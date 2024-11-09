@@ -275,5 +275,35 @@ pub fn supported_languages() -> Vec<LangProfile> {
                 signature("enum_member_declaration", vec![vec![Field("name")]]),
             ],
         },
+        LangProfile {
+            name: "PHP",
+            extensions: vec![".php", ".phtml"],
+            language: tree_sitter_php::LANGUAGE_PHP.into(),
+            // optional settings, explained below
+            atomic_nodes: vec![],
+            commutative_parents: vec![
+                // Use-statement ordering support, which (currently) requires all
+                // top-level children of `program` to be commutable, is purposefully
+                // being skipped (as PHP scripts allow top-level expression that
+                // cause side-effects).
+
+                CommutativeParent::new("declaration_list", "{", "\n\n", "}"),
+                CommutativeParent::new("enum_declaration_list", "{", "\n\n", "}"),
+            ],
+            signatures: vec![
+                signature("namespace_use_declaration", vec![vec![]]),
+                signature("const_declaration", vec![vec![ChildType("const_element"), ChildType("name")]]),
+                signature("function_definition", vec![vec![Field("name")]]),
+                signature("interface_declaration", vec![vec![Field("name")]]),
+                signature("class_declaration", vec![vec![Field("name")]]),
+                signature("property_declaration", vec![vec![ChildType("property_element"), Field("name")]]),
+                signature("property_promotion_parameter", vec![vec![Field("name")]]),
+                signature("method_declaration", vec![vec![Field("name")]]),
+                signature("enum_declaration", vec![vec![Field("name")]]),
+                signature("enum_case", vec![vec![Field("name")]]),
+                signature("attribute_list", vec![vec![]]),
+            ],
+        },
     ];
 }
+
