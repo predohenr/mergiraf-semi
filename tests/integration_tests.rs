@@ -13,6 +13,7 @@ fn run_git(args: Vec<&str>, repo_dir: &Path) {
     let mut command = Command::new("git");
     command.current_dir(repo_dir);
     command.args(args.iter());
+    command.env("HOME", ""); // disable ~/.gitconfig to isolate the test better
     let output = command.output().expect("Failed to execute git command");
     if !output.status.success() {
         eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
@@ -75,6 +76,7 @@ fn test_solve_command(#[case] conflict_style: &str) {
             "-c",
             "user.name=Author",
             "commit",
+            "--no-gpg-sign",
             "-m",
             "initial_commit",
         ],
@@ -88,6 +90,7 @@ fn test_solve_command(#[case] conflict_style: &str) {
             "-c",
             "user.name=Author",
             "commit",
+            "--no-gpg-sign",
             "-am",
             "second_commit",
         ],
@@ -103,6 +106,7 @@ fn test_solve_command(#[case] conflict_style: &str) {
             "-c",
             "user.name=Author",
             "commit",
+            "--no-gpg-sign",
             "-am",
             "third_commit",
         ],
@@ -118,6 +122,7 @@ fn test_solve_command(#[case] conflict_style: &str) {
             &format!("merge.conflictstyle={conflict_style}"),
             "rebase",
             "first_branch",
+            "--no-gpg-sign",
         ]
         .iter(),
     );
