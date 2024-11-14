@@ -295,7 +295,6 @@ pub fn supported_languages() -> Vec<LangProfile> {
             name: "Scala",
             extensions: vec![".scala", ".sbt"],
             language: tree_sitter_scala::LANGUAGE.into(),
-            // optional settings, explained below
             atomic_nodes: vec![],
             commutative_parents: vec![],
             signatures: vec![],
