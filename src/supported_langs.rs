@@ -211,16 +211,11 @@ pub fn supported_languages() -> Vec<LangProfile> {
             atomic_nodes: vec![],
             commutative_parents: vec![
                 CommutativeParent::new("initializer_list", "{", ",", "}"),
-                CommutativeParent {
-                    parent_type: "field_declaration_list",
-                    separator: "\n",
-                    left_delim: Some("{\n"),
-                    right_delim: Some("\n}\n"),
-                    children_groups: vec![
-                        ChildrenGroup::new(&["field_declaration"]),
-                        ChildrenGroup::new(&["function_definition"])
-                    ],
-                }
+                CommutativeParent::new("field_declaration_list", "{\n", "\n", "\n}\n")
+                    .restricted_to_groups(&[
+                        &["field_declaration"],
+                        &["function_definition"]
+                    ])
             ],
             signatures: vec![
                 signature("initializer_pair", vec![vec![Field("designator")]]),

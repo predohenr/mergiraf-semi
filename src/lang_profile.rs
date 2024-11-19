@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, process::Child};
 
 use itertools::Itertools;
 use tree_sitter::Language;
@@ -170,6 +170,15 @@ impl CommutativeParent {
             right_delim: None,
             children_groups: Vec::new(),
         }
+    }
+
+    /// Short-hand to restrict a commutative parent to some children groups
+    pub(crate) fn restricted_to_groups(mut self, groups: &[&[&'static str]]) -> CommutativeParent {
+        let children_groups = groups
+            .into_iter().map(|types| ChildrenGroup::new(&types))
+            .collect();
+        self.children_groups = children_groups;
+        self
     }
 
     /// Can children with the supplied types commute together?
