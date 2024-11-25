@@ -69,7 +69,7 @@ where
         K: std::borrow::Borrow<Q>,
         Q: Hash + Eq,
     {
-        self.map.contains_key(k)
+        self.map.get(k).is_some_and(|s| !s.is_empty())
     }
 }
 
