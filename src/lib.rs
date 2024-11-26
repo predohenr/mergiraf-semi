@@ -485,9 +485,7 @@ pub fn resolve_merge_cascading(
 
                 match structured_merge {
                     Ok(merge) => merges.push(merge),
-                    Err(err) => {
-                        warn!("Full structured merge failed: {err}");
-                    }
+                    Err(err) => warn!("Full structured merge failed: {err}"),
                 };
             } else {
                 if let Err(b) = revision_base {
