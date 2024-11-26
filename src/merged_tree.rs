@@ -262,8 +262,8 @@ impl<'a> MergedTree<'a> {
     }
 
     /// Pretty-prints the result tree into its final output. Exciting!
-    pub fn pretty_print(
-        &self,
+    pub fn pretty_print<'u: 'a>(
+        &'u self,
         class_mapping: &ClassMapping<'a>,
         settings: &DisplaySettings,
     ) -> String {
@@ -273,9 +273,9 @@ impl<'a> MergedTree<'a> {
     }
 
     /// Recursively pretty-prints a sub part of the result tree.
-    fn pretty_print_recursively<'u>(
+    fn pretty_print_recursively<'u: 'a>(
         &'u self,
-        output: &mut MergedText,
+        output: &mut MergedText<'a>,
         class_mapping: &ClassMapping<'a>,
         previous_sibling: Option<PreviousSibling<'a>>,
         indentation: &str,
@@ -357,9 +357,9 @@ impl<'a> MergedTree<'a> {
                 );
                 // TODO reindent??
                 output.push_conflict(
-                    Self::pretty_print_astnode_list(Revision::Base, base),
+                    Self::pretty_print_astnode_list(Revision::Base, base).into(),
                     Self::pretty_print_astnode_list(Revision::Left, left).into(),
-                    Self::pretty_print_astnode_list(Revision::Right, right),
+                    Self::pretty_print_astnode_list(Revision::Right, right).into(),
                 );
             }
             MergedTree::LineBasedMerge { contents, node, .. } => {
@@ -391,7 +391,7 @@ impl<'a> MergedTree<'a> {
 
     /// Adds any preceding whitespace before pretty-printing a node.
     fn add_preceding_whitespace<'b>(
-        output: &mut MergedText,
+        output: &mut MergedText<'a>,
         rev_node: Leader<'a>,
         previous_sibling: Option<PreviousSibling<'a>>,
         indentation: &'b str,
