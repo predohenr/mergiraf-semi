@@ -391,12 +391,12 @@ pub fn cascading_merge(
 /// on the enclosing AST nodes.
 ///
 /// Returns either a merge (potentially with conflicts) or an error.
-fn resolve_merge(
-    merge_contents: &str,
+fn resolve_merge<'a>(
+    merge_contents: &'a str,
     settings: &DisplaySettings,
     lang_profile: &LangProfile,
     debug_dir: &Option<String>,
-) -> Result<(ParsedMerge, MergeResult), String> {
+) -> Result<(ParsedMerge<'a>, MergeResult), String> {
     let parsed_merge = ParsedMerge::parse(merge_contents)?;
 
     let base_rev = parsed_merge.reconstruct_revision(Revision::Base);
