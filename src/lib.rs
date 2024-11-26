@@ -501,10 +501,9 @@ pub fn resolve_merge_cascading(
             }
             let best_merge = select_best_merge(&mut merges);
 
-            if best_merge.conflict_count == 0 {
-                info!("Solved all conflicts.");
-            } else {
-                info!("{} conflict(s) remaining.", best_merge.conflict_count);
+            match best_merge.conflict_count {
+                0 => info!("Solved all conflicts."),
+                n => info!("{} conflict(s) remaining.", n),
             }
             Ok(best_merge)
         }
