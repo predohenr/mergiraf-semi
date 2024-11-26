@@ -400,22 +400,19 @@ impl<'a> MergedTree<'a> {
                 let revisions = class_mapping.revision_set(previous_node);
                 let common_revisions =
                     revisions.intersection(class_mapping.revision_set(rev_node).set());
-                let whitespaces = [Revision::Left, Revision::Right, Revision::Base]
-                    .iter()
-                    .map(|rev| {
-                        if common_revisions.contains(*rev) {
-                            Self::whitespace_at_rev(
-                                *rev,
-                                previous_node,
-                                rev_node,
-                                indentation,
-                                class_mapping,
-                            )
-                        } else {
-                            None
-                        }
-                    })
-                    .collect_vec();
+                let whitespaces = [Revision::Left, Revision::Right, Revision::Base].map(|rev| {
+                    if common_revisions.contains(rev) {
+                        Self::whitespace_at_rev(
+                            rev,
+                            previous_node,
+                            rev_node,
+                            indentation,
+                            class_mapping,
+                        )
+                    } else {
+                        None
+                    }
+                });
                 let (preceding_whitespace, indentation_shift) =
                     if let [Some(ref whitespace_left), Some(ref whitespace_right), Some(ref whitespace_base)] = whitespaces[..] {
                         if whitespace_base == whitespace_left {
@@ -424,8 +421,10 @@ impl<'a> MergedTree<'a> {
                             Some(whitespace_left.clone())
                         }
                     } else {
-                        whitespaces
-                            .into_iter()
+                        // NOTE: qualified syntax required because of 2018 edition
+                        // https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html
+                        // TODO: remove in 2021 edition
+                        IntoIterator::into_iter(whitespaces)
                             .flatten()
                             .next()
                     }.unwrap_or_else(|| {
