@@ -22,6 +22,7 @@ tree-sitter-json = "0.23"
 tree-sitter-yaml = "0.6.1"
 tree-sitter-toml-ng = "0.6.0"
 tree-sitter-java = "0.23"
+tree-sitter-kotlin = { git = "https://github.com/alexle0nte/tree-sitter-kotlin.git", rev = "9b40bc22b49e616ea1a2fe6bca98fa211565aa7d" } 
 tree-sitter-html = "0.23"
 tree-sitter-javascript = "0.23"
 tree-sitter-cpp = "0.23"
