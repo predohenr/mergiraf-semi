@@ -160,7 +160,7 @@ pub fn structured_merge(
     debug!("{}", result_tree);
 
     Ok(MergeResult {
-        contents: with_final_newline(&result_tree.pretty_print(&class_mapping, settings)),
+        contents: with_final_newline(&result_tree.pretty_print(&class_mapping, settings)).into(),
         conflict_count: result_tree.count_conflicts(),
         conflict_mass: result_tree.conflict_mass(),
         method: if parsed_merge.is_none() {
