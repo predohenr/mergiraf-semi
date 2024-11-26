@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use itertools::Itertools;
 use regex::Regex;
 
@@ -98,9 +100,9 @@ impl MergedText {
             .enumerate()
             .map(|(idx, line)| {
                 if line.is_empty() || (idx == 0 && !reindent_first) {
-                    line.to_owned()
+                    Cow::from(line)
                 } else {
-                    format!("{indentation}{line}")
+                    Cow::from(format!("{indentation}{line}"))
                 }
             })
             .join("\n");
