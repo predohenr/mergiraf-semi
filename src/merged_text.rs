@@ -39,18 +39,22 @@ impl MergedText {
     }
 
     /// Appends merged text at the end
-    pub(crate) fn push_merged(&mut self, contents: String) {
-        self.sections.push(MergeSection::Merged(contents));
+    pub(crate) fn push_merged(&mut self, contents: Cow<str>) {
+        self.sections
+            .push(MergeSection::Merged(contents.into_owned()));
     }
 
     /// Appends a conflict at the end
-    pub(crate) fn push_conflict(&mut self, base: String, left: String, right: String) {
+    pub(crate) fn push_conflict(&mut self, base: String, left: Cow<str>, right: String) {
         if left == right {
             // well that's not really a conflict
             self.push_merged(left);
         } else {
-            self.sections
-                .push(MergeSection::Conflict { base, left, right });
+            self.sections.push(MergeSection::Conflict {
+                base,
+                left: left.into_owned(),
+                right,
+            });
         }
     }
 
@@ -362,9 +366,9 @@ mod tests {
     #[test]
     fn test_spurious_conflict() {
         let mut merged_text = MergedText::new();
-        merged_text.push_merged("let's start ".to_owned());
-        merged_text.push_conflict("tomorrow".to_owned(), "now".to_owned(), "now".to_owned());
-        merged_text.push_merged(", as it seems we all agree".to_owned());
+        merged_text.push_merged("let's start ".into());
+        merged_text.push_conflict("tomorrow".into(), "now".into(), "now".into());
+        merged_text.push_merged(", as it seems we all agree".into());
         let expected_full_line = "let's start now, as it seems we all agree";
 
         assert_eq!(
