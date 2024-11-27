@@ -390,13 +390,13 @@ impl<'a> MergedTree<'a> {
     }
 
     /// Adds any preceding whitespace before pretty-printing a node.
-    fn add_preceding_whitespace(
+    fn add_preceding_whitespace<'b>(
         output: &mut MergedText,
         rev_node: Leader<'a>,
         previous_sibling: Option<PreviousSibling<'a>>,
-        indentation: &str,
+        indentation: &'b str,
         class_mapping: &ClassMapping<'a>,
-    ) -> String {
+    ) -> Cow<'b, str> {
         let arbitrary_representative = rev_node.as_representative().node;
         let representatives = {
             let mut representatives = class_mapping.representatives(rev_node);
@@ -451,7 +451,7 @@ impl<'a> MergedTree<'a> {
                 };
 
                 output.push_merged(Cow::from(preceding_whitespace));
-                format!("{indentation}{indentation_shift}")
+                Cow::from(format!("{indentation}{indentation_shift}"))
             }
             Some(PreviousSibling::CommutativeSeparator(separator)) => {
                 if separator.ends_with('\n') {
@@ -461,9 +461,9 @@ impl<'a> MergedTree<'a> {
                         .to_owned();
                     let new_indentation = format!("{indentation}{shift}");
                     output.push_merged(Cow::from(new_indentation.clone()));
-                    new_indentation
+                    Cow::from(new_indentation)
                 } else {
-                    indentation.to_string()
+                    Cow::from(indentation)
                 }
             }
             None => {
@@ -472,7 +472,7 @@ impl<'a> MergedTree<'a> {
                     .find_map(|repr| repr.node.preceding_whitespace())
                     .unwrap_or("");
                 output.push_merged(Cow::from(whitespace));
-                indentation.to_string()
+                Cow::from(indentation)
             }
         }
     }
