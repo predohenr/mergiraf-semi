@@ -501,7 +501,7 @@ pub fn resolve_merge_cascading(
 
             match best_merge.conflict_count {
                 0 => info!("Solved all conflicts."),
-                n => info!("{} conflict(s) remaining.", n),
+                n => info!("{n} conflict(s) remaining."),
             }
             Ok(best_merge)
         }
