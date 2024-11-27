@@ -442,15 +442,15 @@ impl<'a> MergedTree<'a> {
                             if let Some(preceding_whitespace) = repr.node.preceding_whitespace() {
                                 let new_whitespace =
                                     preceding_whitespace.replace(&ancestor_newlines, &new_newlines);
-                                Some((new_whitespace, indentation_shift))
+                                Some((Cow::from(new_whitespace), Cow::from(indentation_shift)))
                             } else {
                                 None
                             }
                         })
-                        .unwrap_or_default(),
+                        .unwrap_or((Cow::from(""), Cow::from(""))),
                 };
 
-                output.push_merged(Cow::from(preceding_whitespace));
+                output.push_merged(preceding_whitespace);
                 Cow::from(format!("{indentation}{indentation_shift}"))
             }
             Some(PreviousSibling::CommutativeSeparator(separator)) => {
@@ -481,7 +481,7 @@ impl<'a> MergedTree<'a> {
         current_node: Leader<'a>,
         indentation: &str,
         class_mapping: &ClassMapping<'a>,
-    ) -> Option<(String, String)> {
+    ) -> Option<(Cow<'a, str>, Cow<'a, str>)> {
         let previous_node_at_rev = class_mapping.node_at_rev(previous_node, rev)?;
         let current_node_at_rev = class_mapping.node_at_rev(current_node, rev)?;
 
@@ -503,15 +503,15 @@ impl<'a> MergedTree<'a> {
         if let Some(ancestor_indentation) = current_node_at_rev.ancestor_indentation() {
             let indentation_shift = Self::extract_indentation_shift(ancestor_indentation, source);
             Some((
-                source.replace(
+                Cow::from(source.replace(
                     &format!("\n{ancestor_indentation}"),
                     &format!("\n{indentation}"),
-                ),
-                indentation_shift.to_owned(),
+                )),
+                Cow::from(indentation_shift),
             ))
         } else {
             let indentation = Self::extract_indentation_shift("", source);
-            Some((source.to_owned(), indentation.to_owned()))
+            Some((Cow::from(source), Cow::from(indentation)))
         }
     }
 
