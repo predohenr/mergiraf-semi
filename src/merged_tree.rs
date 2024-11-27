@@ -455,10 +455,7 @@ impl<'a> MergedTree<'a> {
             }
             Some(PreviousSibling::CommutativeSeparator(separator)) => {
                 if separator.ends_with('\n') {
-                    let shift = arbitrary_representative
-                        .indentation_shift()
-                        .unwrap_or("")
-                        .to_owned();
+                    let shift = arbitrary_representative.indentation_shift().unwrap_or("");
                     let new_indentation = format!("{indentation}{shift}");
                     output.push_merged(Cow::from(new_indentation.clone()));
                     Cow::from(new_indentation)
