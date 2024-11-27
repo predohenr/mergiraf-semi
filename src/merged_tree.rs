@@ -507,11 +507,11 @@ impl<'a> MergedTree<'a> {
                     &format!("\n{ancestor_indentation}"),
                     &format!("\n{indentation}"),
                 ),
-                indentation_shift,
+                indentation_shift.to_owned(),
             ))
         } else {
             let indentation = Self::extract_indentation_shift("", source);
-            Some((source.to_owned(), indentation))
+            Some((source.to_owned(), indentation.to_owned()))
         }
     }
 
@@ -538,12 +538,15 @@ impl<'a> MergedTree<'a> {
         }
     }
 
-    fn extract_indentation_shift(ancestor_indentation: &str, preceding_whitespace: &str) -> String {
+    fn extract_indentation_shift<'b>(
+        ancestor_indentation: &str,
+        preceding_whitespace: &'b str,
+    ) -> &'b str {
         let line_with_ancestor_indentation = format!("\n{ancestor_indentation}");
         preceding_whitespace
             .rfind(&line_with_ancestor_indentation)
-            .map_or_else(String::new, |s| {
-                preceding_whitespace[(s + line_with_ancestor_indentation.len())..].to_owned()
+            .map_or("", |s| {
+                &preceding_whitespace[(s + line_with_ancestor_indentation.len())..]
             })
     }
 
