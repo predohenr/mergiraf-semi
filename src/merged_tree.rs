@@ -413,41 +413,43 @@ impl<'a> MergedTree<'a> {
                         None
                     }
                 });
-                let (preceding_whitespace, indentation_shift) =
+
+                #[allow(clippy::manual_unwrap_or_default)]
+                let (preceding_whitespace, indentation_shift) = {
                     if let [Some(whitespace_left), Some(whitespace_right), Some(whitespace_base)] =
                         whitespaces
                     {
                         if whitespace_base == whitespace_left {
-                            Some(whitespace_right)
+                            whitespace_right
                         } else {
-                            Some(whitespace_left)
+                            whitespace_left
                         }
-                    } else {
+                    } else if let Some(whitespace) =
                         // NOTE: qualified syntax required because of 2018 edition
                         // https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html
                         // TODO: remove in 2021 edition
                         IntoIterator::into_iter(whitespaces).flatten().next()
+                    {
+                        whitespace
+                    } else if let Some(whitespace) = representatives.iter().find_map(|repr| {
+                        let indentation_shift =
+                            repr.node.indentation_shift().unwrap_or("").to_owned();
+                        let ancestor_newlines =
+                            format!("\n{}", repr.node.ancestor_indentation().unwrap_or(""));
+                        let new_newlines = format!("\n{indentation}");
+                        if let Some(preceding_whitespace) = repr.node.preceding_whitespace() {
+                            let new_whitespace =
+                                preceding_whitespace.replace(&ancestor_newlines, &new_newlines);
+                            Some((new_whitespace, indentation_shift))
+                        } else {
+                            None
+                        }
+                    }) {
+                        whitespace
+                    } else {
+                        (String::new(), String::new())
                     }
-                    .unwrap_or_else(|| {
-                        representatives
-                            .iter()
-                            .find_map(|repr| {
-                                let indentation_shift =
-                                    repr.node.indentation_shift().unwrap_or("").to_owned();
-                                let ancestor_newlines =
-                                    format!("\n{}", repr.node.ancestor_indentation().unwrap_or(""));
-                                let new_newlines = format!("\n{indentation}");
-                                if let Some(preceding_whitespace) = repr.node.preceding_whitespace()
-                                {
-                                    let new_whitespace = preceding_whitespace
-                                        .replace(&ancestor_newlines, &new_newlines);
-                                    Some((new_whitespace, indentation_shift))
-                                } else {
-                                    None
-                                }
-                            })
-                            .unwrap_or_else(|| (String::new(), String::new()))
-                    });
+                };
 
                 output.push_merged(preceding_whitespace);
                 format!("{indentation}{indentation_shift}")
