@@ -684,10 +684,7 @@ impl<'a> Iterator for DfsIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let node = self.current.pop()?;
-        // TODO can this be rewritten with self.current.append(…) ?
-        for child in node.children.iter().rev() {
-            self.current.push(child)
-        }
+        self.current.extend(node.children.iter().rev());
         Some(node)
     }
 }
