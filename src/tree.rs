@@ -138,9 +138,7 @@ impl<'a> AstNode<'a> {
         let local_source = &global_source[range.start..range.end];
         if node.is_error() {
             return Err(format!(
-                "parse error at {}..{}, starting with: {}",
-                range.start,
-                range.end,
+                "parse error at {range:?}, starting with: {}",
                 &local_source[..min(32, local_source.len())]
             ));
         }
