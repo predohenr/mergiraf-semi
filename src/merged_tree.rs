@@ -414,27 +414,33 @@ impl<'a> MergedTree<'a> {
                     }
                 });
                 let (preceding_whitespace, indentation_shift) =
-                    if let [Some(ref whitespace_left), Some(ref whitespace_right), Some(ref whitespace_base)] = whitespaces[..] {
+                    if let [Some(whitespace_left), Some(whitespace_right), Some(whitespace_base)] =
+                        whitespaces
+                    {
                         if whitespace_base == whitespace_left {
-                            Some(whitespace_right.clone())
+                            Some(whitespace_right)
                         } else {
-                            Some(whitespace_left.clone())
+                            Some(whitespace_left)
                         }
                     } else {
                         // NOTE: qualified syntax required because of 2018 edition
                         // https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html
                         // TODO: remove in 2021 edition
-                        IntoIterator::into_iter(whitespaces)
-                            .flatten()
-                            .next()
-                    }.unwrap_or_else(|| {
-                        representatives.iter()
+                        IntoIterator::into_iter(whitespaces).flatten().next()
+                    }
+                    .unwrap_or_else(|| {
+                        representatives
+                            .iter()
                             .find_map(|repr| {
-                                let indentation_shift = repr.node.indentation_shift().unwrap_or("").to_owned();
-                                let ancestor_newlines = format!("\n{}", repr.node.ancestor_indentation().unwrap_or(""));
+                                let indentation_shift =
+                                    repr.node.indentation_shift().unwrap_or("").to_owned();
+                                let ancestor_newlines =
+                                    format!("\n{}", repr.node.ancestor_indentation().unwrap_or(""));
                                 let new_newlines = format!("\n{indentation}");
-                                if let Some(preceding_whitespace) = repr.node.preceding_whitespace() {
-                                    let new_whitespace = preceding_whitespace.replace(&ancestor_newlines, &new_newlines);
+                                if let Some(preceding_whitespace) = repr.node.preceding_whitespace()
+                                {
+                                    let new_whitespace = preceding_whitespace
+                                        .replace(&ancestor_newlines, &new_newlines);
                                     Some((new_whitespace, indentation_shift))
                                 } else {
                                     None
