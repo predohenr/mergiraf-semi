@@ -148,7 +148,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                             name
                         }
                     })
-                    .unwrap_or(base.clone()),
+                    .unwrap_or(base.clone())
+                    .into(),
                 left_revision_name: left_name
                     .map(|name| {
                         if name == "%X" {
@@ -157,7 +158,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                             name
                         }
                     })
-                    .unwrap_or(left.clone()),
+                    .unwrap_or(left.clone())
+                    .into(),
                 right_revision_name: right_name
                     .map(|name| {
                         if name == "%Y" {
@@ -166,7 +168,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                             name
                         }
                     })
-                    .unwrap_or(right.clone()),
+                    .unwrap_or(right.clone())
+                    .into(),
             };
 
             {
@@ -233,9 +236,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 diff3: true,
                 compact,
                 conflict_marker_size: 7,
-                base_revision_name: default_base_name, // TODO detect from file
-                left_revision_name: default_left_name,
-                right_revision_name: default_right_name,
+                base_revision_name: default_base_name.into(), // TODO detect from file
+                left_revision_name: default_left_name.into(),
+                right_revision_name: default_right_name.into(),
             };
 
             let original_conflict_contents = read_file_to_string(&fname_conflicts)?;
@@ -333,11 +336,11 @@ fn fallback_to_git_merge_file(
     }
     command
         .arg("-L")
-        .arg(&settings.left_revision_name)
+        .arg(&*settings.left_revision_name)
         .arg("-L")
-        .arg(&settings.base_revision_name)
+        .arg(&*settings.base_revision_name)
         .arg("-L")
-        .arg(&settings.right_revision_name)
+        .arg(&*settings.right_revision_name)
         .arg(left)
         .arg(base)
         .arg(right)
