@@ -116,9 +116,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
         .init()
         .unwrap();
 
-    let default_base_name = "base".to_owned();
-    let default_left_name = "left".to_owned();
-    let default_right_name = "right".to_owned();
+    let default_base_name = "base".into();
+    let default_left_name = "left".into();
+    let default_right_name = "right".into();
 
     let return_code = match args.command {
         CliCommand::Merge {
@@ -145,31 +145,28 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                         if name == "%S" {
                             default_base_name
                         } else {
-                            name
+                            name.into()
                         }
                     })
-                    .unwrap_or(base.clone())
-                    .into(),
+                    .unwrap_or(base.clone().into()),
                 left_revision_name: left_name
                     .map(|name| {
                         if name == "%X" {
                             default_left_name
                         } else {
-                            name
+                            name.into()
                         }
                     })
-                    .unwrap_or(left.clone())
-                    .into(),
+                    .unwrap_or(left.clone().into()),
                 right_revision_name: right_name
                     .map(|name| {
                         if name == "%Y" {
                             default_right_name
                         } else {
-                            name
+                            name.into()
                         }
                     })
-                    .unwrap_or(right.clone())
-                    .into(),
+                    .unwrap_or(right.clone().into()),
             };
 
             {
@@ -236,9 +233,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 diff3: true,
                 compact,
                 conflict_marker_size: 7,
-                base_revision_name: default_base_name.into(), // TODO detect from file
-                left_revision_name: default_left_name.into(),
-                right_revision_name: default_right_name.into(),
+                base_revision_name: default_base_name, // TODO detect from file
+                left_revision_name: default_left_name,
+                right_revision_name: default_right_name,
             };
 
             let original_conflict_contents = read_file_to_string(&fname_conflicts)?;
