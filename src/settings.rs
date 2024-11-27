@@ -76,6 +76,7 @@ impl Default for DisplaySettings {
     }
 }
 
+#[allow(clippy::upper_case_acronyms)]
 enum LineFeedStyle {
     LF,
     CRLF,
