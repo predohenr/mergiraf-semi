@@ -393,8 +393,11 @@ impl<'a> MergedTree<'a> {
         class_mapping: &ClassMapping<'a>,
     ) -> String {
         let arbitrary_representative = rev_node.as_representative().node;
-        let mut representatives = class_mapping.representatives(rev_node);
-        representatives.sort_by(|a, b| Ord::cmp(&a.rev, &b.rev));
+        let representatives = {
+            let mut representatives = class_mapping.representatives(rev_node);
+            representatives.sort_by(|a, b| Ord::cmp(&a.rev, &b.rev));
+            representatives
+        };
         match previous_sibling {
             Some(PreviousSibling::RealNode(previous_node)) => {
                 let revisions = class_mapping.revision_set(previous_node);
