@@ -486,8 +486,7 @@ impl<'a> AstNode<'a> {
     pub fn ancestor_indentation(&'a self) -> Option<&'a str> {
         self.ancestors()
             .skip(1)
-            .filter_map(|ancestor| ancestor.preceding_indentation())
-            .next()
+            .find_map(|ancestor| ancestor.preceding_indentation())
     }
 
     /// The difference between this node's preceding indentation and
