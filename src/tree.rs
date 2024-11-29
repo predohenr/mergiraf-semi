@@ -476,7 +476,7 @@ impl<'a> AstNode<'a> {
         let additional_content =
             &self.source[(last_child.byte_range.end - self.byte_range.start)..];
         if !additional_content.is_empty() && additional_content.trim().is_empty() {
-            Some(&additional_content)
+            Some(additional_content)
         } else {
             None
         }
