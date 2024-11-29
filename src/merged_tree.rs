@@ -434,8 +434,7 @@ impl<'a> MergedTree<'a> {
                     _ => representatives
                         .iter()
                         .find_map(|repr| {
-                            let indentation_shift =
-                                repr.node.indentation_shift().unwrap_or("").to_owned();
+                            let indentation_shift = repr.node.indentation_shift().unwrap_or("");
                             let ancestor_newlines =
                                 format!("\n{}", repr.node.ancestor_indentation().unwrap_or(""));
                             let new_newlines = format!("\n{indentation}");
