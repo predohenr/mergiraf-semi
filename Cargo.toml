@@ -63,3 +63,8 @@ panic = "abort"
 strip = true
 lto = true
 debug = false
+
+[lints.clippy]
+only_used_in_recursion = "allow"
+too_many_arguments = "allow"
+type_complexity = "allow"
