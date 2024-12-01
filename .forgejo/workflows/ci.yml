@@ -6,32 +6,11 @@ on:
     branches:
       - main
 jobs:
-  rustfmt:
+  nix_flake_check:
     runs-on: my-ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install Rust
-        uses: https://code.forgejo.org/msrd0/rust-toolchain@stable
-        id: rust-toolchain
-        with:
-          components: rustfmt
-      - run: cargo fmt --all -- --check
-
-  test:
-    runs-on: my-ubuntu-22.04
-    steps:
-      - name: Check out repository
-        uses: https://github.com/actions/checkout@v4
-      - name: Install Rust
-        uses: https://code.forgejo.org/msrd0/rust-toolchain@stable
-        id: rust-toolchain
-      - name: Cache build dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/git
-            ~/.cargo/registry
-            target            
-          key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
-      - name: Run tests
-        run: cargo test --all-features
+      - name: Install nix
+        uses: https://github.com/cachix/install-nix-action@v27
+      - name: Run `nix flake check` to run formatters, linters, and tests
+        run: nix flake check --print-build-logs
