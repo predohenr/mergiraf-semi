@@ -209,7 +209,7 @@ impl<'a> ClassMapping<'a> {
         }
     }
 
-    /// Checks whether the supplied revison (left or right) is only reformatting
+    /// Checks whether the supplied revision (left or right) is only reformatting
     /// the source (the unindented sources are different as strings but the trees are
     /// isomorphic)
     pub fn is_reformatting(&self, leader: Leader<'a>, revision: Revision) -> bool {

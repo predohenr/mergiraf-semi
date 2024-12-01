@@ -274,7 +274,7 @@ mod tests {
         let attempt_dir = attempts_dir.join(attempt.id());
         assert_eq!(
             fs::read_to_string(attempt_dir.join("Base.java"))
-                .expect("Cound not read Base.java file from attempt dir"),
+                .expect("Could not read Base.java file from attempt dir"),
             "hello base"
         );
 
@@ -314,7 +314,7 @@ mod tests {
         let attempt_dir = attempts_dir.join(attempt.id());
         assert_eq!(
             fs::read_to_string(attempt_dir.join("Base.txt"))
-                .expect("Cound not read Base.txt file from attempt dir"),
+                .expect("Could not read Base.txt file from attempt dir"),
             "hello base"
         );
 
