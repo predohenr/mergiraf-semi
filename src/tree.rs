@@ -306,7 +306,7 @@ impl<'a> AstNode<'a> {
     /// Postfix iterator
     pub fn postfix(&'a self) -> impl Iterator<Item = &'a AstNode<'a>> {
         PostfixIterator {
-            queue: Vec::from([(self, 0)]),
+            queue: vec![(self, 0)],
         }
     }
 
