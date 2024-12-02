@@ -405,29 +405,31 @@ impl TreeMatcher {
         for edit in edits {
             match edit {
                 Edit::Replace(child_edits) => {
-                    if let (Some(left_node), Some(right_node)) = (left_cursor, right_cursor) {
-                        assert_eq!(left_node.node.grammar_name, right_node.node.grammar_name, "Inconsistent grammar names between nodes matched by tree edit distance");
-                        if matching.can_be_matched(left_node.node, right_node.node) {
-                            matching.add(left_node.node, right_node.node);
-                            recovery_matching.add(left_node.node, right_node.node);
-                            Self::convert_tree_edits_to_matches(
-                                left_node.children.iter().collect_vec().as_slice(),
-                                right_node
-                                    .children
-                                    .as_slice()
-                                    .iter()
-                                    .collect_vec()
-                                    .as_slice(),
-                                child_edits,
-                                recovery_matching,
-                                matching,
-                            );
-                        }
-                        left_cursor = left_iterator.next();
-                        right_cursor = right_iterator.next();
-                    } else {
+                    let (Some(left_node), Some(right_node)) = (left_cursor, right_cursor) else {
                         panic!("Trees to match and produced edit script are inconsistent");
+                    };
+                    assert_eq!(
+                        left_node.node.grammar_name, right_node.node.grammar_name,
+                        "Inconsistent grammar names between nodes matched by tree edit distance"
+                    );
+                    if matching.can_be_matched(left_node.node, right_node.node) {
+                        matching.add(left_node.node, right_node.node);
+                        recovery_matching.add(left_node.node, right_node.node);
+                        Self::convert_tree_edits_to_matches(
+                            left_node.children.iter().collect_vec().as_slice(),
+                            right_node
+                                .children
+                                .as_slice()
+                                .iter()
+                                .collect_vec()
+                                .as_slice(),
+                            child_edits,
+                            recovery_matching,
+                            matching,
+                        );
                     }
+                    left_cursor = left_iterator.next();
+                    right_cursor = right_iterator.next();
                 }
                 Edit::Insert => right_cursor = right_iterator.next(),
                 Edit::Remove => left_cursor = left_iterator.next(),
