@@ -281,8 +281,8 @@ impl TreeMatcher {
             } else {
                 // add candidates via tree edit distance matching
                 let (edits, _cost) = diff(&left_stripped, &right_stripped);
-                let left_nodes = [&left_stripped];
-                let right_nodes = [&right_stripped];
+                let left_nodes = [left_stripped];
+                let right_nodes = [right_stripped];
                 Self::convert_tree_edits_to_matches(
                     &left_nodes,
                     &right_nodes,
@@ -392,8 +392,8 @@ impl TreeMatcher {
 
     /// Recursively extract matches from edit script between two trees
     fn convert_tree_edits_to_matches<'a>(
-        left_nodes: &[&TEDTree<'a>],
-        right_nodes: &[&TEDTree<'a>],
+        left_nodes: &[TEDTree<'a>],
+        right_nodes: &[TEDTree<'a>],
         edits: &[Edit],
         recovery_matching: &mut Matching<'a>,
         matching: &mut Matching<'a>,
@@ -416,13 +416,8 @@ impl TreeMatcher {
                         matching.add(left_node.node, right_node.node);
                         recovery_matching.add(left_node.node, right_node.node);
                         Self::convert_tree_edits_to_matches(
-                            left_node.children.iter().collect_vec().as_slice(),
-                            right_node
-                                .children
-                                .as_slice()
-                                .iter()
-                                .collect_vec()
-                                .as_slice(),
+                            left_node.children.as_slice(),
+                            right_node.children.as_slice(),
                             child_edits,
                             recovery_matching,
                             matching,
