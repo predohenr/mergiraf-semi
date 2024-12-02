@@ -134,10 +134,10 @@ impl TreeMatcher {
                 Ordering::Equal => {
                     let h1 = l1.pop();
                     let h2 = l2.pop();
-                    let mut matched_1: HashSet<&AstNode<'a>> = HashSet::new();
-                    let mut matched_2: HashSet<&AstNode<'a>> = HashSet::new();
                     let dups_left: HashSet<_> = h1.iter().map(|n| n.hash).duplicates().collect();
                     let dups_right: HashSet<_> = h2.iter().map(|n| n.hash).duplicates().collect();
+                    let mut matched_1 = HashSet::new();
+                    let mut matched_2 = HashSet::new();
                     for t1 in &h1 {
                         for t2 in &h2 {
                             if exact_matching.are_matched(t1, t2) {
