@@ -499,9 +499,8 @@ impl<'a> AstNode<'a> {
                                 4,
                             ),
                         ]
-                        .iter()
+                        .into_iter()
                         .flatten()
-                        .copied()
                         .sorted_by_key(|indentation| indentation.len()) // try to find the minimal shift
                         .next()
                     })
