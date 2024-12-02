@@ -114,9 +114,12 @@ impl TreeMatcher {
         let mut l2 = PriorityList::new();
         l1.push(left.root());
         l2.push(right.root());
-        while min(l1.peek_max().unwrap_or(-1), l2.peek_max().unwrap_or(-1)) >= self.min_height {
+        loop {
             let pm_1 = l1.peek_max().unwrap_or(-1);
             let pm_2 = l2.peek_max().unwrap_or(-1);
+            if min(pm_1, pm_2) < self.min_height {
+                break;
+            }
             match pm_1.cmp(&pm_2) {
                 Ordering::Greater => {
                     for t in l1.pop() {
