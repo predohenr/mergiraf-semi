@@ -222,9 +222,7 @@ impl<'a> AstNode<'a> {
 
         let mut worklist = vec![self];
         while let Some(node) = worklist.pop() {
-            for child in node.children.iter().rev() {
-                worklist.push(child);
-            }
+            worklist.extend(node.children.iter().rev());
             result.push(node);
         }
 
