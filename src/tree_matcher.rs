@@ -335,25 +335,27 @@ impl TreeMatcher {
             .collect();
 
         for ((node_type, signature), children_l) in left_children.iter() {
-            if children_l.len() == 1 {
-                let children_r = right_children.get((node_type, signature.clone())); // TODO avoid this clone and check for length == 1 in a better way
-                if children_r.len() == 1 {
-                    let child_l = children_l.iter().next().unwrap();
-                    let child_r = children_r.iter().next().unwrap();
-                    if matching.can_be_matched(child_l, child_r) {
-                        if signature.is_some() || recursive {
-                            self.match_subtrees_linearly(
-                                child_l,
-                                child_r,
-                                recursive,
-                                matching,
-                                recovery_matching,
-                            );
-                        }
-                        matching.add(child_l, child_r);
-                        recovery_matching.add(child_l, child_r);
-                    }
+            if children_l.len() != 1 {
+                continue;
+            }
+            let children_r = right_children.get((node_type, signature.clone())); // TODO avoid this clone and check for length == 1 in a better way
+            if children_r.len() != 1 {
+                continue;
+            }
+            let child_l = children_l.iter().next().unwrap();
+            let child_r = children_r.iter().next().unwrap();
+            if matching.can_be_matched(child_l, child_r) {
+                if signature.is_some() || recursive {
+                    self.match_subtrees_linearly(
+                        child_l,
+                        child_r,
+                        recursive,
+                        matching,
+                        recovery_matching,
+                    );
                 }
+                matching.add(child_l, child_r);
+                recovery_matching.add(child_l, child_r);
             }
         }
     }
