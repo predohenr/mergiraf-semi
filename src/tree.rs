@@ -417,14 +417,7 @@ impl<'a> AstNode<'a> {
                 children.iter().map(|child| (child.id, *child)).collect();
             self.field_to_children
                 .iter()
-                .map(|(k, v)| {
-                    (
-                        *k,
-                        v.iter()
-                            .map(|child| *child_id_map.get(&child.id).unwrap())
-                            .collect(),
-                    )
-                })
+                .map(|(k, v)| (*k, v.iter().map(|child| child_id_map[&child.id]).collect()))
                 .collect()
         };
         let result = arena.alloc(AstNode {
