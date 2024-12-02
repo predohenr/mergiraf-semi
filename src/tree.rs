@@ -421,17 +421,12 @@ impl<'a> AstNode<'a> {
                 .collect()
         };
         let result = arena.alloc(AstNode {
-            hash: self.hash,
             children,
             field_to_children,
-            source: self.source,
-            grammar_name: self.grammar_name,
-            field_name: self.field_name,
             byte_range: self.byte_range.clone(),
-            id: self.id,
-            descendant_count: self.descendant_count,
             parent: UnsafeCell::new(None),
             dfs: UnsafeCell::new(None),
+            ..*self
         });
         result.internal_set_parent_on_children();
         result
