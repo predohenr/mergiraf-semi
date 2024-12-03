@@ -1,4 +1,9 @@
-use std::{env, fs, process::exit, process::Command};
+use std::{
+    env, fs,
+    process::{exit, Command},
+    thread,
+    time::Duration,
+};
 
 use clap::{Parser, Subcommand};
 use itertools::Itertools;
@@ -72,6 +77,9 @@ enum CliCommand {
         #[clap(short = 'y', long)]
         // the choice of 'y' is inherited from Git's merge driver interface
         right_name: Option<String>,
+        /// Maximum number of milliseconds to try doing the merging for, after which we fall back on git's own algorithm. Set to 0 to disable this limit.
+        #[clap(short, long, default_value_t = 10000)]
+        timeout: u64,
     },
     /// Solve the conflicts in a merged file
     Solve {
@@ -104,12 +112,85 @@ enum CliCommand {
 
 fn main() {
     let args = CliArgs::parse();
+
     match real_main(args) {
         Ok(exit_code) => exit(exit_code),
         Err(error) => {
             eprintln!("Mergiraf: {error}");
             exit(-1)
         }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn do_merge(
+    base: &str,
+    left: &str,
+    right: &str,
+    fast: bool,
+    path_name: Option<&str>,
+    timeout: Duration,
+    settings: &DisplaySettings,
+    debug_dir: Option<&str>,
+) -> Result<(i32, String), String> {
+    let (tx, rx) = oneshot::channel();
+
+    thread::scope(|s| {
+        s.spawn(|| {
+            let res = || {
+                let fname_base = &base;
+                let original_contents_base = read_file_to_string(fname_base)?;
+                let contents_base = normalize_to_lf(&original_contents_base);
+
+                let fname_left = &left;
+                let original_contents_left = read_file_to_string(fname_left)?;
+                let contents_left = normalize_to_lf(&original_contents_left);
+
+                let fname_right = &right;
+                let original_contents_right = read_file_to_string(fname_right)?;
+                let contents_right = normalize_to_lf(&original_contents_right);
+
+                let attempts_cache = AttemptsCache::new(None, None).ok();
+
+                let fname_base = path_name.unwrap_or(fname_base);
+
+                let merge_result = line_merge_and_structured_resolution(
+                    &contents_base,
+                    &contents_left,
+                    &contents_right,
+                    fname_base,
+                    settings,
+                    !fast,
+                    attempts_cache.as_ref(),
+                    debug_dir,
+                );
+
+                let merge_output =
+                    imitate_cr_lf_from_input(&original_contents_left, &merge_result.contents);
+
+                if merge_result.conflict_count > 0 {
+                    let old_git_detected = settings.base_revision_name == "%S";
+                    if old_git_detected {
+                        warn!("Using Git v2.44.0 or above is recommended to get meaningful revision names on conflict markers when using Mergiraf.");
+                    }
+                    Ok((1, merge_output))
+                } else {
+                    Ok((0, merge_output))
+                }
+            };
+            let _ = tx.send(res());
+        });
+    });
+
+    if timeout.is_zero() {
+        rx.recv().unwrap()
+    } else {
+        rx.recv_timeout(timeout).map_err(|err| match err {
+            oneshot::RecvTimeoutError::Timeout => {
+                "structured merge took too long, falling back to Git"
+            }
+            oneshot::RecvTimeoutError::Disconnected => unreachable!(),
+        })?
     }
 }
 
@@ -137,9 +218,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             left_name,
             right_name,
             compact,
+            timeout,
         } => {
-            let old_git_detected = base_name.as_deref().is_some_and(|n| n == "%S");
-
             let settings = DisplaySettings {
                 compact,
                 base_revision_name: match base_name.as_deref() {
@@ -169,50 +249,32 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 }
             }
 
-            let fname_base = &base;
-            let original_contents_base = read_file_to_string(fname_base)?;
-            let contents_base = normalize_to_lf(&original_contents_base);
+            let timeout = Duration::from_millis(timeout);
 
-            let fname_left = &left;
-            let original_contents_left = read_file_to_string(fname_left)?;
-            let contents_left = normalize_to_lf(&original_contents_left);
-
-            let fname_right = &right;
-            let original_contents_right = read_file_to_string(fname_right)?;
-            let contents_right = normalize_to_lf(&original_contents_right);
-
-            let attempts_cache = AttemptsCache::new(None, None).ok();
-
-            let fname_base = path_name.as_deref().unwrap_or(fname_base);
-
-            let merge_result = line_merge_and_structured_resolution(
-                &contents_base,
-                &contents_left,
-                &contents_right,
-                fname_base,
+            match do_merge(
+                &base,
+                &left,
+                &right,
+                fast,
+                path_name.as_deref(),
+                timeout,
                 &settings,
-                !fast,
-                attempts_cache.as_ref(),
                 args.debug_dir.as_deref(),
-            );
-            if let Some(fname_out) = output {
-                write_string_to_file(&fname_out, &merge_result.contents)?;
-            } else if git {
-                write_string_to_file(fname_left, &merge_result.contents)?;
-            } else {
-                print!(
-                    "{}",
-                    imitate_cr_lf_from_input(&original_contents_left, &merge_result.contents)
-                );
-            }
-
-            if merge_result.conflict_count > 0 {
-                if old_git_detected {
-                    warn!("Using Git v2.44.0 or above is recommended to get meaningful revision names on conflict markers when using Mergiraf.");
+            ) {
+                Ok((return_code, merge_output)) => {
+                    if let Some(fname_out) = output {
+                        write_string_to_file(&fname_out, &merge_output)?;
+                    } else if git {
+                        write_string_to_file(&left, &merge_output)?;
+                    } else {
+                        print!("{merge_output}");
+                    };
+                    return_code
                 }
-                1
-            } else {
-                0
+                Err(err) => {
+                    log::error!("Mergiraf: {err}");
+                    return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
+                }
             }
         }
         CliCommand::Solve {
