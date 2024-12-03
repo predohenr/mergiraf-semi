@@ -267,7 +267,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     0
                 }
                 Err(e) => {
-                    warn!("Mergiraf: {}", e);
+                    warn!("Mergiraf: {e}");
                     1
                 }
             }
