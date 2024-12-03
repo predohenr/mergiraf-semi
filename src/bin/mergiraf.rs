@@ -148,7 +148,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                             name.into()
                         }
                     })
-                    .unwrap_or(base.clone().into()),
+                    .unwrap_or((&base).into()),
                 left_revision_name: left_name
                     .map(|name| {
                         if name == "%X" {
@@ -157,7 +157,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                             name.into()
                         }
                     })
-                    .unwrap_or(left.clone().into()),
+                    .unwrap_or((&left).into()),
                 right_revision_name: right_name
                     .map(|name| {
                         if name == "%Y" {
@@ -166,7 +166,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                             name.into()
                         }
                     })
-                    .unwrap_or(right.clone().into()),
+                    .unwrap_or((&right).into()),
             };
 
             {
@@ -174,7 +174,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     || env::var(DISABLING_ENV_VAR).is_ok_and(|v| !v.is_empty()); // TODO: deprecate
 
                 if mergiraf_disabled {
-                    return fallback_to_git_merge_file(base, left, right, git, &settings);
+                    return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
                 }
             }
 
@@ -320,9 +320,9 @@ fn write_string_to_file(path: &str, contents: &str) -> Result<(), String> {
 }
 
 fn fallback_to_git_merge_file(
-    base: String,
-    left: String,
-    right: String,
+    base: &str,
+    left: &str,
+    right: &str,
     git: bool,
     settings: &DisplaySettings,
 ) -> Result<i32, String> {
