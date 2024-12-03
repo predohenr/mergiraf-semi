@@ -1,3 +1,4 @@
+#[derive(Clone, Debug, PartialEq, Eq)]
 /// Parameters controlling how the merged tree should be output.
 pub struct DisplaySettings<'a> {
     /// Whether to show the base revision in the conflicts (true by default)

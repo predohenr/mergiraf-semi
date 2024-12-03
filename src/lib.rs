@@ -399,6 +399,8 @@ fn resolve_merge<'a>(
 ) -> Result<(ParsedMerge<'a>, MergeResult), String> {
     let parsed_merge = ParsedMerge::parse(merge_contents)?;
 
+    let settings_with_revision_names = parsed_merge.add_revision_names(settings);
+
     let base_rev = parsed_merge.reconstruct_revision(Revision::Base);
     let left_rev = parsed_merge.reconstruct_revision(Revision::Left);
     let right_rev = parsed_merge.reconstruct_revision(Revision::Right);
@@ -408,7 +410,7 @@ fn resolve_merge<'a>(
         &left_rev,
         &right_rev,
         Some(&parsed_merge),
-        settings,
+        &settings_with_revision_names,
         lang_profile,
         debug_dir,
     )?;

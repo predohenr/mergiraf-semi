@@ -45,6 +45,12 @@ pub enum MergedChunk<'a> {
         base: Cow<'a, str>,
         /// The right part of the conflict, including the last newline before the next marker.
         right: Cow<'a, str>,
+        /// The name of the left revision (potentially empty)
+        left_name: &'a str,
+        /// The name of the base revision (potentially empty)
+        base_name: &'a str,
+        /// The name of the right revision (potentially empty)
+        right_name: &'a str,
     },
 }
 
@@ -72,14 +78,17 @@ impl<'b> ParsedMerge<'b> {
         let mut offset = 0;
         while offset < source.len() {
             let remaining_source = &source[offset..];
-            let start_marker = start_marker.find(remaining_source);
+            let start_marker = &start_marker.captures(remaining_source);
             let resolved_end = match start_marker {
                 None => remaining_source.len(),
                 Some(occurrence) => {
-                    if occurrence.as_str().starts_with('\n') {
-                        occurrence.start() + 1
+                    let whole_occurrence = occurrence
+                        .get(0)
+                        .expect("whole match is guaranteed to exist");
+                    if whole_occurrence.as_str().starts_with('\n') {
+                        whole_occurrence.start() + 1
                     } else {
-                        occurrence.start()
+                        whole_occurrence.start()
                     }
                 }
             };
@@ -91,8 +100,11 @@ impl<'b> ParsedMerge<'b> {
             }
             offset += resolved_end;
             if let Some(start_marker) = start_marker {
-                let local_offset = start_marker.end();
-                let base_match = match base_marker.find(&remaining_source[local_offset..]) {
+                let left_name = start_marker.get(2).map(|m| m.as_str().trim()).unwrap_or("");
+                let whole_start_marker = start_marker.get(0).unwrap();
+                let local_offset = whole_start_marker.end();
+
+                let base_captures = match base_marker.captures(&remaining_source[local_offset..]) {
                     Some(occurrence) => Ok(occurrence),
                     None => {
                         if right_marker
@@ -105,21 +117,37 @@ impl<'b> ParsedMerge<'b> {
                         }
                     }
                 }?;
+                let base_match = base_captures.get(0).unwrap();
                 let left =
                     remaining_source[local_offset..(local_offset + base_match.start())].into();
                 let local_offset = local_offset + base_match.end();
+                let base_name = base_captures
+                    .get(1)
+                    .map(|m| m.as_str().trim())
+                    .unwrap_or("");
+
                 let right_match = right_marker
                     .find(&remaining_source[local_offset..])
                     .ok_or("unexpected end of file before right conflict marker")?;
                 let base =
                     remaining_source[local_offset..(local_offset + right_match.start())].into();
                 let local_offset = local_offset + right_match.end();
-                let end_match = end_marker
-                    .find(&remaining_source[local_offset..])
+
+                let end_captures = end_marker
+                    .captures(&remaining_source[local_offset..])
                     .ok_or("unexpected end of file before end conflict marker")?;
+                let end_match = end_captures.get(0).unwrap();
+                let right_name = end_captures.get(1).map(|m| m.as_str().trim()).unwrap_or("");
                 let right =
                     remaining_source[local_offset..(local_offset + end_match.start())].into();
-                chunks.push(MergedChunk::Conflict { left, base, right });
+                chunks.push(MergedChunk::Conflict {
+                    left,
+                    base,
+                    right,
+                    left_name,
+                    base_name,
+                    right_name,
+                });
                 offset += local_offset + end_match.end() - resolved_end;
             }
         }
@@ -157,7 +185,9 @@ impl<'b> ParsedMerge<'b> {
                     base_offset += length;
                     right_offset += length;
                 }
-                MergedChunk::Conflict { left, base, right } => {
+                MergedChunk::Conflict {
+                    left, base, right, ..
+                } => {
                     left_offset += left.len();
                     base_offset += base.len();
                     right_offset += right.len();
@@ -182,7 +212,9 @@ impl<'b> ParsedMerge<'b> {
             .iter()
             .map(|chunk| match chunk {
                 MergedChunk::Resolved { contents, .. } => contents,
-                MergedChunk::Conflict { left, base, right } => match revision {
+                MergedChunk::Conflict {
+                    left, base, right, ..
+                } => match revision {
                     Revision::Base => base,
                     Revision::Left => left,
                     Revision::Right => right,
@@ -267,7 +299,9 @@ impl<'b> ParsedMerge<'b> {
         for chunk in self.chunks.iter() {
             match chunk {
                 MergedChunk::Resolved { contents, .. } => result.push_str(contents),
-                MergedChunk::Conflict { left, base, right } => {
+                MergedChunk::Conflict {
+                    left, base, right, ..
+                } => {
                     result.push_str(&settings.left_marker());
                     result.push('\n');
                     result.push_str(left);
@@ -339,11 +373,36 @@ impl<'b> ParsedMerge<'b> {
             .iter()
             .map(|chunk| match chunk {
                 MergedChunk::Resolved { .. } => 0,
-                MergedChunk::Conflict { base, left, right } => {
-                    base.len() + left.len() + right.len()
-                }
+                MergedChunk::Conflict {
+                    base, left, right, ..
+                } => base.len() + left.len() + right.len(),
             })
             .sum()
+    }
+
+    /// Update display settings by taking revision names from merge (if there are any conflicts)
+    pub fn add_revision_names<'a>(&'a self, settings: &DisplaySettings<'a>) -> DisplaySettings<'a> {
+        match self.chunks.iter().find_map(|chunk| match chunk {
+            MergedChunk::Resolved { .. } => None,
+            MergedChunk::Conflict {
+                left_name,
+                base_name,
+                right_name,
+                ..
+            } => Some((*left_name, *base_name, *right_name)),
+        }) {
+            Some((left_name, base_name, right_name))
+                if !left_name.is_empty() && !base_name.is_empty() && !right_name.is_empty() =>
+            {
+                DisplaySettings {
+                    left_revision_name: left_name,
+                    base_revision_name: base_name,
+                    right_revision_name: right_name,
+                    ..*settings
+                }
+            }
+            _ => settings.clone(),
+        }
     }
 }
 
@@ -367,6 +426,9 @@ mod tests {
                 left: "let's go to the left!\n".into(),
                 base: "where should we go?\n".into(),
                 right: "turn right please!\n".into(),
+                left_name: "left",
+                base_name: "base",
+                right_name: "",
             },
             MergedChunk::Resolved {
                 offset: 127,
@@ -487,6 +549,9 @@ mod tests {
                 left: "let's go to the left!\n".into(),
                 base: "where should we go?\n".into(),
                 right: "turn right please!\n".into(),
+                left_name: "left",
+                base_name: "base",
+                right_name: "",
             },
             MergedChunk::Resolved {
                 offset: 103,
@@ -523,6 +588,9 @@ mod tests {
                 left: "let's go to the left!\n".into(),
                 base: "where should we go?\n".into(),
                 right: "turn right please!\n".into(),
+                left_name: "left",
+                base_name: "base",
+                right_name: "",
             },
         ]);
 
@@ -565,6 +633,9 @@ mod tests {
                 left: "    .foo = 3,\n    .bar = 2,\n".into(),
                 base: "    .foo = 3,\n".into(),
                 right: "".into(),
+                left_name: "LEFT",
+                base_name: "BASE",
+                right_name: "RIGHT",
             },
             MergedChunk::Resolved {
                 offset: 115,
@@ -654,5 +725,49 @@ mod tests {
         assert!(matching.are_matched(closing_bracket_left, closing_bracket_right));
 
         assert_eq!(matching.len(), 7);
+    }
+
+    #[test]
+    fn test_add_revision_names_to_settings() {
+        let source = "<<<<<<< my_left\nlet's go to the left!\n||||||| my_base\nwhere should we go?\n=======\nturn right please!\n>>>>>>> my_right\nrest of file\n";
+        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+
+        let initial_settings = DisplaySettings::default();
+
+        let enriched_settings = parsed.add_revision_names(&initial_settings);
+
+        assert_eq!(
+            enriched_settings,
+            DisplaySettings {
+                left_revision_name: "my_left".into(),
+                base_revision_name: "my_base".into(),
+                right_revision_name: "my_right".into(),
+                ..initial_settings
+            }
+        );
+    }
+
+    #[test]
+    fn test_add_revision_names_to_settings_no_names() {
+        let source = "<<<<<<<\nlet's go to the left!\n|||||||\nwhere should we go?\n=======\nturn right please!\n>>>>>>>\nrest of file\n";
+        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+
+        let initial_settings = DisplaySettings::default();
+
+        let enriched_settings = parsed.add_revision_names(&initial_settings);
+
+        assert_eq!(enriched_settings, initial_settings);
+    }
+
+    #[test]
+    fn test_add_revision_names_to_settings_no_conflict() {
+        let source = "start of file\nrest of file\n";
+        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+
+        let initial_settings = DisplaySettings::default();
+
+        let enriched_settings = parsed.add_revision_names(&initial_settings);
+
+        assert_eq!(enriched_settings, initial_settings);
     }
 }
