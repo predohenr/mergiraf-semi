@@ -1,4 +1,8 @@
-use std::{env, fs, process::exit, process::Command};
+use std::{
+    env, fs,
+    process::{exit, Command},
+    time::Duration,
+};
 
 use clap::{Parser, Subcommand};
 use itertools::Itertools;
@@ -10,6 +14,7 @@ use mergiraf::{
     settings::{imitate_cr_lf_from_input, normalize_to_lf, DisplaySettings},
     supported_langs::supported_languages,
 };
+use wait_timeout::ChildExt;
 
 const DISABLING_ENV_VAR: &str = "MERGIRAF_DISABLE";
 
@@ -68,6 +73,9 @@ enum CliCommand {
         #[clap(short = 'y', long)]
         // the choice of 'y' is inherited from Git's merge driver interface
         right_name: Option<String>,
+        /// Maximum number of milliseconds to try doing the merging for, after which we fall back on git's own algorithm.
+        #[clap(short, long)]
+        timeout: Option<u64>,
     },
     /// Solve the conflicts in a merged file
     Solve {
@@ -100,6 +108,7 @@ enum CliCommand {
 
 fn main() {
     let args = CliArgs::parse();
+
     match real_main(args) {
         Ok(exit_code) => exit(exit_code),
         Err(error) => {
@@ -133,6 +142,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             left_name,
             right_name,
             compact,
+            timeout,
         } => {
             let old_git_detected = base_name.as_deref().is_some_and(|n| n == "%S");
 
@@ -163,6 +173,42 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
 
                 if mergiraf_disabled {
                     return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
+                }
+            }
+
+            if let Some(timeout) = timeout {
+                if env::var("mergiraf_ignore_timeout") != Ok("1".to_owned()) {
+                    let current_exe = env::current_exe().map_err(|err| {
+                        format!("could not get path to current executable: {err}")
+                    })?;
+                    let timeout_duration = Duration::from_millis(timeout);
+
+                    let mut child = Command::new(format!("{}", current_exe.display()))
+                        .args(env::args().into_iter().skip(1))
+                        .env("mergiraf_ignore_timeout", "1")
+                        .spawn()
+                        .map_err(|err| {
+                            format!("could not spawn a subprocess to honour --timeout: {err}")
+                        })?;
+
+                    let status_code = match child
+                        .wait_timeout(timeout_duration)
+                        .map_err(|err| format!("error in the merge process: {err}"))?
+                    {
+                        Some(status) => status.code(),
+                        None => {
+                            warn!("Mergiraf: structured merge took too long, falling back to Git");
+                            // TODO: here, we could be killing the subprocess while it is writing the merge results to the output file,
+                            // which is terrible.
+                            child.kill().map_err(|err| {
+                                format!("could not kill merging subprocess: {err}")
+                            })?;
+                            return fallback_to_git_merge_file(
+                                &base, &left, &right, git, &settings,
+                            );
+                        }
+                    };
+                    return Ok(status_code.unwrap_or(0));
                 }
             }
 
