@@ -134,7 +134,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             right_name,
             compact,
         } => {
-            let old_git_detected = base_name.as_deref().unwrap_or("") == "%S";
+            let old_git_detected = base_name.as_deref().is_some_and(|n| n == "%S");
 
             let settings = DisplaySettings {
                 diff3: true,
