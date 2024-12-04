@@ -652,9 +652,9 @@ mod tests {
             diff3: true,
             compact: false,
             conflict_marker_size: 7,
-            left_revision_name: "LEFT".into(),
-            base_revision_name: "BASE".into(),
-            right_revision_name: "RIGHT".into(),
+            left_revision_name: "LEFT",
+            base_revision_name: "BASE",
+            right_revision_name: "RIGHT",
         });
 
         assert_eq!(rendered, source);
@@ -739,9 +739,9 @@ mod tests {
         assert_eq!(
             enriched_settings,
             DisplaySettings {
-                left_revision_name: "my_left".into(),
-                base_revision_name: "my_base".into(),
-                right_revision_name: "my_right".into(),
+                left_revision_name: "my_left",
+                base_revision_name: "my_base",
+                right_revision_name: "my_right",
                 ..initial_settings
             }
         );
