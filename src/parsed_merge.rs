@@ -382,23 +382,22 @@ impl<'b> ParsedMerge<'b> {
 
     /// Update display settings by taking revision names from merge (if there are any conflicts)
     pub fn add_revision_names(&self, settings: &mut DisplaySettings<'b>) {
-        match self.chunks.iter().find_map(|chunk| match chunk {
-            MergedChunk::Resolved { .. } => None,
-            MergedChunk::Conflict {
-                left_name,
-                base_name,
-                right_name,
-                ..
-            } => Some((*left_name, *base_name, *right_name)),
-        }) {
-            Some((left_name, base_name, right_name))
-                if !left_name.is_empty() && !base_name.is_empty() && !right_name.is_empty() =>
-            {
+        if let Some((left_name, base_name, right_name)) =
+            self.chunks.iter().find_map(|chunk| match chunk {
+                MergedChunk::Resolved { .. } => None,
+                MergedChunk::Conflict {
+                    left_name,
+                    base_name,
+                    right_name,
+                    ..
+                } => Some((*left_name, *base_name, *right_name)),
+            })
+        {
+            if !left_name.is_empty() && !base_name.is_empty() && !right_name.is_empty() {
                 settings.left_revision_name = left_name;
                 settings.base_revision_name = base_name;
                 settings.right_revision_name = right_name;
             }
-            _ => {}
         }
     }
 }
