@@ -381,7 +381,7 @@ impl<'b> ParsedMerge<'b> {
     }
 
     /// Update display settings by taking revision names from merge (if there are any conflicts)
-    pub fn add_revision_names<'a>(&'a self, settings: &DisplaySettings<'a>) -> DisplaySettings<'a> {
+    pub fn add_revision_names(&self, settings: &mut DisplaySettings<'b>) {
         match self.chunks.iter().find_map(|chunk| match chunk {
             MergedChunk::Resolved { .. } => None,
             MergedChunk::Conflict {
@@ -394,14 +394,11 @@ impl<'b> ParsedMerge<'b> {
             Some((left_name, base_name, right_name))
                 if !left_name.is_empty() && !base_name.is_empty() && !right_name.is_empty() =>
             {
-                DisplaySettings {
-                    left_revision_name: left_name,
-                    base_revision_name: base_name,
-                    right_revision_name: right_name,
-                    ..*settings
-                }
+                settings.left_revision_name = left_name;
+                settings.base_revision_name = base_name;
+                settings.right_revision_name = right_name;
             }
-            _ => settings.clone(),
+            _ => {}
         }
     }
 }
@@ -734,7 +731,8 @@ mod tests {
 
         let initial_settings = DisplaySettings::default();
 
-        let enriched_settings = parsed.add_revision_names(&initial_settings);
+        let mut enriched_settings = initial_settings.clone();
+        parsed.add_revision_names(&mut enriched_settings);
 
         assert_eq!(
             enriched_settings,
@@ -754,7 +752,8 @@ mod tests {
 
         let initial_settings = DisplaySettings::default();
 
-        let enriched_settings = parsed.add_revision_names(&initial_settings);
+        let mut enriched_settings = initial_settings.clone();
+        parsed.add_revision_names(&mut enriched_settings);
 
         assert_eq!(enriched_settings, initial_settings);
     }
@@ -766,7 +765,8 @@ mod tests {
 
         let initial_settings = DisplaySettings::default();
 
-        let enriched_settings = parsed.add_revision_names(&initial_settings);
+        let mut enriched_settings = initial_settings.clone();
+        parsed.add_revision_names(&mut enriched_settings);
 
         assert_eq!(enriched_settings, initial_settings);
     }

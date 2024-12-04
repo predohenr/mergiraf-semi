@@ -393,13 +393,13 @@ pub fn cascading_merge(
 /// Returns either a merge (potentially with conflicts) or an error.
 fn resolve_merge<'a>(
     merge_contents: &'a str,
-    settings: &DisplaySettings,
+    settings: &mut DisplaySettings<'a>,
     lang_profile: &LangProfile,
     debug_dir: &Option<String>,
 ) -> Result<(ParsedMerge<'a>, MergeResult), String> {
     let parsed_merge = ParsedMerge::parse(merge_contents)?;
 
-    let settings_with_revision_names = parsed_merge.add_revision_names(settings);
+    parsed_merge.add_revision_names(settings);
 
     let base_rev = parsed_merge.reconstruct_revision(Revision::Base);
     let left_rev = parsed_merge.reconstruct_revision(Revision::Left);
@@ -410,7 +410,7 @@ fn resolve_merge<'a>(
         &left_rev,
         &right_rev,
         Some(&parsed_merge),
-        &settings_with_revision_names,
+        settings,
         lang_profile,
         debug_dir,
     )?;
@@ -418,10 +418,10 @@ fn resolve_merge<'a>(
 }
 
 /// Cascading merge resolution starting from a user-supplied file with merge conflicts
-pub fn resolve_merge_cascading(
-    merge_contents: &str,
+pub fn resolve_merge_cascading<'a>(
+    merge_contents: &'a str,
     fname_base: &str,
-    settings: DisplaySettings,
+    mut settings: DisplaySettings<'a>,
     debug_dir: &Option<String>,
     working_dir: &Path,
 ) -> Result<MergeResult, String> {
@@ -432,7 +432,7 @@ pub fn resolve_merge_cascading(
     let mut resolved_merge = None;
     let mut parsed_merge = None;
 
-    match resolve_merge(merge_contents, &settings, &lang_profile, debug_dir) {
+    match resolve_merge(merge_contents, &mut settings, &lang_profile, debug_dir) {
         Ok((original_merge, merge_result)) => {
             parsed_merge = Some(original_merge);
             resolved_merge = Some(merge_result);
