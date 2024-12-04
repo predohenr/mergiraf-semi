@@ -421,7 +421,7 @@ fn resolve_merge<'a>(
 pub fn resolve_merge_cascading(
     merge_contents: &str,
     fname_base: &str,
-    settings: &DisplaySettings,
+    settings: DisplaySettings,
     debug_dir: &Option<String>,
     working_dir: &Path,
 ) -> Result<MergeResult, String> {
@@ -432,7 +432,7 @@ pub fn resolve_merge_cascading(
     let mut resolved_merge = None;
     let mut parsed_merge = None;
 
-    match resolve_merge(merge_contents, settings, &lang_profile, debug_dir) {
+    match resolve_merge(merge_contents, &settings, &lang_profile, debug_dir) {
         Ok((original_merge, merge_result)) => {
             parsed_merge = Some(original_merge);
             resolved_merge = Some(merge_result);
@@ -460,7 +460,7 @@ pub fn resolve_merge_cascading(
                 merges.push(merge);
             }
             if let Some(parsed_merge) = parsed_merge {
-                merges.push(parsed_merge.to_merge_result(settings));
+                merges.push(parsed_merge.to_merge_result(&settings));
             }
 
             let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
@@ -476,7 +476,7 @@ pub fn resolve_merge_cascading(
                     contents_left,
                     contents_right,
                     None,
-                    settings,
+                    &settings,
                     &lang_profile,
                     debug_dir,
                 );
