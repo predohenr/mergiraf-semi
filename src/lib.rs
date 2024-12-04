@@ -151,7 +151,7 @@ pub fn structured_merge(
         &auxiliary_matcher,
         debug_dir,
     );
-    debug!("{}", result_tree);
+    debug!("{result_tree}");
 
     Ok(MergeResult {
         contents: with_final_newline(&result_tree.pretty_print(&class_mapping, settings)).into(),
@@ -347,10 +347,7 @@ pub fn cascading_merge(
                     }
                 }
                 Err(err) => {
-                    debug!(
-                        "error while attempting conflict resolution of line-based merge: {}",
-                        err
-                    );
+                    debug!("error while attempting conflict resolution of line-based merge: {err}");
                 }
             }
         }
@@ -369,10 +366,7 @@ pub fn cascading_merge(
             match structured_merge {
                 Ok(successful_merge) => merges.push(successful_merge),
                 Err(parse_error) => {
-                    debug!(
-                        "full structured merge encountered an error: {}",
-                        parse_error
-                    );
+                    debug!("full structured merge encountered an error: {parse_error}");
                 }
             };
         }

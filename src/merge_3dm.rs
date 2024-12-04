@@ -169,12 +169,12 @@ pub fn three_way_merge<'a>(
             let mut conflicting_triples = changeset.inconsistent_triples(*pcs);
             let count = changeset.inconsistent_triples(*pcs).count();
             if count > 0 {
-                debug!("number of conflicting triples: {}", count);
+                debug!("number of conflicting triples: {count}");
             }
             if let Some(triple) =
                 conflicting_triples.find(|triple| triple.revision != Revision::Base)
             {
-                debug!("eliminating {} by {}", pcs, triple);
+                debug!("eliminating {pcs} by {triple}");
                 conflict_found = true;
             }
         }
@@ -259,7 +259,7 @@ mod tests {
             &None,
         );
 
-        debug!("{}", merged_tree);
+        debug!("{merged_tree}");
         let pretty_printed = merged_tree.pretty_print(&classmapping, &DisplaySettings::default());
         assert_eq!(pretty_printed, "[0, 1, {\"a\":2}, 3]");
     }
