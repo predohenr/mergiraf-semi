@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::Path};
 
 use itertools::Itertools;
 
@@ -158,7 +158,7 @@ impl<'a> ChangeSet<'a> {
     }
 
     /// Save to file, for debugging purposes
-    pub fn save(&self, fname: &str) {
+    pub fn save(&self, fname: impl AsRef<Path>) {
         let mut result = String::new();
         for pcs in self.iter().sorted().map(|pcs| format!("{pcs}\n")) {
             result.push_str(&pcs)

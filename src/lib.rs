@@ -92,7 +92,7 @@ pub fn structured_merge(
     parsed_merge: Option<&ParsedMerge>,
     settings: &DisplaySettings,
     lang_profile: &LangProfile,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
 ) -> Result<MergeResult, String> {
     let arena = Arena::new();
     let ref_arena = Arena::new();
@@ -178,7 +178,7 @@ pub fn line_merge_and_structured_resolution(
     settings: &DisplaySettings,
     full_merge: bool,
     attempts_cache: Option<&AttemptsCache>,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
 ) -> MergeResult {
     let mut merges = cascading_merge(
         contents_base,
@@ -292,7 +292,7 @@ pub fn cascading_merge(
     fname_base: &str,
     settings: &DisplaySettings,
     full_merge: bool,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
 ) -> Vec<MergeResult> {
     let mut merges = Vec::new();
     let lang_profile = LangProfile::detect_from_filename(fname_base);
@@ -383,7 +383,7 @@ fn resolve_merge<'a>(
     merge_contents: &'a str,
     settings: &DisplaySettings,
     lang_profile: &LangProfile,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
 ) -> Result<(ParsedMerge<'a>, MergeResult), String> {
     let parsed_merge = ParsedMerge::parse(merge_contents)?;
 
@@ -408,7 +408,7 @@ pub fn resolve_merge_cascading(
     merge_contents: &str,
     fname_base: &str,
     settings: &DisplaySettings,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
     working_dir: &Path,
 ) -> Result<MergeResult, String> {
     let lang_profile = LangProfile::detect_from_filename(fname_base).ok_or(format!(
