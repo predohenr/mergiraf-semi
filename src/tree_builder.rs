@@ -300,10 +300,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .copied()
             .filter(|pcsnode| !seen_nodes.contains(pcsnode))
         {
-            debug!(
-                "{pad}{node} Checking unvisited base node {}",
-                unvisited_base_node
-            );
+            debug!("{pad}{node} Checking unvisited base node {unvisited_base_node}");
             let PCSNode::Node {
                 node: unvisited,
                 revisions,
@@ -402,11 +399,12 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
     /// Construct a conflict by following successors on all three revisions
     /// from the given predecessor.
-    fn build_conflict<'c: 'b>(
+    #[allow(clippy::type_complexity)]
+    fn build_conflict(
         &self,
         predecessor: PCSNode<'a>,
-        merged_successors: &'c MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
-        base_successors: &'c MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
+        merged_successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
+        base_successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
         seen_nodes: &mut HashSet<PCSNode<'a>>,
         visiting_state: &mut VisitingState<'a>,
     ) -> Result<(&'b HashSet<(Revision, PCSNode<'a>)>, MergedTree<'a>), String> {
@@ -465,12 +463,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
     /// Extract one side of a conflict by iteratively following the successor
     /// from the given starting node.
-    fn extract_conflict_side<'c: 'b>(
+    #[allow(clippy::type_complexity)]
+    fn extract_conflict_side(
         &self,
         starting_node: PCSNode<'a>,
         revision: Revision,
-        successors: &'c MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
-        other_successors: &'c MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
+        successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
+        other_successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
         seen_nodes: &mut HashSet<PCSNode<'a>>,
         visiting_state: &mut VisitingState<'a>,
     ) -> Result<(&'b HashSet<(Revision, PCSNode<'a>)>, Vec<&'a AstNode<'a>>), String> {

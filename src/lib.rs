@@ -40,15 +40,12 @@ pub(crate) mod test_utils;
 pub mod tree;
 pub(crate) mod tree_builder;
 pub(crate) mod tree_matcher;
-#[cfg(feature = "dotty")]
 pub(crate) mod visualizer;
 
 use std::{fs, path::Path, time::Instant};
 
 use attempts::AttemptsCache;
 use git::extract_revision_from_git;
-#[cfg(feature = "dotty")]
-use graphviz_rust::printer::{DotPrinter, PrinterContext};
 
 use itertools::Itertools;
 use lang_profile::LangProfile;
@@ -63,12 +60,9 @@ use parsed_merge::{ParsedMerge, PARSED_MERGE_DIFF2_DETECTED};
 use pcs::Revision;
 use settings::DisplaySettings;
 use tree::{Ast, AstNode};
-use tree_matcher::{DetailedMatching, TreeMatcher};
+use tree_matcher::TreeMatcher;
 use tree_sitter::Parser as TSParser;
 use typed_arena::Arena;
-
-#[cfg(feature = "dotty")]
-use crate::visualizer::matching_to_graph;
 
 /// Helper to parse a source text with a given tree-sitter parser.
 pub(crate) fn parse<'a>(
@@ -98,7 +92,7 @@ pub fn structured_merge(
     parsed_merge: Option<&ParsedMerge>,
     settings: &DisplaySettings,
     lang_profile: &LangProfile,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
 ) -> Result<MergeResult, String> {
     let arena = Arena::new();
     let ref_arena = Arena::new();
@@ -157,7 +151,7 @@ pub fn structured_merge(
         &auxiliary_matcher,
         debug_dir,
     );
-    debug!("{}", result_tree);
+    debug!("{result_tree}");
 
     Ok(MergeResult {
         contents: with_final_newline(&result_tree.pretty_print(&class_mapping, settings)).into(),
@@ -176,6 +170,7 @@ pub fn structured_merge(
 /// in a structured way (see [`structured_merge`]).
 /// If there are still conflicts and a full merge is requested, a fully structured
 /// merge (independently of the textual merge) is attempted
+#[allow(clippy::too_many_arguments)]
 pub fn line_merge_and_structured_resolution(
     contents_base: &str,
     contents_left: &str,
@@ -184,7 +179,7 @@ pub fn line_merge_and_structured_resolution(
     settings: &DisplaySettings,
     full_merge: bool,
     attempts_cache: Option<&AttemptsCache>,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
 ) -> MergeResult {
     let mut merges = cascading_merge(
         contents_base,
@@ -298,7 +293,7 @@ pub fn cascading_merge(
     fname_base: &str,
     settings: &DisplaySettings,
     full_merge: bool,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
 ) -> Vec<MergeResult> {
     let mut merges = Vec::new();
     let lang_profile = LangProfile::detect_from_filename(fname_base);
@@ -353,10 +348,7 @@ pub fn cascading_merge(
                     }
                 }
                 Err(err) => {
-                    debug!(
-                        "error while attempting conflict resolution of line-based merge: {}",
-                        err
-                    );
+                    debug!("error while attempting conflict resolution of line-based merge: {err}");
                 }
             }
         }
@@ -375,10 +367,7 @@ pub fn cascading_merge(
             match structured_merge {
                 Ok(successful_merge) => merges.push(successful_merge),
                 Err(parse_error) => {
-                    debug!(
-                        "full structured merge encountered an error: {}",
-                        parse_error
-                    );
+                    debug!("full structured merge encountered an error: {parse_error}");
                 }
             };
         }
@@ -395,7 +384,7 @@ fn resolve_merge<'a>(
     merge_contents: &'a str,
     settings: &mut DisplaySettings<'a>,
     lang_profile: &LangProfile,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
 ) -> Result<(ParsedMerge<'a>, MergeResult), String> {
     let parsed_merge = ParsedMerge::parse(merge_contents)?;
 
@@ -422,7 +411,7 @@ pub fn resolve_merge_cascading<'a>(
     merge_contents: &'a str,
     fname_base: &str,
     mut settings: DisplaySettings<'a>,
-    debug_dir: &Option<String>,
+    debug_dir: Option<&str>,
     working_dir: &Path,
 ) -> Result<MergeResult, String> {
     let lang_profile = LangProfile::detect_from_filename(fname_base).ok_or(format!(
@@ -510,21 +499,6 @@ fn extract_revision(working_dir: &Path, path: &str, revision: Revision) -> Resul
     let temp_file = extract_revision_from_git(working_dir, Path::new(path), revision)?;
     let contents = fs::read_to_string(temp_file.path()).map_err(|err| err.to_string())?;
     Ok(contents)
-}
-
-#[cfg(feature = "dotty")]
-fn save_matching<'a>(
-    left: &'a Ast<'a>,
-    right: &'a Ast<'a>,
-    matching: &DetailedMatching<'a>,
-    fname: &str,
-) {
-    let graph = matching_to_graph(left, right, matching);
-
-    let mut ctx = PrinterContext::default();
-
-    let dotty = graph.print(&mut ctx);
-    fs::write(fname, dotty).expect("Unable to write debug graph file");
 }
 
 fn fxhasher() -> rustc_hash::FxHasher {
