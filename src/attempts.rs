@@ -19,7 +19,7 @@ use crate::line_based::LINE_BASED_METHOD;
 pub(crate) struct Attempt<'a> {
     pub(crate) file_name: &'a str,
     pub(crate) uid: Cow<'a, str>,
-    extension: String,
+    extension: &'a str,
     dir: PathBuf,
 }
 
@@ -137,7 +137,7 @@ impl AttemptsCache {
             file_name,
             uid: Cow::from(uid),
             dir,
-            extension: extension.to_owned(),
+            extension,
         };
         attempt.write("Base", contents_base)?;
         attempt.write("Left", contents_left)?;
@@ -163,7 +163,7 @@ impl AttemptsCache {
         Ok(Attempt {
             file_name,
             uid: Cow::from(uid),
-            extension: extension.to_owned(),
+            extension,
             dir,
         })
     }
