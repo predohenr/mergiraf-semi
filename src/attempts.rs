@@ -116,8 +116,7 @@ impl AttemptsCache {
         let file_name = final_path
             .file_name()
             .and_then(|file_name| file_name.to_str())
-            .unwrap_or("file")
-            .to_owned();
+            .unwrap_or("file");
         let extension = final_path
             .extension()
             .and_then(|ext| ext.to_str())
@@ -134,7 +133,7 @@ impl AttemptsCache {
         })?;
 
         let attempt = Attempt {
-            file_name,
+            file_name: file_name.to_owned(),
             uid,
             dir,
             extension: extension.to_owned(),
