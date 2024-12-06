@@ -90,10 +90,10 @@ impl AttemptsCache {
                 .ok();
                 strategy.map(|project_dir| project_dir.data_dir().clone().join(ATTEMPTS_DIRECTORY))
             })
-            .ok_or(
+            .ok_or_else(|| {
                 "Could not determine a suitable application data directory to store merge attempts"
-                    .to_string(),
-            )?;
+                    .to_string()
+            })?;
         fs::create_dir_all(&cache_dir).map_err(|err| {
             format!(
                 "Error while creating merge attempts directory {}: {err}",
