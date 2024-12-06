@@ -150,14 +150,11 @@ impl AttemptsCache {
         let Some((file_name, uid)) = attempt_id.rsplit_once('_') else {
             return Err("Invalid attempt id, should contain a '_' character".to_owned());
         };
-        let mut dot_splits: Vec<&str> = file_name.split('.').collect();
-        let extension = if dot_splits.len() > 1 {
-            dot_splits
-                .pop()
-                .expect("Unexpected empty vector after split")
-        } else {
-            DEFAULT_FILE_EXTENSION
-        };
+
+        let extension = file_name
+            .rsplit_once('.')
+            .map_or(DEFAULT_FILE_EXTENSION, |(_, extension)| extension);
+
         let dir_name = format!("{file_name}_{uid}");
         let dir = self.base_dir.join(dir_name);
         if !dir.exists() {
