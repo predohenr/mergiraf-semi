@@ -155,7 +155,7 @@ impl AttemptsCache {
             .rsplit_once('.')
             .map_or(DEFAULT_FILE_EXTENSION, |(_, extension)| extension);
 
-        let dir_name = format!("{file_name}_{uid}");
+        let dir_name = attempt_id;
         let dir = self.base_dir.join(dir_name);
         if !dir.exists() {
             return Err(format!("Could not find merge attempt with id {attempt_id}"));
