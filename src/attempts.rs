@@ -1,5 +1,6 @@
 use core::str;
 use std::{
+    borrow::Cow,
     fmt::Display,
     fs,
     path::{Path, PathBuf},
@@ -17,7 +18,7 @@ use crate::line_based::LINE_BASED_METHOD;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct Attempt<'a> {
     pub(crate) file_name: &'a str,
-    pub(crate) uid: String,
+    pub(crate) uid: Cow<'a, str>,
     extension: String,
     dir: PathBuf,
 }
@@ -134,7 +135,7 @@ impl AttemptsCache {
 
         let attempt = Attempt {
             file_name,
-            uid,
+            uid: Cow::from(uid),
             dir,
             extension: extension.to_owned(),
         };
@@ -161,7 +162,7 @@ impl AttemptsCache {
         }
         Ok(Attempt {
             file_name,
-            uid: uid.to_owned(),
+            uid: Cow::from(uid),
             extension: extension.to_owned(),
             dir,
         })
