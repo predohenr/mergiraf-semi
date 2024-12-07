@@ -217,11 +217,8 @@ impl AttemptsCache {
             for (f, _) in &subdirs[self.max_size..] {
                 if let Err(err) = fs::remove_dir_all(f.path()) {
                     warn!(
-                        "Could not delete cached attempt {}: {}",
-                        f.file_name()
-                            .into_string()
-                            .as_deref()
-                            .unwrap_or("<invalid_directory_name>"),
+                        "Could not delete cached attempt {:?}: {}",
+                        f.file_name(),
                         err.to_string()
                     );
                 }
