@@ -49,13 +49,8 @@ impl Attempt<'_> {
 
     pub(crate) fn best_merge_id(&self) -> Result<String, String> {
         let path = self.dir.join(BEST_MERGE_FILENAME);
-        fs::read(&path)
+        fs::read_to_string(&path)
             .map_err(|err| format!("Could not read best merge id at {}: {err}", &path.display()))
-            .and_then(|contents| {
-                str::from_utf8(&contents)
-                    .map_err(|err| err.to_string())
-                    .map(|s| s.to_owned())
-            })
     }
 
     pub(crate) fn path(&self, file_name: &str) -> PathBuf {
