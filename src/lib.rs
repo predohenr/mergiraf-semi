@@ -183,7 +183,7 @@ pub fn line_merge_and_structured_resolution(
     attempts_cache: Option<&AttemptsCache>,
     debug_dir: Option<&str>,
 ) -> MergeResult {
-    let mut merges = cascading_merge(
+    let merges = cascading_merge(
         contents_base,
         contents_left,
         contents_right,
@@ -199,7 +199,7 @@ pub fn line_merge_and_structured_resolution(
         .expect("No line-based merge available")
         .clone(); // TODO avoid this clone
 
-    let best_merge = select_best_merge(&mut merges);
+    let best_merge = select_best_merge(merges);
 
     if best_merge.conflict_count == 0 && best_merge.method != LINE_BASED_METHOD {
         // for successful merges that aren't line-based,
@@ -227,8 +227,7 @@ pub fn line_merge_and_structured_resolution(
 }
 
 /// Takes a non-empty vector of merge results and picks the best one
-fn select_best_merge(merges: &mut Vec<MergeResult>) -> MergeResult {
-    let mut merges: Vec<MergeResult> = std::mem::take(merges);
+fn select_best_merge(mut merges: Vec<MergeResult>) -> MergeResult {
     merges.sort_by_key(|merge| merge.conflict_mass);
     debug!("~~~ Merge statistics ~~~");
     for merge in &merges {
@@ -485,7 +484,7 @@ pub fn resolve_merge_cascading<'a>(
             if merges.is_empty() {
                 return Err("Could not generate any merge".to_string());
             }
-            let best_merge = select_best_merge(&mut merges);
+            let best_merge = select_best_merge(merges);
 
             match best_merge.conflict_count {
                 0 => info!("Solved all conflicts."),
