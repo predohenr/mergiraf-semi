@@ -42,6 +42,7 @@ pub(crate) mod tree_builder;
 pub(crate) mod tree_matcher;
 pub(crate) mod visualizer;
 
+use core::cmp::Ordering;
 use std::{borrow::Cow, fs, path::Path, time::Instant};
 
 use attempts::AttemptsCache;
@@ -193,37 +194,33 @@ pub fn line_merge_and_structured_resolution(
         debug_dir,
     );
 
-    let line_based = merges
-        .iter()
-        .find(|merge| merge.method == LINE_BASED_METHOD)
-        .expect("No line-based merge available")
-        .clone(); // TODO avoid this clone
-
-    let best_merge = select_best_merge(merges);
-
-    if best_merge.conflict_count == 0 && best_merge.method != LINE_BASED_METHOD {
-        // for successful merges that aren't line-based,
-        // give the opportunity to the user to review Mergiraf's work
-        let attempt = attempts_cache.and_then(|cache| {
-            match cache.new_attempt(
-                Path::new(fname_base),
-                contents_base,
-                contents_left,
-                contents_right,
-            ) {
-                Ok(attempt) => Some(attempt),
-                Err(err) => {
-                    warn!("Could not store merging attempt for later review: {err}");
-                    None
-                }
+    match line_based_and_best(merges) {
+        LineBasedAndBestResult::TheSame(merge) => merge,
+        LineBasedAndBestResult::NotTheSame { line_based, best } => {
+            if best.conflict_count == 0 {
+                // for successful merges that aren't line-based,
+                // give the opportunity to the user to review Mergiraf's work
+                let attempt = attempts_cache.and_then(|cache| {
+                    match cache.new_attempt(
+                        Path::new(fname_base),
+                        contents_base,
+                        contents_left,
+                        contents_right,
+                    ) {
+                        Ok(attempt) => Some(attempt),
+                        Err(err) => {
+                            warn!("Could not store merging attempt for later review: {err}");
+                            None
+                        }
+                    }
+                });
+                best.store_in_attempt(&attempt);
+                line_based.store_in_attempt(&attempt);
+                best.mark_as_best_merge_in_attempt(&attempt, line_based.conflict_count);
             }
-        });
-        best_merge.store_in_attempt(&attempt);
-        line_based.store_in_attempt(&attempt);
-        best_merge.mark_as_best_merge_in_attempt(&attempt, line_based.conflict_count);
+            best
+        }
     }
-
-    best_merge
 }
 
 /// Takes a non-empty vector of merge results and picks the best one
@@ -240,6 +237,56 @@ fn select_best_merge(mut merges: Vec<MergeResult>) -> MergeResult {
         .into_iter()
         .find_or_first(|merge| !merge.has_additional_issues)
         .expect("At least one merge result should be present")
+}
+
+enum LineBasedAndBestResult {
+    TheSame(MergeResult),
+    NotTheSame {
+        line_based: MergeResult,
+        best: MergeResult,
+    },
+}
+
+/// Takes a non-empty vector of merge results
+/// Returns both the line-based and the best one
+/// These may happen to coincide, so returns either one or two merges
+fn line_based_and_best(mut merges: Vec<MergeResult>) -> LineBasedAndBestResult {
+    merges.sort_by_key(|merge| merge.conflict_mass);
+    debug!("~~~ Merge statistics ~~~");
+    for merge in &merges {
+        debug!(
+            "{}: {} conflict(s), {} mass, has_additional_issues: {}",
+            merge.method, merge.conflict_count, merge.conflict_mass, merge.has_additional_issues
+        );
+    }
+
+    let best_pos = merges
+        .iter()
+        .position(|merge| !merge.has_additional_issues)
+        .unwrap_or_default();
+    let line_based_pos = merges
+        .iter()
+        .position(|merge| merge.method == LINE_BASED_METHOD)
+        .expect("No line-based merge available");
+
+    match best_pos.cmp(&line_based_pos) {
+        Ordering::Equal => {
+            let best = merges.swap_remove(best_pos);
+            LineBasedAndBestResult::TheSame(best)
+        }
+        // in the following 2 cases, we remove the merge that comes later in the list first
+        // in order to avoid messing up the other one's index
+        Ordering::Less => {
+            let line_based = merges.swap_remove(line_based_pos);
+            let best = merges.swap_remove(best_pos);
+            LineBasedAndBestResult::NotTheSame { line_based, best }
+        }
+        Ordering::Greater => {
+            let best = merges.swap_remove(best_pos);
+            let line_based = merges.swap_remove(line_based_pos);
+            LineBasedAndBestResult::NotTheSame { line_based, best }
+        }
+    }
 }
 
 /// Do a line-based merge. If it is conflict-free, also check if it introduced any duplicate signatures,
