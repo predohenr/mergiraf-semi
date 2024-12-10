@@ -113,10 +113,14 @@ fn highlight_duplicate_signatures<'a>(
     // locations to be grouped with other elements with the same signature
     let mut filtered_elements = Vec::new();
     let mut skip_next_separator = true;
-    for (idx, element) in elements.iter().enumerate().rev() {
-        let sig = sigs
-            .get(idx)
-            .expect("Inconsistent of length of signature arrays and elements array");
+    // NOTE: can't use `itertools::zip_eq` here because it doesn't implement `DoubleEndedIterator`
+    // which is needed for `.rev()`. See https://github.com/rust-itertools/itertools/pull/531
+    debug_assert_eq!(
+        elements.len(),
+        sigs.len(),
+        "Inconsistent length of signature arrays and elements array"
+    );
+    for (idx, (element, sig)) in std::iter::zip(&elements, &sigs).enumerate().rev() {
         match sig {
             None => {
                 let is_separator = is_separator(element, trimmed_separator);
