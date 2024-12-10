@@ -260,16 +260,15 @@ impl RevisionSet {
         }
     }
 
-    /// Adds a revision to the set
+    /// Adds a revision to the set by modifying it
     pub fn add(&mut self, revision: Revision) {
         self.set(revision, true);
     }
 
-    /// Adds a revision to the set by making a copy
-    pub fn with(&self, revision: Revision) -> RevisionSet {
-        let mut copy = *self;
-        copy.add(revision);
-        copy
+    /// Adds a revision to the set by taking ownership
+    pub fn with(mut self, revision: Revision) -> RevisionSet {
+        self.add(revision);
+        self
     }
 
     /// Removes a revision from this set
@@ -386,13 +385,13 @@ impl RevisionNESet {
         RevisionNESet(revisions)
     }
 
-    /// Adds a revision to the set
+    /// Adds a revision to the set by modifying it
     pub fn add(&mut self, revision: Revision) {
         self.0.set(revision, true);
     }
 
-    /// Adds a revision to the set by making a copy
-    pub fn with(&self, revision: Revision) -> RevisionNESet {
+    /// Adds a revision to the set by taking ownership
+    pub fn with(self, revision: Revision) -> RevisionNESet {
         RevisionNESet(self.0.with(revision))
     }
 
