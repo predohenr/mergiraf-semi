@@ -62,20 +62,20 @@ fn highlight_duplicate_signatures<'a>(
     commutative_parent: &CommutativeParent,
 ) -> Vec<MergedTree<'a>> {
     // compute signatures and index them
-    let mut sig_to_indices: HashMap<Signature<'_, 'a>, Vec<usize>> = HashMap::new();
-    let mut sigs = Vec::new();
+    let mut sig_to_indices: HashMap<&Signature<'_, 'a>, Vec<usize>> = HashMap::new();
     let mut conflict_found = false;
-    for (idx, element) in elements.iter().enumerate() {
-        let sig = lang_profile.extract_signature_from_merged_node(element, class_mapping);
-        sigs.push(sig.clone());
+    let sigs: Vec<_> = elements
+        .iter()
+        .map(|element| lang_profile.extract_signature_from_merged_node(element, class_mapping))
+        .collect();
+    for (idx, sig) in sigs.iter().enumerate() {
         if let Some(signature) = sig {
-            let sig_clone = signature.clone();
             let existing_indices = sig_to_indices.entry(signature).or_default();
             if !existing_indices.is_empty() {
                 conflict_found = true;
                 debug!(
                     "signature conflict found in {}: {}",
-                    commutative_parent.parent_type, sig_clone
+                    commutative_parent.parent_type, signature
                 );
             }
             existing_indices.push(idx);
