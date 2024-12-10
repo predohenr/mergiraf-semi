@@ -142,9 +142,9 @@ impl AttemptsCache {
     }
 
     pub(crate) fn parse_attempt_id<'a>(&'a self, attempt_id: &'a str) -> Result<Attempt, String> {
-        let Some((file_name, uid)) = attempt_id.rsplit_once('_') else {
-            return Err("Invalid attempt id, should contain a '_' character".to_owned());
-        };
+        let (file_name, uid) = attempt_id
+            .rsplit_once('_')
+            .ok_or_else(|| "Invalid attempt id, should contain a '_' character".to_owned())?;
 
         let extension = file_name
             .rsplit_once('.')
