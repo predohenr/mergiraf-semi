@@ -81,23 +81,18 @@ impl<'a> Hash for RevNode<'a> {
 /// Creates classes of nodes across multiple revisions so that
 /// they can be equated when converting the corresponding trees
 /// to PCS, following the 3DM-Merge algorithm from Spork
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ClassMapping<'a> {
     map: HashMap<RevNode<'a>, Leader<'a>>,
     representatives: HashMap<Leader<'a>, HashMap<Revision, RevNode<'a>>>,
     exact_matchings: HashMap<Leader<'a>, i8>,
-    empty_repr: HashMap<Revision, RevNode<'a>>,
+    empty_repr: HashMap<Revision, RevNode<'a>>, // stays empty (only there for ownership purposes)
 }
 
 impl<'a> ClassMapping<'a> {
     /// Creates an empty class mapping.
     pub fn new() -> Self {
-        ClassMapping {
-            map: HashMap::new(),
-            representatives: HashMap::new(),
-            exact_matchings: HashMap::new(),
-            empty_repr: HashMap::new(), // stays empty (only there for ownership purposes)
-        }
+        Self::default()
     }
 
     /// Adds a matching to the mapping. The `from_rev` indicates the revision that's on the left hand side of the mapping.
@@ -233,12 +228,6 @@ impl<'a> ClassMapping<'a> {
                 .flat_map(|(_, node)| node.node.field_name.into_iter())
                 .next()
         })
-    }
-}
-
-impl<'a> Default for ClassMapping<'a> {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
