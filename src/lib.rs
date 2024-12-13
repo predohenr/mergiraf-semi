@@ -387,9 +387,8 @@ pub fn cascading_merge(
 
             match solved_merge {
                 Ok(recovered_merge) => {
-                    let conflicts = recovered_merge.conflict_count;
-                    let additional_issues = recovered_merge.has_additional_issues;
-                    if conflicts == 0 && !additional_issues {
+                    if recovered_merge.conflict_count == 0 && !recovered_merge.has_additional_issues
+                    {
                         return vec![line_based_merge, recovered_merge];
                     }
                     merges.push(recovered_merge);
