@@ -100,7 +100,7 @@ impl<'a> ParsedMerge<'a> {
             }
             offset += resolved_end;
             if let Some(start_marker) = start_marker {
-                let left_name = start_marker.get(2).map(|m| m.as_str().trim()).unwrap_or("");
+                let left_name = start_marker.get(2).map_or("", |m| m.as_str().trim());
                 let whole_start_marker = start_marker.get(0).unwrap();
                 let local_offset = whole_start_marker.end();
 
@@ -120,10 +120,7 @@ impl<'a> ParsedMerge<'a> {
                 let base_match = base_captures.get(0).unwrap();
                 let left = &remaining_source[local_offset..(local_offset + base_match.start())];
                 let local_offset = local_offset + base_match.end();
-                let base_name = base_captures
-                    .get(1)
-                    .map(|m| m.as_str().trim())
-                    .unwrap_or("");
+                let base_name = base_captures.get(1).map_or("", |m| m.as_str().trim());
 
                 let right_match = right_marker
                     .find(&remaining_source[local_offset..])
@@ -135,7 +132,7 @@ impl<'a> ParsedMerge<'a> {
                     .captures(&remaining_source[local_offset..])
                     .ok_or("unexpected end of file before end conflict marker")?;
                 let end_match = end_captures.get(0).unwrap();
-                let right_name = end_captures.get(1).map(|m| m.as_str().trim()).unwrap_or("");
+                let right_name = end_captures.get(1).map_or("", |m| m.as_str().trim());
                 let right = &remaining_source[local_offset..(local_offset + end_match.start())];
                 chunks.push(MergedChunk::Conflict {
                     left,
