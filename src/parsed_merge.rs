@@ -61,7 +61,7 @@ struct OffsetMap {
     rev_start: usize,
     /// The start of the section in the original merge output
     merged_start: usize,
-    /// The lcommon ength of the section on both sides
+    /// The common length of the section on both sides
     length: usize,
 }
 
