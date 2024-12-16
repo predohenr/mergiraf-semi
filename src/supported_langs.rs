@@ -369,5 +369,13 @@ pub fn supported_languages() -> Vec<LangProfile> {
                 signature("keyword_argument", vec![vec![Field("name")]]),
             ],
         },
+        LangProfile {
+            name: "Nix",
+            extensions: vec![".nix"],
+            language: tree_sitter_nix::LANGUAGE.into(),
+            atomic_nodes: vec![],
+            commutative_parents: vec![],
+            signatures: vec![],
+        },
     ]
 }
