@@ -612,6 +612,14 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             commutative_parents: vec![],
             signatures: vec![],
         },
+        LangProfile {
+            name: "Nix",
+            extensions: vec![".nix"],
+            language: tree_sitter_nix::LANGUAGE.into(),
+            atomic_nodes: vec![],
+            commutative_parents: vec![],
+            signatures: vec![],
+        }
     ]
 });
 
