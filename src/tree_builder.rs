@@ -183,7 +183,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
         let mut children = Vec::new();
         let mut predecessor = PCSNode::LeftMarker;
-        let mut cursor = children_map.get(predecessor);
+        let mut cursor = children_map.get(&predecessor);
         let mut seen_nodes: HashSet<PCSNode<'a>> = HashSet::new(); // to avoid looping, and to make sure every single known predecessor is visited
         seen_nodes.insert(predecessor);
 
@@ -217,7 +217,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         children.push(child_result_tree);
                         predecessor = *current_child;
                         seen_nodes.insert(predecessor);
-                        cursor = children_map.get(predecessor);
+                        cursor = children_map.get(&predecessor);
                     } else {
                         // we failed to build the result tree for a child of this node, because of a nasty conflict.
                         // We fall back on line diffing
@@ -472,7 +472,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         let mut result = Vec::new();
         let mut cursor = starting_node;
         loop {
-            let all_successors = successors.get(cursor);
+            let all_successors = successors.get(&cursor);
             let candidate = *all_successors
                 .iter()
                 .filter(|(rev, _)| *rev == revision)
