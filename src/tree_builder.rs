@@ -224,9 +224,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                                         commutative_parent,
                                         visiting_state,
                                     )?;
-                                    for result in solved_conflict {
-                                        children.push(result);
-                                    }
+                                    children.extend(solved_conflict);
                                 } else {
                                     children.push(conflict);
                                 }

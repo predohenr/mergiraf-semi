@@ -106,20 +106,22 @@ impl<'a> ChangeSet<'a> {
     pub fn other_roots(&self, pcs: PCS<'a>) -> impl Iterator<Item = &PCS<'a>> {
         let mut results = Vec::new();
         if let PCSNode::Node { .. } = pcs.predecessor {
-            self.predecessors
-                .get(pcs.predecessor)
-                .iter()
-                .chain(self.successors.get(pcs.predecessor).iter())
-                .filter(|other| other.parent != pcs.parent)
-                .for_each(|other| results.push(other));
+            results.extend(
+                self.predecessors
+                    .get(pcs.predecessor)
+                    .iter()
+                    .chain(self.successors.get(pcs.predecessor).iter())
+                    .filter(|other| other.parent != pcs.parent),
+            );
         }
         if let PCSNode::Node { .. } = pcs.successor {
-            self.predecessors
-                .get(pcs.successor)
-                .iter()
-                .chain(self.successors.get(pcs.successor).iter())
-                .filter(|other| other.parent != pcs.parent)
-                .for_each(|other| results.push(other));
+            results.extend(
+                self.predecessors
+                    .get(pcs.successor)
+                    .iter()
+                    .chain(self.successors.get(pcs.successor).iter())
+                    .filter(|other| other.parent != pcs.parent),
+            );
         }
         results.into_iter()
     }
