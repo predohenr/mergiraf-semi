@@ -110,7 +110,7 @@ impl<'a> ChangeSet<'a> {
                 .get(pcs.predecessor)
                 .iter()
                 .chain(self.successors.get(pcs.predecessor).iter())
-                .filter(move |other| other.parent != pcs.parent)
+                .filter(|other| other.parent != pcs.parent)
                 .for_each(|other| results.push(other));
         }
         if let PCSNode::Node { .. } = pcs.successor {
@@ -118,7 +118,7 @@ impl<'a> ChangeSet<'a> {
                 .get(pcs.successor)
                 .iter()
                 .chain(self.successors.get(pcs.successor).iter())
-                .filter(move |other| other.parent != pcs.parent)
+                .filter(|other| other.parent != pcs.parent)
                 .for_each(|other| results.push(other));
         }
         results.into_iter()
