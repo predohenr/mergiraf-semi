@@ -242,11 +242,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                             imitate_cr_lf_from_input(&original_conflict_contents, &merged.contents)
                         );
                     } else {
-                        write_string_to_file(
-                            &(fname_conflicts.clone() + ".orig"),
-                            &conflict_contents,
-                        )?;
                         write_string_to_file(&fname_conflicts, &merged.contents)?;
+                        write_string_to_file(&(fname_conflicts + ".orig"), &conflict_contents)?;
                     };
                     0
                 }
