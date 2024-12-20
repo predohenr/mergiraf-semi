@@ -55,7 +55,7 @@ pub(crate) fn line_based_merge(
         Ok(contents) | Err(contents) => contents,
     };
     let parsed_merge = ParsedMerge::parse(&merged_contents)
-        .expect("diffy returned a merge that we cannot parse the conflicts of");
+        .expect("imara-mergy returned a merge that we cannot parse the conflicts of");
     MergeResult {
         contents: parsed_merge.render(settings),
         conflict_count: parsed_merge.conflict_count(),
