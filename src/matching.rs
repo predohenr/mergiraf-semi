@@ -4,25 +4,16 @@ use std::collections::HashSet;
 use crate::tree::AstNode;
 
 /// A one-to-one relation between nodes of two trees.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Matching<'tree> {
     left_to_right: FxHashMap<&'tree AstNode<'tree>, &'tree AstNode<'tree>>,
     right_to_left: FxHashMap<&'tree AstNode<'tree>, &'tree AstNode<'tree>>,
 }
 
-impl<'tree> Default for Matching<'tree> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl<'tree> Matching<'tree> {
     /// Creates an empty matching.
     pub fn new() -> Matching<'tree> {
-        Matching {
-            left_to_right: FxHashMap::default(),
-            right_to_left: FxHashMap::default(),
-        }
+        Self::default()
     }
 
     /// Gets the matches associated with a node from the left hand tree
