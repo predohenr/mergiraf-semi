@@ -501,8 +501,7 @@ impl<'a> AstNode<'a> {
                         ]
                         .into_iter()
                         .flatten()
-                        .sorted_by_key(|indentation| indentation.len()) // try to find the minimal shift
-                        .next()
+                        .min_by_key(|indentation| indentation.len()) // try to find the minimal shift
                     })
             }
             None => Some(own_indentation),
