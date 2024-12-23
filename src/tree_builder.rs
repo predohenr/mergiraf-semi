@@ -1030,7 +1030,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_recover_exact_tree() {
+    fn recover_exact_tree() {
         let ctx = ctx();
         let lang_profile = LangProfile::detect_from_filename("test.json").unwrap();
 
@@ -1066,7 +1066,7 @@ mod tests {
     }
 
     #[test]
-    fn test_contains() {
+    fn contains() {
         let ctx = ctx();
         let lang_profile = LangProfile::detect_from_filename("test.json").unwrap();
 

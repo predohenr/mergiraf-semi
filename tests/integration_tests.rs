@@ -54,7 +54,7 @@ fn detect_extension(test_dir: &Path) -> String {
 #[rstest]
 #[case("merge")]
 #[case("diff3")]
-fn test_solve_command(#[case] conflict_style: &str) {
+fn solve_command(#[case] conflict_style: &str) {
     let test_dir = PathBuf::from("examples/java/working/demo");
     let extension = detect_extension(&test_dir);
 

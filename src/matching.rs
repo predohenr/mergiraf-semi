@@ -183,7 +183,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_retrieve_match() {
+    fn retrieve_match() {
         let ctx = ctx();
 
         let tree = ctx.parse_rust("fn t() { 3 }");
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn test_remove_previously_matched() {
+    fn remove_previously_matched() {
         let ctx = ctx();
 
         let tree1 = ctx.parse_json("[1, 2, 3]");
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[test]
-    fn test_dice() {
+    fn dice() {
         let ctx = ctx();
 
         let root = ctx.parse_rust("fn t() { 3 }").root();
