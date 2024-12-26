@@ -146,7 +146,7 @@ pub fn supported_languages() -> Vec<LangProfile> {
         },
         LangProfile {
             name: "Javascript",
-            extensions: vec![".js", ".jsx"],
+            extensions: vec![".js", ".jsx", ".mjs"],
             language: tree_sitter_javascript::LANGUAGE.into(),
             atomic_nodes: vec![],
             commutative_parents: vec![
