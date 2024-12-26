@@ -376,21 +376,27 @@ pub fn supported_languages() -> Vec<LangProfile> {
             // optional settings, explained below
             atomic_nodes: vec![],
             commutative_parents: vec![
-                // Use-statement ordering support, which (currently) requires all
-                // top-level children of `program` to be commutable, is purposefully
-                // being skipped (as PHP scripts allow top-level expression that
-                // cause side-effects).
-
+                // TODO: allow commutation between "use" and "require" statements, which is
+                // currently not possible as "require" statements appear as "expression_statement",
+                // which encompasses non-declarative statements too.
+                CommutativeParent::without_delimiters("program", "\n")
+                    .restricted_to_groups(&[&["namespace_use_declaration"]]),
                 CommutativeParent::new("declaration_list", "{", "\n\n", "}"),
                 CommutativeParent::new("enum_declaration_list", "{", "\n\n", "}"),
             ],
             signatures: vec![
                 signature("namespace_use_declaration", vec![vec![]]),
-                signature("const_declaration", vec![vec![ChildType("const_element"), ChildType("name")]]),
+                signature(
+                    "const_declaration",
+                    vec![vec![ChildType("const_element"), ChildType("name")]],
+                ),
                 signature("function_definition", vec![vec![Field("name")]]),
                 signature("interface_declaration", vec![vec![Field("name")]]),
                 signature("class_declaration", vec![vec![Field("name")]]),
-                signature("property_declaration", vec![vec![ChildType("property_element"), Field("name")]]),
+                signature(
+                    "property_declaration",
+                    vec![vec![ChildType("property_element"), Field("name")]],
+                ),
                 signature("property_promotion_parameter", vec![vec![Field("name")]]),
                 signature("method_declaration", vec![vec![Field("name")]]),
                 signature("enum_declaration", vec![vec![Field("name")]]),
@@ -400,4 +406,3 @@ pub fn supported_languages() -> Vec<LangProfile> {
         },
     ]
 }
-
