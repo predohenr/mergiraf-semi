@@ -77,9 +77,9 @@ enum CliCommand {
         #[clap(short = 'y', long)]
         // the choice of 'y' is inherited from Git's merge driver interface
         right_name: Option<String>,
-        /// Maximum number of milliseconds to try doing the merging for, after which we fall back on git's own algorithm.
-        #[clap(short, long)]
-        timeout: Option<u64>,
+        /// Maximum number of milliseconds to try doing the merging for, after which we fall back on git's own algorithm. Set to 0 to disable this limit.
+        #[clap(short, long, default_value_t = 10000)]
+        timeout: u64,
     },
     /// Solve the conflicts in a merged file
     Solve {
@@ -128,13 +128,13 @@ fn do_merge(
     right: &str,
     fast: bool,
     path_name: Option<String>,
-    timeout: Option<u64>,
+    timeout: u64,
     settings: &DisplaySettings,
     debug_dir: Option<&str>,
 ) -> Result<(i32, String), String> {
     let old_git_detected = settings.base_revision_name == "%S";
 
-    if let Some(timeout) = timeout {
+    if timeout > 0 {
         if env::var(TIMEOUT_DISABLING_ENV_VAR).as_deref() != Ok("1") {
             let current_exe = env::current_exe()
                 .map_err(|err| format!("could not get path to current executable: {err}"))?;
