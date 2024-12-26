@@ -177,14 +177,14 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             }
 
             if let Some(timeout) = timeout {
-                if env::var("mergiraf_ignore_timeout") != Ok("1".to_owned()) {
+                if env::var("mergiraf_ignore_timeout").as_deref() != Ok("1") {
                     let current_exe = env::current_exe().map_err(|err| {
                         format!("could not get path to current executable: {err}")
                     })?;
                     let timeout_duration = Duration::from_millis(timeout);
 
                     let mut child = Command::new(format!("{}", current_exe.display()))
-                        .args(env::args().into_iter().skip(1))
+                        .args(env::args().skip(1))
                         .env("mergiraf_ignore_timeout", "1")
                         .spawn()
                         .map_err(|err| {
