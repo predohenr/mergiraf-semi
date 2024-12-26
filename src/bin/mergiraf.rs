@@ -14,9 +14,13 @@ use mergiraf::{
     settings::{imitate_cr_lf_from_input, normalize_to_lf, DisplaySettings},
     supported_langs::supported_languages,
 };
+use tempfile::NamedTempFile;
 use wait_timeout::ChildExt;
 
-const DISABLING_ENV_VAR: &str = "MERGIRAF_DISABLE";
+const DISABLING_ENV_VAR_LEGACY: &str = "MERGIRAF_DISABLE";
+const DISABLING_ENV_VAR: &str = "mergiraf";
+const TIMEOUT_DISABLING_ENV_VAR: &str = "mergiraf_ignore_timeout";
+const TEMPORARY_OUTPUT_ENV_VAR: &str = "mergiraf_temp_output";
 
 /// Syntax-aware merge driver for Git.
 #[derive(Parser, Debug)]
@@ -118,6 +122,94 @@ fn main() {
     }
 }
 
+fn do_merge(
+    base: &str,
+    left: &str,
+    right: &str,
+    fast: bool,
+    path_name: Option<String>,
+    timeout: Option<u64>,
+    settings: &DisplaySettings,
+    debug_dir: Option<&str>,
+) -> Result<(i32, String), String> {
+    let old_git_detected = settings.base_revision_name == "%S";
+
+    if let Some(timeout) = timeout {
+        if env::var(TIMEOUT_DISABLING_ENV_VAR).as_deref() != Ok("1") {
+            let current_exe = env::current_exe()
+                .map_err(|err| format!("could not get path to current executable: {err}"))?;
+            let timeout_duration = Duration::from_millis(timeout);
+
+            let temp_file = NamedTempFile::new().map_err(|err| {
+                format!("could not create a temporary file to store Mergiraf's output: {err}")
+            })?;
+
+            let mut child = Command::new(format!("{}", current_exe.display()))
+                .args(env::args().skip(1))
+                .env(TIMEOUT_DISABLING_ENV_VAR, "1")
+                .env(
+                    TEMPORARY_OUTPUT_ENV_VAR,
+                    format!("{}", temp_file.path().display()),
+                )
+                .spawn()
+                .map_err(|err| {
+                    format!("could not spawn a subprocess to honour --timeout: {err}")
+                })?;
+
+            return match child
+                .wait_timeout(timeout_duration)
+                .map_err(|err| format!("error in the merge process: {err}"))?
+            {
+                Some(status) => {
+                    let temp_file_contents = fs::read_to_string(temp_file.path())
+                        .map_err(|err| format!("could not read temporary merge output: {err}"))?;
+                    Ok((status.code().unwrap_or(0), temp_file_contents))
+                }
+                None => {
+                    child
+                        .kill()
+                        .map_err(|err| format!("could not kill merging subprocess: {err}"))?;
+                    Err("structured merge took too long, falling back to Git".to_string())
+                }
+            };
+        }
+    }
+
+    let fname_base = &base;
+    let contents_base = normalize_to_lf(&read_file_to_string(fname_base)?);
+    let fname_left = &left;
+    let original_contents_left = read_file_to_string(fname_left)?;
+    let contents_left = normalize_to_lf(&original_contents_left);
+    let fname_right = &right;
+    let contents_right = normalize_to_lf(&read_file_to_string(fname_right)?);
+
+    let attempts_cache = AttemptsCache::new(None, None).ok();
+
+    let fname_base = path_name.as_deref().unwrap_or(fname_base);
+
+    let merge_result = line_merge_and_structured_resolution(
+        &contents_base,
+        &contents_left,
+        &contents_right,
+        fname_base,
+        &settings,
+        !fast,
+        attempts_cache.as_ref(),
+        debug_dir,
+    );
+
+    let merge_output = imitate_cr_lf_from_input(&original_contents_left, &merge_result.contents);
+
+    if merge_result.conflict_count > 0 {
+        if old_git_detected {
+            warn!("Using Git v2.44.0 or above is recommended to get meaningful revision names on conflict markers when using Mergiraf.");
+        }
+        Ok((1, merge_output))
+    } else {
+        Ok((0, merge_output))
+    }
+}
+
 fn real_main(args: CliArgs) -> Result<i32, String> {
     stderrlog::new()
         .module(module_path!())
@@ -144,8 +236,6 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             compact,
             timeout,
         } => {
-            let old_git_detected = base_name.as_deref().is_some_and(|n| n == "%S");
-
             let settings = DisplaySettings {
                 diff3: true,
                 compact,
@@ -168,90 +258,40 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             };
 
             {
-                let mergiraf_disabled = env::var("mergiraf").is_ok_and(|v| v == "0")
-                    || env::var(DISABLING_ENV_VAR).is_ok_and(|v| !v.is_empty()); // TODO: deprecate
+                let mergiraf_disabled = env::var(DISABLING_ENV_VAR).is_ok_and(|v| v == "0")
+                    || env::var(DISABLING_ENV_VAR_LEGACY).is_ok_and(|v| !v.is_empty()); // TODO: deprecate
 
                 if mergiraf_disabled {
                     return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
                 }
             }
 
-            if let Some(timeout) = timeout {
-                if env::var("mergiraf_ignore_timeout").as_deref() != Ok("1") {
-                    let current_exe = env::current_exe().map_err(|err| {
-                        format!("could not get path to current executable: {err}")
-                    })?;
-                    let timeout_duration = Duration::from_millis(timeout);
-
-                    let mut child = Command::new(format!("{}", current_exe.display()))
-                        .args(env::args().skip(1))
-                        .env("mergiraf_ignore_timeout", "1")
-                        .spawn()
-                        .map_err(|err| {
-                            format!("could not spawn a subprocess to honour --timeout: {err}")
-                        })?;
-
-                    let status_code = match child
-                        .wait_timeout(timeout_duration)
-                        .map_err(|err| format!("error in the merge process: {err}"))?
-                    {
-                        Some(status) => status.code(),
-                        None => {
-                            warn!("Mergiraf: structured merge took too long, falling back to Git");
-                            // TODO: here, we could be killing the subprocess while it is writing the merge results to the output file,
-                            // which is terrible.
-                            child.kill().map_err(|err| {
-                                format!("could not kill merging subprocess: {err}")
-                            })?;
-                            return fallback_to_git_merge_file(
-                                &base, &left, &right, git, &settings,
-                            );
-                        }
-                    };
-                    return Ok(status_code.unwrap_or(0));
-                }
-            }
-
-            let fname_base = &base;
-            let contents_base = normalize_to_lf(&read_file_to_string(fname_base)?);
-            let fname_left = &left;
-            let original_contents_left = read_file_to_string(fname_left)?;
-            let contents_left = normalize_to_lf(&original_contents_left);
-            let fname_right = &right;
-            let contents_right = normalize_to_lf(&read_file_to_string(fname_right)?);
-
-            let attempts_cache = AttemptsCache::new(None, None).ok();
-
-            let fname_base = path_name.as_deref().unwrap_or(fname_base);
-
-            let merge_result = line_merge_and_structured_resolution(
-                &contents_base,
-                &contents_left,
-                &contents_right,
-                fname_base,
+            match do_merge(
+                &base,
+                &left,
+                &right,
+                fast,
+                path_name,
+                timeout,
                 &settings,
-                !fast,
-                attempts_cache.as_ref(),
                 args.debug_dir.as_deref(),
-            );
-            if let Some(fname_out) = output {
-                write_string_to_file(&fname_out, &merge_result.contents)?
-            } else if git {
-                write_string_to_file(fname_left, &merge_result.contents)?
-            } else {
-                print!(
-                    "{}",
-                    imitate_cr_lf_from_input(&original_contents_left, &merge_result.contents)
-                );
-            }
-
-            if merge_result.conflict_count > 0 {
-                if old_git_detected {
-                    warn!("Using Git v2.44.0 or above is recommended to get meaningful revision names on conflict markers when using Mergiraf.");
+            ) {
+                Ok((return_code, merge_output)) => {
+                    if let Ok(temporary_merge_output_path) = env::var(TEMPORARY_OUTPUT_ENV_VAR) {
+                        write_string_to_file(&temporary_merge_output_path, &merge_output)?
+                    } else if let Some(fname_out) = output {
+                        write_string_to_file(&fname_out, &merge_output)?
+                    } else if git {
+                        write_string_to_file(&left, &merge_output)?
+                    } else {
+                        print!("{}", merge_output);
+                    };
+                    return_code
                 }
-                1
-            } else {
-                0
+                Err(err) => {
+                    log::error!("Mergiraf: {err}");
+                    return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
+                }
             }
         }
         CliCommand::Solve {
