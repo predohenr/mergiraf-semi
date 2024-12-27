@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-/// Returns the list of supported language profiles,
+/// The list of supported language profiles,
 /// which contain all the language-specific information required to merge files in that language.
 pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
     vec![
