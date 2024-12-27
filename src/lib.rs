@@ -382,7 +382,7 @@ pub fn cascading_merge(
                 &right_recovered_rev,
                 Some(&parsed_conflicts),
                 settings,
-                &lang_profile,
+                lang_profile,
                 debug_dir,
             );
 
@@ -408,7 +408,7 @@ pub fn cascading_merge(
                 contents_right,
                 None,
                 settings,
-                &lang_profile,
+                lang_profile,
                 debug_dir,
             );
             match structured_merge {
@@ -468,7 +468,7 @@ pub fn resolve_merge_cascading<'a>(
     let mut resolved_merge = None;
     let mut parsed_merge = None;
 
-    match resolve_merge(merge_contents, &mut settings, &lang_profile, debug_dir) {
+    match resolve_merge(merge_contents, &mut settings, lang_profile, debug_dir) {
         Ok((original_merge, merge_result)) => {
             parsed_merge = Some(original_merge);
             resolved_merge = Some(merge_result);
@@ -513,7 +513,7 @@ pub fn resolve_merge_cascading<'a>(
                     contents_right,
                     None,
                     &settings,
-                    &lang_profile,
+                    lang_profile,
                     debug_dir,
                 );
 

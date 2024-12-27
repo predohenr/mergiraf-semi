@@ -55,10 +55,10 @@ fn real_main() -> Result<i32, String> {
             );
 
             let ts_tree = parser.parse(&contents, None).ok_or("Parsing failed")?;
-            let tree = Ast::new(ts_tree, &contents, &lang_profile, &arena, &ref_arena)
+            let tree = Ast::new(ts_tree, &contents, lang_profile, &arena, &ref_arena)
                 .map_err(|err| format!("File has parse errors: {err}"))?;
 
-            print!("{}", tree.root().ascii_tree(&lang_profile));
+            print!("{}", tree.root().ascii_tree(lang_profile));
             Ok(0)
         }
     }
