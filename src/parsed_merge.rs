@@ -107,10 +107,7 @@ impl<'a> ParsedMerge<'a> {
                 let base_captures = base_marker
                     .captures(&remaining_source[local_offset..])
                     .ok_or_else(|| {
-                        if right_marker
-                            .find(&remaining_source[local_offset..])
-                            .is_some()
-                        {
+                        if right_marker.is_match(&remaining_source[local_offset..]) {
                             PARSED_MERGE_DIFF2_DETECTED
                         } else {
                             "unexpected end of file before base conflict marker"
