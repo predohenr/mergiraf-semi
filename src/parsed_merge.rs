@@ -95,7 +95,7 @@ impl<'a> ParsedMerge<'a> {
             if resolved_end > 0 {
                 chunks.push(MergedChunk::Resolved {
                     offset,
-                    contents: remaining_source[..resolved_end].into(),
+                    contents: &remaining_source[..resolved_end],
                 });
             }
             offset += resolved_end;
