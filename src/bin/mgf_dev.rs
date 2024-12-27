@@ -41,7 +41,7 @@ fn real_main() -> Result<i32, String> {
         Command::Parse { path } => {
             let arena = Arena::new();
             let ref_arena = Arena::new();
-            let lang_profile: LangProfile = LangProfile::detect_from_filename(&path)
+            let lang_profile = LangProfile::detect_from_filename(&path)
                 .ok_or_else(|| format!("Could not detect a supported language for {path}"))?;
 
             let mut parser = TSParser::new();

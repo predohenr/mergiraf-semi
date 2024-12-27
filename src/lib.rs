@@ -354,7 +354,7 @@ pub fn cascading_merge(
         contents_left,
         contents_right,
         settings,
-        lang_profile.as_ref(),
+        lang_profile,
     );
     debug!("line-based merge took {:?}", start.elapsed());
     if line_based_merge.conflict_count == 0 && !line_based_merge.has_additional_issues {

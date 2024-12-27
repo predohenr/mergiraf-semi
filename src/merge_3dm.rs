@@ -229,14 +229,14 @@ mod tests {
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: true,
-            lang_profile: Cow::Owned(lang_profile.clone()),
+            lang_profile: Cow::Borrowed(lang_profile),
         };
         let auxiliary_matcher = TreeMatcher {
             min_height: 1,
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: false,
-            lang_profile: Cow::Owned(lang_profile),
+            lang_profile: Cow::Borrowed(lang_profile),
         };
         (primary_matcher, auxiliary_matcher)
     }
