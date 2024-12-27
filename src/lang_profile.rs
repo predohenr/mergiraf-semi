@@ -35,8 +35,7 @@ impl LangProfile {
     pub fn detect_from_filename(filename: &str) -> Option<&LangProfile> {
         // TODO make something more advanced like in difftastic
         // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
-        let supported = &SUPPORTED_LANGUAGES;
-        supported.iter().find(|lang_profile| {
+        SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
             lang_profile
                 .extensions
                 .iter()
