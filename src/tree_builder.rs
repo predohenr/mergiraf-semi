@@ -718,13 +718,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             (&left, Revision::Left),
             (&right, Revision::Right),
         ]
-        .iter()
+        .into_iter()
         .find_map(|(nodes, revision)| {
             nodes.iter().next().and_then(|first| {
                 if first.source.trim() == trimmed_left_delim {
                     Some(
                         self.class_mapping
-                            .map_to_leader(RevNode::new(*revision, first)),
+                            .map_to_leader(RevNode::new(revision, first)),
                     )
                 } else {
                     None
@@ -736,13 +736,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             (&left, Revision::Left),
             (&right, Revision::Right),
         ]
-        .iter()
+        .into_iter()
         .find_map(|(nodes, revision)| {
             nodes.iter().last().and_then(|last| {
                 if last.source.trim() == trimmed_right_delim {
                     Some(
                         self.class_mapping
-                            .map_to_leader(RevNode::new(*revision, last)),
+                            .map_to_leader(RevNode::new(revision, last)),
                     )
                 } else {
                     None
@@ -764,10 +764,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         });
 
         let separator = MergedTree::CommutativeChildSeparator {
-            separator: (Self::find_separators_with_whitespace(left, trimmed_sep).iter())
-                .chain(Self::find_separators_with_whitespace(right, trimmed_sep).iter())
-                .chain(Self::find_separators_with_whitespace(base, trimmed_sep).iter())
-                .copied()
+            separator: (Self::find_separators_with_whitespace(left, trimmed_sep).into_iter())
+                .chain(Self::find_separators_with_whitespace(right, trimmed_sep))
+                .chain(Self::find_separators_with_whitespace(base, trimmed_sep))
                 // remove the indentation at the end of separators
                 // (it will be added back when pretty-printing, possibly at a different level)
                 .map(|separator| {
