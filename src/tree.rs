@@ -66,7 +66,7 @@ impl<'a> Ast<'a> {
     /// Create a new tree from a `tree_sitter` tree, the source code it was generated from,
     /// and an arena to allocate the nodes from.
     pub fn new(
-        tree: Tree,
+        tree: &Tree,
         source: &'a str,
         lang_profile: &LangProfile,
         arena: &'a Arena<AstNode<'a>>,

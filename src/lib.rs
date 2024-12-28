@@ -76,7 +76,7 @@ pub(crate) fn parse<'a>(
     let tree = parser
         .parse(contents, None)
         .expect("Parsing example source code failed");
-    Ast::new(tree, contents, lang_profile, arena, ref_arena)
+    Ast::new(&tree, contents, lang_profile, arena, ref_arena)
 }
 
 /// Performs a fully structured merge, parsing the contents of all three revisions,
