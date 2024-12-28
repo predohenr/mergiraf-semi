@@ -640,8 +640,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .collect();
 
         // check that all the nodes involved are allowed to commute in this context
-        let child_types: HashSet<&str> = base_leaders
-            .iter()
+        let child_types: HashSet<&str> = (base_leaders.iter())
             .chain(left_leaders.iter())
             .chain(right_leaders.iter())
             .map(Leader::grammar_name)
@@ -765,8 +764,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         });
 
         let separator = MergedTree::CommutativeChildSeparator {
-            separator: Self::find_separators_with_whitespace(left, trimmed_sep)
-                .iter()
+            separator: (Self::find_separators_with_whitespace(left, trimmed_sep).iter())
                 .chain(Self::find_separators_with_whitespace(right, trimmed_sep).iter())
                 .chain(Self::find_separators_with_whitespace(base, trimmed_sep).iter())
                 .copied()
