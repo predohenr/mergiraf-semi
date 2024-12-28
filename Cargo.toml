@@ -65,3 +65,4 @@ debug = false
 semicolon_if_nothing_returned = "warn"
 uninlined_format_args = "warn"
 needless_pass_by_value = "warn"
+trivially_copy_pass_by_ref = "warn"
