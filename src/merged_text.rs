@@ -155,7 +155,7 @@ impl<'a> MergedText<'a> {
                                     &mut output,
                                 );
                                 output.push_str(&contents[(newline_idx + 1)..]);
-                                gathering_conflict = false
+                                gathering_conflict = false;
                             }
                             None => {
                                 left_buffer.push_str(contents);

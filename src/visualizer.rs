@@ -177,6 +177,6 @@ mod tests {
 
         let contents =
             fs::read_to_string(&target_path).expect("Could not read the generated graph.dot file");
-        assert!(contents.contains("subgraph ")) // yes, not a very great assertion… but node ids are all unstable!
+        assert!(contents.contains("subgraph ")); // yes, not a very great assertion… but node ids are all unstable!
     }
 }

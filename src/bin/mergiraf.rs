@@ -188,9 +188,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 args.debug_dir.as_deref(),
             );
             if let Some(fname_out) = output {
-                write_string_to_file(&fname_out, &merge_result.contents)?
+                write_string_to_file(&fname_out, &merge_result.contents)?;
             } else if git {
-                write_string_to_file(fname_left, &merge_result.contents)?
+                write_string_to_file(fname_left, &merge_result.contents)?;
             } else {
                 print!(
                     "{}",

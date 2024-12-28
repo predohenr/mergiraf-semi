@@ -170,7 +170,7 @@ impl<'a> AstNode<'a> {
                     parent: UnsafeCell::new(None),
                     dfs: UnsafeCell::new(None),
                 }));
-                offset += line.len() + 1
+                offset += line.len() + 1;
             }
         }
 
@@ -347,7 +347,7 @@ impl<'a> AstNode<'a> {
 
     fn internal_s_expr(&self, output: &mut String) {
         if self.is_leaf() {
-            output.push_str(self.source)
+            output.push_str(self.source);
         } else {
             output.push_str(self.grammar_name);
             output.push('(');
@@ -358,7 +358,7 @@ impl<'a> AstNode<'a> {
                 } else {
                     output.push(' ');
                 }
-                child.internal_s_expr(output)
+                child.internal_s_expr(output);
             }
             output.push(')');
         }
@@ -373,7 +373,7 @@ impl<'a> AstNode<'a> {
             if sibling.id == self.id {
                 return previous;
             }
-            previous = Some(sibling)
+            previous = Some(sibling);
         }
         None
     }
@@ -627,7 +627,7 @@ impl<'a> AstNode<'a> {
                     index == num_children - 1,
                     lang_profile,
                     next_parent,
-                ))
+                ));
             }
         }
         result
@@ -874,7 +874,7 @@ mod tests {
                 "number",
                 "}"
             ]
-        )
+        );
     }
 
     #[test]
@@ -899,7 +899,7 @@ mod tests {
                 "object",
                 "document"
             ]
-        )
+        );
     }
 
     #[test]

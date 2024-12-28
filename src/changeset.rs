@@ -155,9 +155,9 @@ impl<'a> ChangeSet<'a> {
     pub fn save(&self, fname: impl AsRef<Path>) {
         let mut result = String::new();
         for pcs in self.iter().sorted().map(|pcs| format!("{pcs}\n")) {
-            result.push_str(&pcs)
+            result.push_str(&pcs);
         }
-        fs::write(fname, result).expect("Unable to write changeset file")
+        fs::write(fname, result).expect("Unable to write changeset file");
     }
 }
 
@@ -213,7 +213,7 @@ mod tests {
             "(]:10…11@Base, ⊣, ⊢)",
         ];
 
-        assert_eq!(as_strings, expected)
+        assert_eq!(as_strings, expected);
     }
 
     #[test]
