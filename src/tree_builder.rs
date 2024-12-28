@@ -620,7 +620,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 trimmed_right_delim,
             )
             .collect();
-        let left_leaders: Vec<_> = self
+        let left_leaders: HashSet<_> = self
             .keep_content_only(
                 left,
                 Revision::Left,
@@ -629,7 +629,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 trimmed_right_delim,
             )
             .collect();
-        let right_leaders: Vec<_> = self
+        let right_leaders: HashSet<_> = self
             .keep_content_only(
                 right,
                 Revision::Right,
@@ -651,10 +651,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         }
 
         // then, compute the symmetric difference between the base and right lists
-        let right_removed = base_leaders
-            .iter()
-            .filter(|x| !right_leaders.contains(x))
-            .collect::<HashSet<&Leader>>();
+        let right_removed: HashSet<_> = base_leaders.difference(&right_leaders).collect();
         debug!("{pad}right_removed: {}", right_removed.iter().join(", "));
         // check which right removed elements have been modified on the left-hand side,
         // in which case they should be kept
@@ -673,7 +670,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             })
             .collect::<Result<_, String>>()?;
         let right_removed_and_not_modified: HashSet<_> = right_removed_content
-            .iter()
+            .into_iter()
             .filter(|(_, result_tree)| match result_tree {
                 MergedTree::ExactTree { revisions, .. } => revisions.contains(Revision::Base),
                 _ => false,
@@ -681,10 +678,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|(revnode, _)| revnode)
             .collect();
 
-        let left_added: HashSet<_> = left_leaders
-            .iter()
-            .filter(|x| !base_leaders.contains(x))
-            .collect();
+        let left_added: HashSet<_> = left_leaders.difference(&base_leaders).collect();
         debug!("{pad}left_added: {}", left_added.iter().join(", "));
         let right_added: Vec<_> = right_leaders
             .iter()
@@ -694,8 +688,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
         // apply this symmetric difference to the left list
         let merged: Vec<_> = left_leaders
-            .iter()
-            .filter(|n| !right_removed_and_not_modified.contains(n))
+            .difference(&right_removed_and_not_modified)
             .chain(right_added)
             .collect();
 
