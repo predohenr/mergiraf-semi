@@ -60,3 +60,6 @@ panic = "abort"
 strip = true
 lto = true
 debug = false
+
+[lints.clippy]
+uninlined_format_args = "warn"

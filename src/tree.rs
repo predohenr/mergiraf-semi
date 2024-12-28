@@ -543,7 +543,7 @@ impl<'a> AstNode<'a> {
         match self.preceding_indentation().or(self.ancestor_indentation()) {
             Some(indentation) => {
                 // TODO FIXME this is invalid for multiline string literals!
-                Cow::from(self.source.replace(&format!("\n{}", indentation), "\n"))
+                Cow::from(self.source.replace(&format!("\n{indentation}"), "\n"))
             }
             None => Cow::from(self.source),
         }
@@ -552,12 +552,12 @@ impl<'a> AstNode<'a> {
     /// The source of this node, stripped from any indentation inherited by the node or its ancestors
     /// and shifted back to the desired indentation.
     pub fn reindented_source(&'a self, new_indentation: &str) -> String {
-        let new_newlines = format!("\n{}", new_indentation);
+        let new_newlines = format!("\n{new_indentation}");
         let indentation = (self.preceding_indentation())
             .or(self.ancestor_indentation())
             .unwrap_or("");
         self.source
-            .replace(&format!("\n{}", indentation), &new_newlines) // TODO FIXME this is invalid for multiline string literals!
+            .replace(&format!("\n{indentation}"), &new_newlines) // TODO FIXME this is invalid for multiline string literals!
     }
 
     /// Source of the node, including any whitespace before and after,
@@ -597,7 +597,7 @@ impl<'a> AstNode<'a> {
             "{prefix}{}{}\x1b[0m{}{}\n",
             if last_child { "└" } else { "├" },
             if let Some(key) = self.field_name {
-                format!("{}: ", key)
+                format!("{key}: ")
             } else {
                 "".to_owned()
             },
@@ -614,7 +614,7 @@ impl<'a> AstNode<'a> {
                 parent,
                 lang_profile.extract_signature_from_original_node(self)
             ) {
-                format!(" \x1b[0;96m{}\x1b[0m", sig)
+                format!(" \x1b[0;96m{sig}\x1b[0m")
             } else {
                 "".to_owned()
             }
