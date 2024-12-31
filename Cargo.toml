@@ -62,11 +62,11 @@ lto = true
 debug = false
 
 [lints.clippy]
-semicolon_if_nothing_returned = "warn"
-uninlined_format_args = "warn"
+explicit_into_iter_loop = "warn"
+explicit_iter_loop = "warn"
 needless_pass_by_value = "warn"
-trivially_copy_pass_by_ref = "warn"
+semicolon_if_nothing_returned = "warn"
 single_char_pattern = "warn"
 single_match_else = "warn"
-explicit_iter_loop = "warn"
-explicit_into_iter_loop = "warn"
+trivially_copy_pass_by_ref = "warn"
+uninlined_format_args = "warn"
