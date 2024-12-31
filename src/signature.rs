@@ -230,8 +230,9 @@ impl<'a, 'b> Hash for AstNodeEquiv<'a, 'b> {
         match self {
             AstNodeEquiv::Original(ast_node) => ast_node.hash.hash(state),
             AstNodeEquiv::Merged(tree) => match tree {
-                MergedTree::ExactTree { hash, .. } => hash.hash(state),
-                MergedTree::MixedTree { hash, .. } => hash.hash(state),
+                MergedTree::ExactTree { hash, .. } | MergedTree::MixedTree { hash, .. } => {
+                    hash.hash(state);
+                }
                 MergedTree::Conflict { base, left, right } => {
                     base.hash(state);
                     left.hash(state);

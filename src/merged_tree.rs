@@ -552,13 +552,12 @@ impl<'a> MergedTree<'a> {
     /// The number of conflicts in this merge
     pub fn count_conflicts(&self) -> usize {
         match self {
-            MergedTree::ExactTree { .. } => 0,
+            MergedTree::ExactTree { .. } | MergedTree::CommutativeChildSeparator { .. } => 0,
             MergedTree::MixedTree { children, .. } => {
                 children.iter().map(MergedTree::count_conflicts).sum()
             }
             MergedTree::Conflict { .. } => 1,
             MergedTree::LineBasedMerge { contents, .. } => contents.matches(">>>>>>>").count(),
-            MergedTree::CommutativeChildSeparator { .. } => 0,
         }
     }
 
@@ -566,7 +565,7 @@ impl<'a> MergedTree<'a> {
     /// required to solve them.
     pub fn conflict_mass(&self) -> usize {
         match self {
-            MergedTree::ExactTree { .. } => 0,
+            MergedTree::ExactTree { .. } | MergedTree::CommutativeChildSeparator { .. } => 0,
             MergedTree::MixedTree { children, .. } => {
                 children.iter().map(MergedTree::conflict_mass).sum()
             }
@@ -576,7 +575,6 @@ impl<'a> MergedTree<'a> {
                     + Self::pretty_print_astnode_list(Revision::Right, right).len()
             }
             MergedTree::LineBasedMerge { conflict_mass, .. } => *conflict_mass,
-            MergedTree::CommutativeChildSeparator { .. } => 0,
         }
     }
 
