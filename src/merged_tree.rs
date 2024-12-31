@@ -277,7 +277,7 @@ impl<'a> MergedTree<'a> {
         &'u self,
         output: &mut MergedText<'a>,
         class_mapping: &ClassMapping<'a>,
-        previous_sibling: Option<PreviousSibling<'a>>,
+        previous_sibling: Option<&PreviousSibling<'a>>,
         indentation: &str,
     ) {
         match self {
@@ -314,7 +314,7 @@ impl<'a> MergedTree<'a> {
                     c.pretty_print_recursively(
                         output,
                         class_mapping,
-                        previous_sibling,
+                        previous_sibling.as_ref(),
                         &new_indentation,
                     );
                     previous_sibling = match c {
