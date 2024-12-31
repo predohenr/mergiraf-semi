@@ -195,9 +195,9 @@ impl<'a> MergedTree<'a> {
                         .children_at_revision(node, picked_revision)
                         .expect("non-existent children for revision in revset of ExactTree");
                     let cloned_children: Vec<MergedTree<'a>> = children
-                        .iter()
+                        .into_iter()
                         .map(|c| {
-                            MergedTree::new_exact(*c, revisions, class_mapping)
+                            MergedTree::new_exact(c, revisions, class_mapping)
                                 .force_line_based_fallback_on_specific_nodes(nodes, class_mapping)
                         })
                         .collect();
@@ -343,9 +343,9 @@ impl<'a> MergedTree<'a> {
                     (right.first(), Revision::Right),
                     (base.first(), Revision::Base),
                 ]
-                .iter()
+                .into_iter()
                 .find_map(|(maybe_node, rev)| {
-                    maybe_node.map(|node| class_mapping.map_to_leader(RevNode::new(*rev, node)))
+                    maybe_node.map(|node| class_mapping.map_to_leader(RevNode::new(rev, node)))
                 })
                 .expect("The conflict should contain at least one node");
                 Self::add_preceding_whitespace(
