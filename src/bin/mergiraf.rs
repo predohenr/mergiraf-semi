@@ -277,7 +277,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             0
         }
         CliCommand::Report { merge_id_or_file } => {
-            report_bug(merge_id_or_file)?;
+            report_bug(&merge_id_or_file)?;
             0
         }
     };
