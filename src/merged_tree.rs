@@ -393,7 +393,7 @@ impl<'a> MergedTree<'a> {
     fn add_preceding_whitespace<'b>(
         output: &mut MergedText<'a>,
         rev_node: Leader<'a>,
-        previous_sibling: Option<PreviousSibling<'a>>,
+        previous_sibling: Option<&PreviousSibling<'a>>,
         indentation: &'b str,
         class_mapping: &ClassMapping<'a>,
     ) -> Cow<'b, str> {
@@ -404,7 +404,7 @@ impl<'a> MergedTree<'a> {
             representatives
         };
         match previous_sibling {
-            Some(PreviousSibling::RealNode(previous_node)) => {
+            Some(&PreviousSibling::RealNode(previous_node)) => {
                 let revisions = class_mapping.revision_set(previous_node);
                 let common_revisions =
                     revisions.intersection(class_mapping.revision_set(rev_node).set());
