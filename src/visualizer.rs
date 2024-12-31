@@ -142,7 +142,7 @@ fn add_node(
         attrs.iter().map(|(k, v)| format!("{k}=\"{v}\"")).join(",")
     )?;
     if !is_exact_match {
-        for child in node.children.iter() {
+        for child in &node.children {
             let child_id = add_node(child, writer, prefix, matched, exactly_matched, visited)?;
             writeln!(writer, "    {nodeid} -- {child_id}")?;
         }

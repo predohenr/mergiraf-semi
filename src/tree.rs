@@ -147,7 +147,7 @@ impl<'a> AstNode<'a> {
         // if this is a leaf that spans multiple lines, create one child per line,
         // to ease matching and diffing (typically, for multi-line comments)
         if children.is_empty() && local_source.contains('\n') {
-            let lines = local_source.split("\n");
+            let lines = local_source.split('\n');
             let mut offset = range.start;
             for line in lines {
                 let trimmed = line.trim_start();
@@ -212,7 +212,7 @@ impl<'a> AstNode<'a> {
     }
 
     fn internal_set_parent_on_children(&'a self) {
-        for child in self.children.iter() {
+        for child in &self.children {
             unsafe { *child.parent.get() = Some(self) }
         }
     }
@@ -352,7 +352,7 @@ impl<'a> AstNode<'a> {
             output.push_str(self.grammar_name);
             output.push('(');
             let mut first = true;
-            for child in self.children.iter() {
+            for child in &self.children {
                 if first {
                     first = false;
                 } else {
@@ -369,7 +369,7 @@ impl<'a> AstNode<'a> {
     pub fn predecessor(&'a self) -> Option<&'a AstNode<'a>> {
         let parent = self.parent()?;
         let mut previous = None;
-        for sibling in parent.children.iter() {
+        for sibling in &parent.children {
             if sibling.id == self.id {
                 return previous;
             }
@@ -452,7 +452,7 @@ impl<'a> AstNode<'a> {
     /// This is None if the preceding whitespace does not contain any newline.
     pub fn preceding_indentation(&'a self) -> Option<&'a str> {
         let whitespace = self.preceding_whitespace()?;
-        let last_newline = whitespace.rfind("\n")?;
+        let last_newline = whitespace.rfind('\n')?;
         Some(&whitespace[(last_newline + 1)..])
     }
 
@@ -514,8 +514,8 @@ impl<'a> AstNode<'a> {
         tab_width: usize,
     ) -> Option<&'b str> {
         let tab_spaces = " ".repeat(tab_width);
-        let own_spaces = own_indentation.replace("\t", &tab_spaces);
-        let suffix = own_spaces.strip_prefix(&ancestor_indentation.replace("\t", &tab_spaces))?;
+        let own_spaces = own_indentation.replace('\t', &tab_spaces);
+        let suffix = own_spaces.strip_prefix(&ancestor_indentation.replace('\t', &tab_spaces))?;
         // convert back the suffix of the normalized strings to a suffix of the original string
         let mut idx = own_indentation.len();
         let mut remaining_spaces = suffix.len();
@@ -607,7 +607,7 @@ impl<'a> AstNode<'a> {
                 format!("\x1b[0;31m{}\x1b[0m", self.grammar_name)
             },
             if num_children == 0 && self.source != self.grammar_name {
-                format!(" \x1b[0;31m{}\x1b[0m", self.source.replace("\n", "\\n"))
+                format!(" \x1b[0;31m{}\x1b[0m", self.source.replace('\n', "\\n"))
             } else if next_parent.is_some() {
                 " \x1b[0;95mCommutative\x1b[0m".to_string()
             } else if let (Some(_), Some(sig)) = (
