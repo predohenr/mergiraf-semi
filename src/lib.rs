@@ -147,7 +147,7 @@ pub fn structured_merge(
         &tree_base,
         &tree_left,
         &tree_right,
-        initial_matchings,
+        initial_matchings.as_ref(),
         &primary_matcher,
         &auxiliary_matcher,
         debug_dir,
