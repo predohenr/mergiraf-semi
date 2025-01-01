@@ -250,7 +250,7 @@ impl Hash for AstNodeEquiv<'_, '_> {
     }
 }
 
-impl<'a, 'b> Display for AstNodeEquiv<'a, 'b> {
+impl Display for AstNodeEquiv<'_, '_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AstNodeEquiv::Original(ast_node) => write!(f, "Original({ast_node})"),

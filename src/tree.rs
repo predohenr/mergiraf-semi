@@ -637,7 +637,7 @@ impl<'a> AstNode<'a> {
 /// We pre-compute hash values for all nodes,
 /// so we make sure those are used instead of recursively walking the tree
 /// each time a hash is computed.
-impl<'a> Hash for AstNode<'a> {
+impl Hash for AstNode<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.hash.hash(state);
         self.id.hash(state);

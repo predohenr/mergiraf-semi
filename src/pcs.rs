@@ -47,7 +47,7 @@ pub struct PCS<'a> {
     pub revision: Revision,
 }
 
-impl<'a> PartialEq for PCS<'a> {
+impl PartialEq for PCS<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.parent == other.parent
             && self.predecessor == other.predecessor
