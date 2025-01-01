@@ -646,7 +646,7 @@ impl<'a> Hash for AstNode<'a> {
     }
 }
 
-impl<'a> PartialEq for AstNode<'a> {
+impl PartialEq for AstNode<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.hash == other.hash
             && self.id == other.id
@@ -655,16 +655,16 @@ impl<'a> PartialEq for AstNode<'a> {
     }
 }
 
-impl<'a> Eq for AstNode<'a> {}
+impl Eq for AstNode<'_> {}
 
 // AstNode fails to be Sync by default because it contains
 // an UnsafeCell. But this cell is only mutated during initialization and only
 // ever refers to something that lives as long as the node itself (thanks to the
 // use of arenas) so it's fine to share it across threads.
-unsafe impl<'a> Sync for AstNode<'a> {}
-unsafe impl<'a> Send for AstNode<'a> {}
+unsafe impl Sync for AstNode<'_> {}
+unsafe impl Send for AstNode<'_> {}
 
-impl<'a> Display for AstNode<'a> {
+impl Display for AstNode<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
