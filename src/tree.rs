@@ -539,7 +539,7 @@ impl<'a> AstNode<'a> {
     }
 
     /// The source of this node, stripped from any indentation inherited by the node or its ancestors
-    pub fn unindented_source(&'a self) -> Cow<str> {
+    pub fn unindented_source(&'a self) -> Cow<'a, str> {
         match self.preceding_indentation().or(self.ancestor_indentation()) {
             Some(indentation) => {
                 // TODO FIXME this is invalid for multiline string literals!
