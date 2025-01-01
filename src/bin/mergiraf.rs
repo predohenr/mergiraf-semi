@@ -232,7 +232,6 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 &working_dir,
             );
             match postprocessed {
-                Ok(merged) if merged.method == "original" => 1,
                 Ok(merged) => {
                     if keep {
                         print!(

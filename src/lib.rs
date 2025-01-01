@@ -465,11 +465,9 @@ pub fn resolve_merge_cascading<'a>(
         .ok_or_else(|| format!("Could not find a supported language for {fname_base}"))?;
 
     let mut resolved_merge = None;
-    let mut parsed_merge = None;
 
     match resolve_merge(merge_contents, &mut settings, lang_profile, debug_dir) {
-        Ok((original_merge, merge_result)) => {
-            parsed_merge = Some(original_merge);
+        Ok((_original_merge, merge_result)) => {
             resolved_merge = Some(merge_result);
         }
         Err(err) => {
@@ -493,9 +491,6 @@ pub fn resolve_merge_cascading<'a>(
             let mut merges = Vec::new();
             if let Some(merge) = resolved_merge {
                 merges.push(merge);
-            }
-            if let Some(parsed_merge) = parsed_merge {
-                merges.push(parsed_merge.to_merge_result(&settings));
             }
 
             let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
