@@ -141,7 +141,7 @@ impl<'a> MergedTree<'a> {
         let right_src = class_mapping.node_at_rev(node, Revision::Right);
         match (base_src, left_src, right_src) {
             (None, None, None) => {
-                panic!("A node that does not belong to any revision, how curious!")
+                unreachable!("A node that does not belong to any revision, how curious!")
             }
             (_, Some(_), None) => MergedTree::new_exact(
                 node,
