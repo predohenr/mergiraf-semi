@@ -464,8 +464,6 @@ pub fn resolve_merge_cascading<'a>(
     let lang_profile = LangProfile::detect_from_filename(fname_base)
         .ok_or_else(|| format!("Could not find a supported language for {fname_base}"))?;
 
-    let mut resolved_merge = None;
-
     match ParsedMerge::parse(merge_contents) {
         Err(err) => {
             if err == PARSED_MERGE_DIFF2_DETECTED {
@@ -480,8 +478,12 @@ pub fn resolve_merge_cascading<'a>(
             settings.add_revision_names(&parsed_merge);
 
             match resolve_merge(&parsed_merge, &settings, lang_profile, debug_dir) {
-                Ok(merge_result) => {
-                    resolved_merge = Some(merge_result);
+                Ok(merge) => {
+                    if merge.conflict_count == 0 {
+                        info!("Solved all conflicts.");
+                        return Ok(merge);
+                    }
+                    merges.push(merge);
                 }
                 Err(err) => warn!("{err}"),
             }
@@ -499,59 +501,47 @@ pub fn resolve_merge_cascading<'a>(
         }
     }
 
-    match resolved_merge {
-        Some(merge) if merge.conflict_count == 0 => {
-            info!("Solved all conflicts.");
-            Ok(merge)
+    // if we didn't manage to solve all conflicts, try again by extracting the original revisions from Git
+    let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
+    let revision_left = extract_revision(working_dir, fname_base, Revision::Left);
+    let revision_right = extract_revision(working_dir, fname_base, Revision::Right);
+
+    // we only attempt a full structured merge if we could extract revisions from Git
+    match (revision_base, revision_left, revision_right) {
+        (Ok(contents_base), Ok(contents_left), Ok(contents_right)) => {
+            let structured_merge = structured_merge(
+                &contents_base,
+                &contents_left,
+                &contents_right,
+                None,
+                &settings,
+                lang_profile,
+                debug_dir,
+            );
+
+            match structured_merge {
+                Ok(merge) => merges.push(merge),
+                Err(err) => warn!("Full structured merge failed: {err}"),
+            };
         }
-        _ => {
-            // if we didn't manage to solve all conflicts, try again by extracting the original revisions from Git
-            if let Some(merge) = resolved_merge {
-                merges.push(merge);
+        (rev_base, _, _) => {
+            if let Err(b) = rev_base {
+                println!("{b}");
             }
-
-            let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
-            let revision_left = extract_revision(working_dir, fname_base, Revision::Left);
-            let revision_right = extract_revision(working_dir, fname_base, Revision::Right);
-
-            // we only attempt a full structured merge if we could extract revisions from Git
-            match (revision_base, revision_left, revision_right) {
-                (Ok(contents_base), Ok(contents_left), Ok(contents_right)) => {
-                    let structured_merge = structured_merge(
-                        &contents_base,
-                        &contents_left,
-                        &contents_right,
-                        None,
-                        &settings,
-                        lang_profile,
-                        debug_dir,
-                    );
-
-                    match structured_merge {
-                        Ok(merge) => merges.push(merge),
-                        Err(err) => warn!("Full structured merge failed: {err}"),
-                    };
-                }
-                (rev_base, _, _) => {
-                    if let Err(b) = rev_base {
-                        println!("{b}");
-                    }
-                    warn!("Could not retrieve conflict sides from Git.");
-                }
-            }
-
-            if merges.is_empty() {
-                return Err("Could not generate any merge".to_string());
-            }
-            let best_merge = select_best_merge(merges);
-
-            match best_merge.conflict_count {
-                0 => info!("Solved all conflicts."),
-                n => info!("{n} conflict(s) remaining."),
-            }
-            Ok(best_merge)
+            warn!("Could not retrieve conflict sides from Git.");
         }
     }
+
+    if merges.is_empty() {
+        return Err("Could not generate any merge".to_string());
+    }
+    let best_merge = select_best_merge(merges);
+
+    match best_merge.conflict_count {
+        0 => info!("Solved all conflicts."),
+        n => info!("{n} conflict(s) remaining."),
+    }
+    Ok(best_merge)
 }
 
 fn extract_revision(working_dir: &Path, path: &str, revision: Revision) -> Result<String, String> {
