@@ -451,6 +451,50 @@ fn resolve_merge<'a>(
     Ok(merge)
 }
 
+/// Extracts the original revisions of the file from Git and performs a fully structured merge (see
+/// [`structured_merge`])
+///
+/// Returns either a merge or nothing if couldn't extract the revisions.
+fn structured_merge_from_git_revisions(
+    fname_base: &str,
+    settings: &DisplaySettings,
+    debug_dir: Option<&str>,
+    working_dir: &Path,
+    lang_profile: &LangProfile,
+) -> Option<MergeResult> {
+    let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
+    let revision_left = extract_revision(working_dir, fname_base, Revision::Left);
+    let revision_right = extract_revision(working_dir, fname_base, Revision::Right);
+
+    // we only attempt a full structured merge if we could extract revisions from Git
+    match (revision_base, revision_left, revision_right) {
+        (Ok(contents_base), Ok(contents_left), Ok(contents_right)) => {
+            let structured_merge = structured_merge(
+                &contents_base,
+                &contents_left,
+                &contents_right,
+                None,
+                settings,
+                lang_profile,
+                debug_dir,
+            );
+
+            match structured_merge {
+                Ok(merge) => return Some(merge),
+                Err(err) => warn!("Full structured merge failed: {err}"),
+            };
+        }
+        (rev_base, _, _) => {
+            if let Err(b) = rev_base {
+                println!("{b}");
+            }
+            warn!("Could not retrieve conflict sides from Git.");
+        }
+    }
+
+    None
+}
+
 /// Cascading merge resolution starting from a user-supplied file with merge conflicts
 pub fn resolve_merge_cascading<'a>(
     merge_contents: &'a str,
@@ -502,34 +546,14 @@ pub fn resolve_merge_cascading<'a>(
     }
 
     // if we didn't manage to solve all conflicts, try again by extracting the original revisions from Git
-    let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
-    let revision_left = extract_revision(working_dir, fname_base, Revision::Left);
-    let revision_right = extract_revision(working_dir, fname_base, Revision::Right);
-
-    // we only attempt a full structured merge if we could extract revisions from Git
-    match (revision_base, revision_left, revision_right) {
-        (Ok(contents_base), Ok(contents_left), Ok(contents_right)) => {
-            let structured_merge = structured_merge(
-                &contents_base,
-                &contents_left,
-                &contents_right,
-                None,
-                &settings,
-                lang_profile,
-                debug_dir,
-            );
-
-            match structured_merge {
-                Ok(merge) => merges.push(merge),
-                Err(err) => warn!("Full structured merge failed: {err}"),
-            };
-        }
-        (rev_base, _, _) => {
-            if let Err(b) = rev_base {
-                println!("{b}");
-            }
-            warn!("Could not retrieve conflict sides from Git.");
-        }
+    if let Some(structured_merge) = structured_merge_from_git_revisions(
+        fname_base,
+        &settings,
+        debug_dir,
+        working_dir,
+        lang_profile,
+    ) {
+        merges.push(structured_merge);
     }
 
     if merges.is_empty() {
