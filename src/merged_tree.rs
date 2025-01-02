@@ -595,7 +595,7 @@ impl<'a> MergedTree<'a> {
 
     /// Debug print with indentation
     fn debug_print(&self, indentation: usize) -> String {
-        let mut result = " ".to_string().repeat(indentation);
+        let mut result = " ".repeat(indentation);
         let c = match self {
             MergedTree::ExactTree {
                 node, revisions, ..
