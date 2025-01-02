@@ -428,14 +428,12 @@ pub fn cascading_merge(
 ///
 /// Returns either a merge (potentially with conflicts) or an error.
 fn resolve_merge<'a>(
-    merge_contents: &'a str,
+    parsed_merge: &ParsedMerge<'a>,
     settings: &mut DisplaySettings<'a>,
     lang_profile: &LangProfile,
     debug_dir: Option<&str>,
-) -> Result<(ParsedMerge<'a>, MergeResult), String> {
-    let parsed_merge = ParsedMerge::parse(merge_contents)?;
-
-    settings.add_revision_names(&parsed_merge);
+) -> Result<MergeResult, String> {
+    settings.add_revision_names(parsed_merge);
 
     let base_rev = parsed_merge.reconstruct_revision(Revision::Base);
     let left_rev = parsed_merge.reconstruct_revision(Revision::Left);
@@ -445,12 +443,12 @@ fn resolve_merge<'a>(
         &base_rev,
         &left_rev,
         &right_rev,
-        Some(&parsed_merge),
+        Some(parsed_merge),
         settings,
         lang_profile,
         debug_dir,
     )?;
-    Ok((parsed_merge, merge))
+    Ok(merge)
 }
 
 /// Cascading merge resolution starting from a user-supplied file with merge conflicts
@@ -461,25 +459,31 @@ pub fn resolve_merge_cascading<'a>(
     debug_dir: Option<&str>,
     working_dir: &Path,
 ) -> Result<MergeResult, String> {
+    let mut merges = Vec::with_capacity(3);
+
     let lang_profile = LangProfile::detect_from_filename(fname_base)
         .ok_or_else(|| format!("Could not find a supported language for {fname_base}"))?;
 
     let mut resolved_merge = None;
-    let mut parsed_merge = None;
 
-    match resolve_merge(merge_contents, &mut settings, lang_profile, debug_dir) {
-        Ok((original_merge, merge_result)) => {
-            parsed_merge = Some(original_merge);
-            resolved_merge = Some(merge_result);
-        }
+    match ParsedMerge::parse(merge_contents) {
         Err(err) => {
             if err == PARSED_MERGE_DIFF2_DETECTED {
                 // if parsing the original merge failed because it's done in diff2 mode,
                 // then we warn the user about it but don't give up yet as we can try a full merge
                 warn!("Cannot solve conflicts in diff2 style. Merging the original conflict sides from scratch instead.");
             } else {
-                return Err(err);
+                warn!("{err}");
             }
+        }
+        Ok(parsed_merge) => {
+            match resolve_merge(&parsed_merge, &mut settings, lang_profile, debug_dir) {
+                Ok(merge_result) => {
+                    resolved_merge = Some(merge_result);
+                }
+                Err(err) => warn!("{err}"),
+            }
+            merges.push(parsed_merge.to_merge_result(&settings));
         }
     }
 
@@ -490,12 +494,8 @@ pub fn resolve_merge_cascading<'a>(
         }
         _ => {
             // if we didn't manage to solve all conflicts, try again by extracting the original revisions from Git
-            let mut merges = Vec::new();
             if let Some(merge) = resolved_merge {
                 merges.push(merge);
-            }
-            if let Some(parsed_merge) = parsed_merge {
-                merges.push(parsed_merge.to_merge_result(&settings));
             }
 
             let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
