@@ -506,7 +506,7 @@ pub fn resolve_merge_cascading<'a>(
                 // then we warn the user about it but don't give up yet as we can try a full merge
                 warn!("Cannot solve conflicts in diff2 style. Merging the original conflict sides from scratch instead.");
             } else {
-                warn!("{err}");
+                warn!("Error while parsing conflicts: {err}. Merging the original conflict sides from scratch instead.");
             }
         }
         Ok(parsed_merge) => {
@@ -520,7 +520,7 @@ pub fn resolve_merge_cascading<'a>(
                     }
                     merges.push(merge);
                 }
-                Err(err) => warn!("{err}"),
+                Err(err) => warn!("Error while resolving conflicts: {err}"),
             }
 
             let rendered_from_parsed = {
