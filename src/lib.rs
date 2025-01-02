@@ -483,7 +483,17 @@ pub fn resolve_merge_cascading<'a>(
                 }
                 Err(err) => warn!("{err}"),
             }
-            merges.push(parsed_merge.to_merge_result(&settings));
+
+            let rendered_from_parsed = {
+                MergeResult {
+                    contents: parsed_merge.render(&settings),
+                    conflict_count: parsed_merge.conflict_count(),
+                    conflict_mass: parsed_merge.conflict_mass(),
+                    method: "original",
+                    has_additional_issues: false,
+                }
+            };
+            merges.push(rendered_from_parsed);
         }
     }
 
