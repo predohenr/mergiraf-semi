@@ -475,8 +475,7 @@ fn structured_merge_from_git_revisions(
             settings,
             lang_profile,
             debug_dir,
-        )
-        .map_err(|err| format!("Full structured merge failed: {err}")),
+        ),
         (rev_base, _, _) => {
             if let Err(b) = rev_base {
                 println!("{b}");
@@ -545,7 +544,7 @@ pub fn resolve_merge_cascading<'a>(
         lang_profile,
     ) {
         Ok(structured_merge) => merges.push(structured_merge),
-        Err(e) => warn!("{e}"),
+        Err(err) => warn!("Full structured merge failed: {err}"),
     }
 
     if merges.is_empty() {
