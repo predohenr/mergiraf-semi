@@ -431,12 +431,10 @@ pub fn cascading_merge(
 /// Returns either a merge (potentially with conflicts) or an error.
 fn resolve_merge<'a>(
     parsed_merge: &ParsedMerge<'a>,
-    settings: &mut DisplaySettings<'a>,
+    settings: &DisplaySettings<'a>,
     lang_profile: &LangProfile,
     debug_dir: Option<&str>,
 ) -> Result<MergeResult, String> {
-    settings.add_revision_names(parsed_merge);
-
     let base_rev = parsed_merge.reconstruct_revision(Revision::Base);
     let left_rev = parsed_merge.reconstruct_revision(Revision::Left);
     let right_rev = parsed_merge.reconstruct_revision(Revision::Right);
@@ -479,7 +477,9 @@ pub fn resolve_merge_cascading<'a>(
             }
         }
         Ok(parsed_merge) => {
-            match resolve_merge(&parsed_merge, &mut settings, lang_profile, debug_dir) {
+            settings.add_revision_names(&parsed_merge);
+
+            match resolve_merge(&parsed_merge, &settings, lang_profile, debug_dir) {
                 Ok(merge_result) => {
                     resolved_merge = Some(merge_result);
                 }
