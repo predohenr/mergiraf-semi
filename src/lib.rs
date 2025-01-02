@@ -439,7 +439,7 @@ fn resolve_merge<'a>(
     let left_rev = parsed_merge.reconstruct_revision(Revision::Left);
     let right_rev = parsed_merge.reconstruct_revision(Revision::Right);
 
-    let merge = structured_merge(
+    structured_merge(
         &base_rev,
         &left_rev,
         &right_rev,
@@ -447,8 +447,7 @@ fn resolve_merge<'a>(
         settings,
         lang_profile,
         debug_dir,
-    )?;
-    Ok(merge)
+    )
 }
 
 /// Extracts the original revisions of the file from Git and performs a fully structured merge (see
