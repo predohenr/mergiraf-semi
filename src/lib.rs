@@ -512,13 +512,11 @@ pub fn resolve_merge_cascading<'a>(
             settings.add_revision_names(&parsed_merge);
 
             match resolve_merge(&parsed_merge, &settings, lang_profile, debug_dir) {
-                Ok(merge) => {
-                    if merge.conflict_count == 0 {
-                        info!("Solved all conflicts.");
-                        return Ok(merge);
-                    }
-                    merges.push(merge);
+                Ok(merge) if merge.conflict_count == 0 => {
+                    info!("Solved all conflicts.");
+                    return Ok(merge);
                 }
+                Ok(merge) => merges.push(merge),
                 Err(err) => warn!("Error while resolving conflicts: {err}"),
             }
 
