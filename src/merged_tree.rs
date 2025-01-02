@@ -16,7 +16,7 @@ use crate::{
     tree::AstNode,
 };
 
-/// A merged tree, which can contain a mixture of elements from the original trees,s
+/// A merged tree, which can contain a mixture of elements from the original trees,
 /// conflict markers, or even new elements inserted by commutative merging to separate them.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MergedTree<'a> {
