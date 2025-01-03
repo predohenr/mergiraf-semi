@@ -12,6 +12,7 @@ Mergiraf currently supports the following programming languages:
 * Scala (*.scala, *.sbt)
 * Python (*.py)
 * PHP (*.php)
+* GDScript (*.gd)
 
 and the following declarative file formats:
 * JSON (*.json)
@@ -19,6 +20,7 @@ and the following declarative file formats:
 * XML (*.xml, *.xhtml)
 * YAML (*.yml, *.yaml)
 * TOML (*.toml)
+* Godot Resource (*.tres, *.tscn)
 
 This list can also be obtained with the `mergiraf languages` command.
 

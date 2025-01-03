@@ -406,5 +406,48 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
                 signature("attribute_list", vec![vec![]]),
             ],
         },
+        LangProfile{
+            name: "Godot Resource",
+            extensions: vec![".tscn", ".tres"],
+            language: tree_sitter_godot_resource::LANGUAGE.into(),
+            atomic_nodes: vec![],
+            commutative_parents: vec![
+                CommutativeParent::without_delimiters("section", "\n")
+                    .restricted_to_groups(&[
+                        &["property"],
+                        &["attribute"],
+                    ]),
+                CommutativeParent::without_delimiters("resource", "\n")
+                    .restricted_to_groups(&[
+                        &["property"],
+                        &["section"],
+                    ]),
+            ],
+            signatures: vec![
+                signature("property", vec![vec![ChildType("path")]]),
+                signature("attribute", vec![vec![ChildType("identifier")]]),
+                signature("section", vec![vec![ChildType("identifier")], vec![ChildType("attribute")]]),
+            ],
+        },
+        LangProfile{
+            name: "GDScript",
+            extensions: vec![".gd"],
+            language: tree_sitter_gdscript::LANGUAGE.into(),
+            atomic_nodes: vec!["string"],
+            commutative_parents: vec![
+                CommutativeParent::without_delimiters("source", "\n")
+                    .restricted_to_groups(&[
+                        &["variable_statement", "function_definition", "signal_statement", "constructor_definition", "class_definition", "enum_definition"],
+                    ]),
+            ],
+            signatures: vec![
+                signature("variable_statement", vec![vec![Field("name")]]),
+                signature("function_definition", vec![vec![Field("name")]]),
+                signature("signal_statement", vec![vec![ChildType("name")]]),
+                signature("constructor_definition", vec![vec![ChildType("_init")]]),
+                signature("class_definition", vec![vec![Field("name")]]),
+                signature("enum_definition", vec![vec![Field("name")]]),
+            ],
+        },
     ]
 });

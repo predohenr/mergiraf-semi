@@ -636,7 +636,9 @@ dependencies = [
  "tree-sitter-c-sharp",
  "tree-sitter-cpp",
  "tree-sitter-dart",
+ "tree-sitter-gdscript",
  "tree-sitter-go",
+ "tree-sitter-godot-resource",
  "tree-sitter-html",
  "tree-sitter-java",
  "tree-sitter-javascript",
@@ -1066,10 +1068,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "tree-sitter-gdscript"
+version = "4.0.3"
+source = "git+https://github.com/PrestonKnopp/tree-sitter-gdscript#48b49330888a4669b48619b211cc8da573827725"
+dependencies = [
+ "cc",
+ "tree-sitter-language",
+]
+
+[[package]]
 name = "tree-sitter-go"
 version = "0.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a83995691e929d60d7946ab29a6cace465f0cf5bfdb62d7721f76278537d59ad"
+dependencies = [
+ "cc",
+ "tree-sitter-language",
+]
+
+[[package]]
+name = "tree-sitter-godot-resource"
+version = "0.6.0"
+source = "git+https://github.com/PrestonKnopp/tree-sitter-godot-resource#941955d027f1d8530501e77ce5e1d6035f5f99c1"
 dependencies = [
  "cc",
  "tree-sitter-language",

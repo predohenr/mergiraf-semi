@@ -32,6 +32,7 @@ tree-sitter-dart = "0.0.4"
 tree-sitter-typescript = "0.23.2"
 tree-sitter-python = "0.23.4"
 tree-sitter-php = "0.23"
+tree-sitter-godot-resource = { git = "https://github.com/PrestonKnopp/tree-sitter-godot-resource", version = "0.6.0" }
 regex = "1.10.4"
 itertools = "0.13.0"
 typed-arena = "2"
@@ -46,6 +47,7 @@ tree-sitter-scala = "0.23.3"
 either = "1.13.0"
 rustc-hash = "2.0.0"
 diffy-imara = "0.1.0"
+tree-sitter-gdscript = { git = "https://github.com/PrestonKnopp/tree-sitter-gdscript", version = "4.0.3" }
 
 [dev-dependencies]
 rstest = "0.23.0"

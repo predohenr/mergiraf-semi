@@ -58,6 +58,9 @@ Then, you also need to specify for which sorts of files this merge driver should
 *.ts merge=mergiraf
 *.py merge=mergiraf
 *.php merge=mergiraf
+*.gd merge=mergiraf
+*.tres merge=mergiraf
+*.tscn merge=mergiraf
 ```
 
 Or run:
