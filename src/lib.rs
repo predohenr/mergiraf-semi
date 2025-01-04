@@ -365,27 +365,10 @@ pub fn cascading_merge(
     if let Some(lang_profile) = lang_profile {
         // second attempt: to solve the conflicts from the line-based merge
         if !line_based_merge.has_additional_issues {
-            let start = Instant::now();
             let parsed_conflicts = ParsedMerge::parse(&line_based_merge.contents)
                 .expect("the diffy-imara rust library produced inconsistent conflict markers");
 
-            let base_recovered_rev = parsed_conflicts.reconstruct_revision(Revision::Base);
-            let left_recovered_rev = parsed_conflicts.reconstruct_revision(Revision::Left);
-            let right_recovered_rev = parsed_conflicts.reconstruct_revision(Revision::Right);
-            debug!(
-                "re-constructing revisions from parsed merge took {:?}",
-                start.elapsed()
-            );
-
-            let solved_merge = structured_merge(
-                &base_recovered_rev,
-                &left_recovered_rev,
-                &right_recovered_rev,
-                Some(&parsed_conflicts),
-                settings,
-                lang_profile,
-                debug_dir,
-            );
+            let solved_merge = resolve_merge(&parsed_conflicts, settings, lang_profile, debug_dir);
 
             match solved_merge {
                 Ok(recovered_merge) => {
@@ -435,9 +418,16 @@ fn resolve_merge<'a>(
     lang_profile: &LangProfile,
     debug_dir: Option<&str>,
 ) -> Result<MergeResult, String> {
+    let start = Instant::now();
+
     let base_rev = parsed_merge.reconstruct_revision(Revision::Base);
     let left_rev = parsed_merge.reconstruct_revision(Revision::Left);
     let right_rev = parsed_merge.reconstruct_revision(Revision::Right);
+
+    debug!(
+        "re-constructing revisions from parsed merge took {:?}",
+        start.elapsed()
+    );
 
     structured_merge(
         &base_rev,
