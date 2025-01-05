@@ -608,14 +608,15 @@ impl<'a> AstNode<'a> {
             .then(|| format!(" \x1b[0;31m{}\x1b[0m", self.source.replace('\n', "\\n")))
             .unwrap_or_default();
 
+        let commutative = if next_parent.is_some() {
+            " \x1b[0;95mCommutative\x1b[0m".to_string()
+        } else {
+            "".to_owned()
+        };
+
         let mut result = format!(
-            "{prefix}{}{key}\x1b[0m{grammar_name}{source}{}{}\n",
+            "{prefix}{}{key}\x1b[0m{grammar_name}{source}{commutative}{}\n",
             if last_child { "└" } else { "├" },
-            if next_parent.is_some() {
-                " \x1b[0;95mCommutative\x1b[0m".to_string()
-            } else {
-                "".to_owned()
-            },
             if let (Some(_), Some(sig)) = (
                 parent,
                 lang_profile.extract_signature_from_original_node(self)
