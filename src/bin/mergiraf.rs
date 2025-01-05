@@ -130,7 +130,7 @@ fn do_merge(
     fast: bool,
     path_name: Option<String>,
     timeout: Duration,
-    settings: &DisplaySettings,
+    settings: DisplaySettings,
     debug_dir: Option<&str>,
 ) -> Result<(i32, String), String> {
     if !timeout.is_zero() && env::var(TIMEOUT_DISABLING_ENV_VAR).as_deref() != Ok("1") {
@@ -186,7 +186,7 @@ fn do_merge(
         &contents_left,
         &contents_right,
         fname_base,
-        settings,
+        &settings,
         !fast,
         attempts_cache.as_ref(),
         debug_dir,
@@ -270,7 +270,14 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let timeout = Duration::from_millis(timeout);
 
             match do_merge(
-                base, left, right, fast, path_name, timeout, &settings, debug_dir,
+                base,
+                left,
+                right,
+                fast,
+                path_name,
+                timeout,
+                settings.clone(),
+                debug_dir,
             ) {
                 Ok((return_code, merge_output)) => {
                     if let Ok(temporary_merge_output_path) = env::var(TEMPORARY_OUTPUT_ENV_VAR) {
