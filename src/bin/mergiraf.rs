@@ -135,45 +135,41 @@ fn do_merge(
 ) -> Result<(i32, String), String> {
     let old_git_detected = settings.base_revision_name == "%S";
 
-    if timeout > 0 {
-        if env::var(TIMEOUT_DISABLING_ENV_VAR).as_deref() != Ok("1") {
-            let current_exe = env::current_exe()
-                .map_err(|err| format!("could not get path to current executable: {err}"))?;
-            let timeout_duration = Duration::from_millis(timeout);
+    if timeout > 0 && env::var(TIMEOUT_DISABLING_ENV_VAR).as_deref() != Ok("1") {
+        let current_exe = env::current_exe()
+            .map_err(|err| format!("could not get path to current executable: {err}"))?;
+        let timeout_duration = Duration::from_millis(timeout);
 
-            let temp_file = NamedTempFile::new().map_err(|err| {
-                format!("could not create a temporary file to store Mergiraf's output: {err}")
-            })?;
+        let temp_file = NamedTempFile::new().map_err(|err| {
+            format!("could not create a temporary file to store Mergiraf's output: {err}")
+        })?;
 
-            let mut child = Command::new(format!("{}", current_exe.display()))
-                .args(env::args().skip(1))
-                .env(TIMEOUT_DISABLING_ENV_VAR, "1")
-                .env(
-                    TEMPORARY_OUTPUT_ENV_VAR,
-                    format!("{}", temp_file.path().display()),
-                )
-                .spawn()
-                .map_err(|err| {
-                    format!("could not spawn a subprocess to honour --timeout: {err}")
-                })?;
+        let mut child = Command::new(format!("{}", current_exe.display()))
+            .args(env::args().skip(1))
+            .env(TIMEOUT_DISABLING_ENV_VAR, "1")
+            .env(
+                TEMPORARY_OUTPUT_ENV_VAR,
+                format!("{}", temp_file.path().display()),
+            )
+            .spawn()
+            .map_err(|err| format!("could not spawn a subprocess to honour --timeout: {err}"))?;
 
-            return match child
-                .wait_timeout(timeout_duration)
-                .map_err(|err| format!("error in the merge process: {err}"))?
-            {
-                Some(status) => {
-                    let temp_file_contents = fs::read_to_string(temp_file.path())
-                        .map_err(|err| format!("could not read temporary merge output: {err}"))?;
-                    Ok((status.code().unwrap_or(0), temp_file_contents))
-                }
-                None => {
-                    child
-                        .kill()
-                        .map_err(|err| format!("could not kill merging subprocess: {err}"))?;
-                    Err("structured merge took too long, falling back to Git".to_string())
-                }
-            };
-        }
+        return match child
+            .wait_timeout(timeout_duration)
+            .map_err(|err| format!("error in the merge process: {err}"))?
+        {
+            Some(status) => {
+                let temp_file_contents = fs::read_to_string(temp_file.path())
+                    .map_err(|err| format!("could not read temporary merge output: {err}"))?;
+                Ok((status.code().unwrap_or(0), temp_file_contents))
+            }
+            None => {
+                child
+                    .kill()
+                    .map_err(|err| format!("could not kill merging subprocess: {err}"))?;
+                Err("structured merge took too long, falling back to Git".to_string())
+            }
+        };
     }
 
     let fname_base = &base;
