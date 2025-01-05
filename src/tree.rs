@@ -610,11 +610,9 @@ impl<'a> AstNode<'a> {
             .then(|| format!(" \x1b[0;31m{}\x1b[0m", self.source.replace('\n', "\\n")))
             .unwrap_or_default();
 
-        let commutative = if next_parent.is_some() {
-            " \x1b[0;95mCommutative\x1b[0m".to_string()
-        } else {
-            "".to_owned()
-        };
+        let commutative = (next_parent.is_some())
+            .then_some(" \x1b[0;95mCommutative\x1b[0m")
+            .unwrap_or_default();
 
         let sig = if let (Some(_), Some(sig)) = (
             parent,
