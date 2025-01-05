@@ -129,14 +129,13 @@ fn do_merge(
     right: &str,
     fast: bool,
     path_name: Option<String>,
-    timeout: u64,
+    timeout: Duration,
     settings: &DisplaySettings,
     debug_dir: Option<&str>,
 ) -> Result<(i32, String), String> {
-    if timeout > 0 && env::var(TIMEOUT_DISABLING_ENV_VAR).as_deref() != Ok("1") {
+    if !timeout.is_zero() && env::var(TIMEOUT_DISABLING_ENV_VAR).as_deref() != Ok("1") {
         let current_exe = env::current_exe()
             .map_err(|err| format!("could not get path to current executable: {err}"))?;
-        let timeout_duration = Duration::from_millis(timeout);
 
         let temp_file = NamedTempFile::new().map_err(|err| {
             format!("could not create a temporary file to store Mergiraf's output: {err}")
@@ -153,7 +152,7 @@ fn do_merge(
             .map_err(|err| format!("could not spawn a subprocess to honour --timeout: {err}"))?;
 
         return match child
-            .wait_timeout(timeout_duration)
+            .wait_timeout(timeout)
             .map_err(|err| format!("error in the merge process: {err}"))?
         {
             Some(status) => {
@@ -261,6 +260,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
                 }
             }
+
+            let timeout = Duration::from_millis(timeout);
 
             match do_merge(
                 &base,
