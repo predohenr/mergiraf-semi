@@ -593,14 +593,14 @@ impl<'a> AstNode<'a> {
     ) -> String {
         let num_children = self.children.len();
         let next_parent = lang_profile.get_commutative_parent(self.grammar_name);
+
+        let key = (self.field_name)
+            .map(|key| format!("{key}: "))
+            .unwrap_or_default();
+
         let mut result = format!(
-            "{prefix}{}{}\x1b[0m{}{}{}{}\n",
+            "{prefix}{}{key}\x1b[0m{}{}{}{}\n",
             if last_child { "└" } else { "├" },
-            if let Some(key) = self.field_name {
-                format!("{key}: ")
-            } else {
-                "".to_owned()
-            },
             if self.source != self.grammar_name {
                 self.grammar_name.to_owned()
             } else {
