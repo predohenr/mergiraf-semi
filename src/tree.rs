@@ -625,17 +625,21 @@ impl<'a> AstNode<'a> {
                 "".to_owned()
             }
         );
-        for (index, child) in self.children.iter().enumerate() {
-            if child.grammar_name != "@virtual_line@" {
-                let new_prefix = format!("{prefix}{} ", if last_child { " " } else { "│" });
-                result.push_str(&child.internal_ascii_tree(
-                    &new_prefix,
-                    index == num_children - 1,
-                    lang_profile,
-                    next_parent,
-                ));
-            }
-        }
+        result.extend(
+            self.children
+                .iter()
+                .enumerate()
+                .filter(|(_, child)| child.grammar_name != "@virtual_line@")
+                .map(|(index, child)| {
+                    let new_prefix = format!("{prefix}{} ", if last_child { " " } else { "│" });
+                    child.internal_ascii_tree(
+                        &new_prefix,
+                        index == num_children - 1,
+                        lang_profile,
+                        next_parent,
+                    )
+                }),
+        );
         result
     }
 }
