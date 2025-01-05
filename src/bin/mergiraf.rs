@@ -121,60 +121,62 @@ fn main() {
 
 #[allow(clippy::too_many_arguments)]
 fn do_merge(
-    base: &'static str,
-    left: &'static str,
-    right: &'static str,
+    base: &str,
+    left: &str,
+    right: &str,
     fast: bool,
     path_name: Option<String>,
     timeout: Duration,
-    settings: DisplaySettings<'static>,
-    debug_dir: Option<&'static str>,
+    settings: &DisplaySettings,
+    debug_dir: Option<&str>,
 ) -> Result<(i32, String), String> {
     let (tx, rx) = oneshot::channel();
 
-    thread::spawn(move || {
-        let res = || {
-            let fname_base = &base;
-            let original_contents_base = read_file_to_string(fname_base)?;
-            let contents_base = normalize_to_lf(&original_contents_base);
+    thread::scope(move |s| {
+        s.spawn(move || {
+            let res = || {
+                let fname_base = &base;
+                let original_contents_base = read_file_to_string(fname_base)?;
+                let contents_base = normalize_to_lf(&original_contents_base);
 
-            let fname_left = &left;
-            let original_contents_left = read_file_to_string(fname_left)?;
-            let contents_left = normalize_to_lf(&original_contents_left);
+                let fname_left = &left;
+                let original_contents_left = read_file_to_string(fname_left)?;
+                let contents_left = normalize_to_lf(&original_contents_left);
 
-            let fname_right = &right;
-            let original_contents_right = read_file_to_string(fname_right)?;
-            let contents_right = normalize_to_lf(&original_contents_right);
+                let fname_right = &right;
+                let original_contents_right = read_file_to_string(fname_right)?;
+                let contents_right = normalize_to_lf(&original_contents_right);
 
-            let attempts_cache = AttemptsCache::new(None, None).ok();
+                let attempts_cache = AttemptsCache::new(None, None).ok();
 
-            let fname_base = path_name.as_deref().unwrap_or(fname_base);
+                let fname_base = path_name.as_deref().unwrap_or(fname_base);
 
-            let merge_result = line_merge_and_structured_resolution(
-                &contents_base,
-                &contents_left,
-                &contents_right,
-                fname_base,
-                &settings,
-                !fast,
-                attempts_cache.as_ref(),
-                debug_dir,
-            );
+                let merge_result = line_merge_and_structured_resolution(
+                    &contents_base,
+                    &contents_left,
+                    &contents_right,
+                    fname_base,
+                    settings,
+                    !fast,
+                    attempts_cache.as_ref(),
+                    debug_dir,
+                );
 
-            let merge_output =
-                imitate_cr_lf_from_input(&original_contents_left, &merge_result.contents);
+                let merge_output =
+                    imitate_cr_lf_from_input(&original_contents_left, &merge_result.contents);
 
-            if merge_result.conflict_count > 0 {
-                let old_git_detected = settings.base_revision_name == "%S";
-                if old_git_detected {
-                    warn!("Using Git v2.44.0 or above is recommended to get meaningful revision names on conflict markers when using Mergiraf.");
+                if merge_result.conflict_count > 0 {
+                    let old_git_detected = settings.base_revision_name == "%S";
+                    if old_git_detected {
+                        warn!("Using Git v2.44.0 or above is recommended to get meaningful revision names on conflict markers when using Mergiraf.");
+                    }
+                    Ok((1, merge_output))
+                } else {
+                    Ok((0, merge_output))
                 }
-                Ok((1, merge_output))
-            } else {
-                Ok((0, merge_output))
-            }
-        };
-        let _ = tx.send(res());
+            };
+            let _ = tx.send(res());
+        });
     });
 
     if timeout.is_zero() {
@@ -215,28 +217,22 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             compact,
             timeout,
         } => {
-            let base: &'static str = base.leak();
-            let left: &'static str = left.leak();
-            let right: &'static str = right.leak();
-
-            let debug_dir: Option<&'static str> = args.debug_dir.map(String::leak).map(|s| &*s);
-
-            let settings: DisplaySettings<'static> = DisplaySettings {
+            let settings = DisplaySettings {
                 compact,
-                base_revision_name: match base_name {
-                    Some(s) if s == "%S" => default_base_name,
-                    Some(name) => name.leak(),
-                    None => base,
+                base_revision_name: match base_name.as_deref() {
+                    Some("%S") => default_base_name,
+                    Some(name) => name,
+                    None => &base,
                 },
-                left_revision_name: match left_name {
-                    Some(s) if s == "%X" => default_left_name,
-                    Some(name) => name.leak(),
-                    None => left,
+                left_revision_name: match left_name.as_deref() {
+                    Some("%X") => default_left_name,
+                    Some(name) => name,
+                    None => &left,
                 },
-                right_revision_name: match right_name {
-                    Some(s) if s == "%Y" => default_right_name,
-                    Some(name) => name.leak(),
-                    None => right,
+                right_revision_name: match right_name.as_deref() {
+                    Some("%Y") => default_right_name,
+                    Some(name) => name,
+                    None => &right,
                 },
                 ..Default::default()
             };
@@ -246,27 +242,27 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     || env::var(DISABLING_ENV_VAR_LEGACY).is_ok_and(|v| !v.is_empty()); // TODO: deprecate
 
                 if mergiraf_disabled {
-                    return fallback_to_git_merge_file(base, left, right, git, &settings);
+                    return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
                 }
             }
 
             let timeout = Duration::from_millis(timeout);
 
             match do_merge(
-                base,
-                left,
-                right,
+                &base,
+                &left,
+                &right,
                 fast,
                 path_name,
                 timeout,
-                settings.clone(),
-                debug_dir,
+                &settings,
+                args.debug_dir.as_deref(),
             ) {
                 Ok((return_code, merge_output)) => {
                     if let Some(fname_out) = output {
                         write_string_to_file(&fname_out, &merge_output)?;
                     } else if git {
-                        write_string_to_file(left, &merge_output)?;
+                        write_string_to_file(&left, &merge_output)?;
                     } else {
                         print!("{merge_output}");
                     };
@@ -274,7 +270,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 }
                 Err(err) => {
                     log::error!("Mergiraf: {err}");
-                    return fallback_to_git_merge_file(base, left, right, git, &settings);
+                    return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
                 }
             }
         }
