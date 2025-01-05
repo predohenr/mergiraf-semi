@@ -133,8 +133,6 @@ fn do_merge(
     settings: &DisplaySettings,
     debug_dir: Option<&str>,
 ) -> Result<(i32, String), String> {
-    let old_git_detected = settings.base_revision_name == "%S";
-
     if timeout > 0 && env::var(TIMEOUT_DISABLING_ENV_VAR).as_deref() != Ok("1") {
         let current_exe = env::current_exe()
             .map_err(|err| format!("could not get path to current executable: {err}"))?;
@@ -198,6 +196,7 @@ fn do_merge(
     let merge_output = imitate_cr_lf_from_input(&original_contents_left, &merge_result.contents);
 
     if merge_result.conflict_count > 0 {
+        let old_git_detected = settings.base_revision_name == "%S";
         if old_git_detected {
             warn!("Using Git v2.44.0 or above is recommended to get meaningful revision names on conflict markers when using Mergiraf.");
         }
