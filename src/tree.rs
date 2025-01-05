@@ -614,17 +614,18 @@ impl<'a> AstNode<'a> {
             "".to_owned()
         };
 
+        let sig = if let (Some(_), Some(sig)) = (
+            parent,
+            lang_profile.extract_signature_from_original_node(self),
+        ) {
+            format!(" \x1b[0;96m{sig}\x1b[0m")
+        } else {
+            "".to_owned()
+        };
+
         let mut result = format!(
-            "{prefix}{}{key}\x1b[0m{grammar_name}{source}{commutative}{}\n",
+            "{prefix}{}{key}\x1b[0m{grammar_name}{source}{commutative}{sig}\n",
             if last_child { "└" } else { "├" },
-            if let (Some(_), Some(sig)) = (
-                parent,
-                lang_profile.extract_signature_from_original_node(self)
-            ) {
-                format!(" \x1b[0;96m{sig}\x1b[0m")
-            } else {
-                "".to_owned()
-            }
         );
         result.extend(
             self.children
