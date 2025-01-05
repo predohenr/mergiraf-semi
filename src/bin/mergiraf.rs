@@ -125,15 +125,15 @@ fn do_merge(
     left: &str,
     right: &str,
     fast: bool,
-    path_name: Option<String>,
+    path_name: Option<&str>,
     timeout: Duration,
     settings: &DisplaySettings,
     debug_dir: Option<&str>,
 ) -> Result<(i32, String), String> {
     let (tx, rx) = oneshot::channel();
 
-    thread::scope(move |s| {
-        s.spawn(move || {
+    thread::scope(|s| {
+        s.spawn(|| {
             let res = || {
                 let fname_base = &base;
                 let original_contents_base = read_file_to_string(fname_base)?;
@@ -149,7 +149,7 @@ fn do_merge(
 
                 let attempts_cache = AttemptsCache::new(None, None).ok();
 
-                let fname_base = path_name.as_deref().unwrap_or(fname_base);
+                let fname_base = path_name.unwrap_or(fname_base);
 
                 let merge_result = line_merge_and_structured_resolution(
                     &contents_base,
@@ -253,7 +253,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 &left,
                 &right,
                 fast,
-                path_name,
+                path_name.as_deref(),
                 timeout,
                 &settings,
                 args.debug_dir.as_deref(),
