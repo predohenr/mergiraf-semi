@@ -235,6 +235,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let left: &'static str = left.leak();
             let right: &'static str = right.leak();
 
+            let debug_dir: Option<&'static str> = args.debug_dir.map(String::leak).map(|s| &*s);
+
             let settings: DisplaySettings<'static> = DisplaySettings {
                 diff3: true,
                 compact,
@@ -268,14 +270,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let timeout = Duration::from_millis(timeout);
 
             match do_merge(
-                base,
-                left,
-                right,
-                fast,
-                path_name,
-                timeout,
-                &settings,
-                args.debug_dir.as_deref(),
+                base, left, right, fast, path_name, timeout, &settings, debug_dir,
             ) {
                 Ok((return_code, merge_output)) => {
                     if let Ok(temporary_merge_output_path) = env::var(TEMPORARY_OUTPUT_ENV_VAR) {
