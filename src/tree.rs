@@ -604,11 +604,9 @@ impl<'a> AstNode<'a> {
             format!("\x1b[0;31m{}\x1b[0m", self.grammar_name)
         };
 
-        let source = if num_children == 0 && self.source != self.grammar_name {
-            format!(" \x1b[0;31m{}\x1b[0m", self.source.replace('\n', "\\n"))
-        } else {
-            "".to_owned()
-        };
+        let source = (num_children == 0 && self.source != self.grammar_name)
+            .then(|| format!(" \x1b[0;31m{}\x1b[0m", self.source.replace('\n', "\\n")))
+            .unwrap_or_default();
 
         let mut result = format!(
             "{prefix}{}{key}\x1b[0m{grammar_name}{source}{}{}\n",
