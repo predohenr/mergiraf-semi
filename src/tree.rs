@@ -614,14 +614,14 @@ impl<'a> AstNode<'a> {
             .then_some(" \x1b[0;95mCommutative\x1b[0m")
             .unwrap_or_default();
 
-        let sig = if let (Some(_), Some(sig)) = (
-            parent,
-            lang_profile.extract_signature_from_original_node(self),
-        ) {
-            format!(" \x1b[0;96m{sig}\x1b[0m")
-        } else {
-            "".to_owned()
-        };
+        let sig = (parent.is_some())
+            .then(|| {
+                lang_profile
+                    .extract_signature_from_original_node(self)
+                    .map(|sig| format!(" \x1b[0;96m{sig}\x1b[0m"))
+            })
+            .flatten()
+            .unwrap_or_default();
 
         let mut result =
             format!("{prefix}{tree_sym}{key}\x1b[0m{grammar_name}{source}{commutative}{sig}\n");
