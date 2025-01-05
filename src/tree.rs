@@ -594,6 +594,8 @@ impl<'a> AstNode<'a> {
         let num_children = self.children.len();
         let next_parent = lang_profile.get_commutative_parent(self.grammar_name);
 
+        let tree_sym = if last_child { "└" } else { "├" };
+
         let key = (self.field_name)
             .map(|key| format!("{key}: "))
             .unwrap_or_default();
@@ -623,10 +625,8 @@ impl<'a> AstNode<'a> {
             "".to_owned()
         };
 
-        let mut result = format!(
-            "{prefix}{}{key}\x1b[0m{grammar_name}{source}{commutative}{sig}\n",
-            if last_child { "└" } else { "├" },
-        );
+        let mut result =
+            format!("{prefix}{tree_sym}{key}\x1b[0m{grammar_name}{source}{commutative}{sig}\n");
         result.extend(
             self.children
                 .iter()
