@@ -235,23 +235,23 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let left: &'static str = left.leak();
             let right: &'static str = right.leak();
 
-            let settings = DisplaySettings {
+            let settings: DisplaySettings<'static> = DisplaySettings {
                 diff3: true,
                 compact,
                 conflict_marker_size: 7,
-                base_revision_name: match base_name.as_deref() {
-                    Some("%S") => default_base_name,
-                    Some(name) => name,
+                base_revision_name: match base_name {
+                    Some(s) if s == "%S" => default_base_name,
+                    Some(name) => name.leak(),
                     None => base,
                 },
-                left_revision_name: match left_name.as_deref() {
-                    Some("%X") => default_left_name,
-                    Some(name) => name,
+                left_revision_name: match left_name {
+                    Some(s) if s == "%X" => default_left_name,
+                    Some(name) => name.leak(),
                     None => left,
                 },
-                right_revision_name: match right_name.as_deref() {
-                    Some("%Y") => default_right_name,
-                    Some(name) => name,
+                right_revision_name: match right_name {
+                    Some(s) if s == "%Y" => default_right_name,
+                    Some(name) => name.leak(),
                     None => right,
                 },
             };
