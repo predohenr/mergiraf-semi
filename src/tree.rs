@@ -601,9 +601,9 @@ impl<'a> AstNode<'a> {
             .unwrap_or_default();
 
         let grammar_name = if self.source != self.grammar_name {
-            self.grammar_name.to_owned()
+            self.grammar_name
         } else {
-            format!("\x1b[0;31m{}\x1b[0m", self.grammar_name)
+            &format!("\x1b[0;31m{}\x1b[0m", self.grammar_name)
         };
 
         let source = (num_children == 0 && self.source != self.grammar_name)
