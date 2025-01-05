@@ -1,7 +1,6 @@
 use itertools::Itertools;
 use log::debug;
 use std::{
-    borrow::Cow,
     cmp::{min, Ordering},
     collections::HashSet,
     fmt::Display,
@@ -30,7 +29,7 @@ pub struct TreeMatcher<'a> {
     /// The maximum size of trees to match with tree edit distance
     pub max_recovery_size: i32,
     /// The language-specific information, which could be used to inform the matching algorithm
-    pub lang_profile: Cow<'a, LangProfile>,
+    pub lang_profile: &'a LangProfile,
 }
 
 /// A matching which keeps track of how each link was inferred, for visualization purposes
@@ -334,12 +333,14 @@ impl TreeMatcher<'_> {
             if children_l.len() != 1 {
                 continue;
             }
-            let children_r = right_children.get((node_type, signature));
+            let children_r = right_children.get(&(node_type, signature));
             if children_r.len() != 1 {
                 continue;
             }
-            let child_l = children_l.iter().next().unwrap();
-            let child_r = children_r.iter().next().unwrap();
+            // SAFETY: checked above
+            let child_l = unsafe { children_l.iter().next().unwrap_unchecked() };
+            // SAFETY: checked above
+            let child_r = unsafe { children_r.iter().next().unwrap_unchecked() };
             if matching.can_be_matched(child_l, child_r) {
                 if signature.is_some() || recursive {
                     self.match_subtrees_linearly(
@@ -473,7 +474,7 @@ impl<'a> tree_edit_distance::Tree for TEDTree<'a> {
     }
 }
 
-impl<'a> TEDTree<'a> {
+impl TEDTree<'_> {
     fn display(&self, f: &mut std::fmt::Formatter<'_>, indentation: usize) -> std::fmt::Result {
         let pad = " ".repeat(indentation);
         write!(
@@ -501,7 +502,7 @@ impl<'a> TEDTree<'a> {
     }
 }
 
-impl<'a> Display for TEDTree<'a> {
+impl Display for TEDTree<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.display(f, 0)
     }
@@ -527,7 +528,7 @@ mod tests {
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: true,
-            lang_profile: Cow::Owned(lang_profile),
+            lang_profile,
         };
 
         let detailed_matching = matcher.match_trees(&t1, &t2, None);
@@ -553,7 +554,7 @@ mod tests {
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: true,
-            lang_profile: Cow::Owned(lang_profile),
+            lang_profile,
         };
 
         let matching = matcher.match_trees(&t1, &t2, None);
@@ -579,7 +580,7 @@ mod tests {
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: false,
-            lang_profile: Cow::Owned(lang_profile),
+            lang_profile,
         };
 
         let matching = matcher.match_trees(&t1, &t2, None);
@@ -603,7 +604,7 @@ mod tests {
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: true,
-            lang_profile: Cow::Owned(lang_profile),
+            lang_profile,
         };
 
         let matching = matcher.match_trees(&left, &right, None);
@@ -627,7 +628,7 @@ mod tests {
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: true,
-            lang_profile: Cow::Owned(lang_profile),
+            lang_profile,
         };
         let matching = matcher.match_trees(&left, &right, None);
 

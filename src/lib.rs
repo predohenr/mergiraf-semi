@@ -76,7 +76,7 @@ pub(crate) fn parse<'a>(
     let tree = parser
         .parse(contents, None)
         .expect("Parsing example source code failed");
-    Ast::new(tree, contents, lang_profile, arena, ref_arena)
+    Ast::new(&tree, contents, lang_profile, arena, ref_arena)
 }
 
 /// Performs a fully structured merge, parsing the contents of all three revisions,
@@ -110,14 +110,14 @@ pub fn structured_merge(
         sim_threshold: 0.4,
         max_recovery_size: 100,
         use_rted: true,
-        lang_profile: Cow::Borrowed(lang_profile),
+        lang_profile,
     };
     let auxiliary_matcher = TreeMatcher {
         min_height: 2,
         sim_threshold: 0.6,
         max_recovery_size: 100,
         use_rted: false,
-        lang_profile: Cow::Borrowed(lang_profile),
+        lang_profile,
     };
 
     let start = Instant::now();
@@ -147,7 +147,7 @@ pub fn structured_merge(
         &tree_base,
         &tree_left,
         &tree_right,
-        initial_matchings,
+        initial_matchings.as_ref(),
         &primary_matcher,
         &auxiliary_matcher,
         debug_dir,
@@ -200,23 +200,22 @@ pub fn line_merge_and_structured_resolution(
             if best.conflict_count == 0 {
                 // for successful merges that aren't line-based,
                 // give the opportunity to the user to review Mergiraf's work
-                if let Some(attempt) = attempts_cache.and_then(|cache| {
+                if let Some(cache) = attempts_cache {
                     match cache.new_attempt(
                         Path::new(fname_base),
                         contents_base,
                         contents_left,
                         contents_right,
                     ) {
-                        Ok(attempt) => Some(attempt),
+                        Ok(attempt) => {
+                            best.store_in_attempt(&attempt);
+                            line_based.store_in_attempt(&attempt);
+                            best.mark_as_best_merge_in_attempt(&attempt, line_based.conflict_count);
+                        }
                         Err(err) => {
                             warn!("Could not store merging attempt for later review: {err}");
-                            None
                         }
                     }
-                }) {
-                    best.store_in_attempt(&attempt);
-                    line_based.store_in_attempt(&attempt);
-                    best.mark_as_best_merge_in_attempt(&attempt, line_based.conflict_count);
                 }
             }
             best
@@ -354,7 +353,7 @@ pub fn cascading_merge(
         contents_left,
         contents_right,
         settings,
-        lang_profile.as_ref(),
+        lang_profile,
     );
     debug!("line-based merge took {:?}", start.elapsed());
     if line_based_merge.conflict_count == 0 && !line_based_merge.has_additional_issues {
@@ -366,7 +365,7 @@ pub fn cascading_merge(
         if !line_based_merge.has_additional_issues {
             let start = Instant::now();
             let parsed_conflicts = ParsedMerge::parse(&line_based_merge.contents)
-                .expect("the imara-mergy rust library produced inconsistent conflict markers");
+                .expect("the diffy-imara rust library produced inconsistent conflict markers");
 
             let base_recovered_rev = parsed_conflicts.reconstruct_revision(Revision::Base);
             let left_recovered_rev = parsed_conflicts.reconstruct_revision(Revision::Left);
@@ -382,7 +381,7 @@ pub fn cascading_merge(
                 &right_recovered_rev,
                 Some(&parsed_conflicts),
                 settings,
-                &lang_profile,
+                lang_profile,
                 debug_dir,
             );
 
@@ -408,7 +407,7 @@ pub fn cascading_merge(
                 contents_right,
                 None,
                 settings,
-                &lang_profile,
+                lang_profile,
                 debug_dir,
             );
             match structured_merge {
@@ -468,7 +467,7 @@ pub fn resolve_merge_cascading<'a>(
     let mut resolved_merge = None;
     let mut parsed_merge = None;
 
-    match resolve_merge(merge_contents, &mut settings, &lang_profile, debug_dir) {
+    match resolve_merge(merge_contents, &mut settings, lang_profile, debug_dir) {
         Ok((original_merge, merge_result)) => {
             parsed_merge = Some(original_merge);
             resolved_merge = Some(merge_result);
@@ -504,28 +503,29 @@ pub fn resolve_merge_cascading<'a>(
             let revision_right = extract_revision(working_dir, fname_base, Revision::Right);
 
             // we only attempt a full structured merge if we could extract revisions from Git
-            if let (Ok(contents_base), Ok(contents_left), Ok(contents_right)) =
-                (&revision_base, &revision_left, &revision_right)
-            {
-                let structured_merge = structured_merge(
-                    contents_base,
-                    contents_left,
-                    contents_right,
-                    None,
-                    &settings,
-                    &lang_profile,
-                    debug_dir,
-                );
+            match (revision_base, revision_left, revision_right) {
+                (Ok(contents_base), Ok(contents_left), Ok(contents_right)) => {
+                    let structured_merge = structured_merge(
+                        &contents_base,
+                        &contents_left,
+                        &contents_right,
+                        None,
+                        &settings,
+                        lang_profile,
+                        debug_dir,
+                    );
 
-                match structured_merge {
-                    Ok(merge) => merges.push(merge),
-                    Err(err) => warn!("Full structured merge failed: {err}"),
-                };
-            } else {
-                if let Err(b) = revision_base {
-                    println!("{b}");
+                    match structured_merge {
+                        Ok(merge) => merges.push(merge),
+                        Err(err) => warn!("Full structured merge failed: {err}"),
+                    };
                 }
-                warn!("Could not retrieve conflict sides from Git.");
+                (rev_base, _, _) => {
+                    if let Err(b) = rev_base {
+                        println!("{b}");
+                    }
+                    warn!("Could not retrieve conflict sides from Git.");
+                }
             }
 
             if merges.is_empty() {

@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    iter::FromIterator,
-};
+use std::collections::{HashMap, HashSet};
 
 use itertools::Itertools;
 use log::debug;
@@ -59,7 +56,7 @@ struct VisitingState<'a> {
     visited_nodes: HashSet<Leader<'a>>,
 }
 
-impl<'a> VisitingState<'a> {
+impl VisitingState<'_> {
     fn indentation(&self) -> String {
         " ".repeat(self.visited_nodes.len())
     }
@@ -186,7 +183,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
         let mut children = Vec::new();
         let mut predecessor = PCSNode::LeftMarker;
-        let mut cursor = children_map.get(predecessor);
+        let mut cursor = children_map.get(&predecessor);
         let mut seen_nodes: HashSet<PCSNode<'a>> = HashSet::new(); // to avoid looping, and to make sure every single known predecessor is visited
         seen_nodes.insert(predecessor);
 
@@ -220,7 +217,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         children.push(child_result_tree);
                         predecessor = *current_child;
                         seen_nodes.insert(predecessor);
-                        cursor = children_map.get(predecessor);
+                        cursor = children_map.get(&predecessor);
                     } else {
                         // we failed to build the result tree for a child of this node, because of a nasty conflict.
                         // We fall back on line diffing
@@ -349,20 +346,18 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 // Check if all the children are exact trees with at least one common revision
                 let mut children_revnodes = Vec::new();
                 let mut common_revisions = revisions.set();
-                for child in children.iter() {
-                    match child {
-                        MergedTree::ExactTree {
-                            node, revisions, ..
-                        } => {
-                            common_revisions = common_revisions.intersection(revisions.set());
-                            children_revnodes.push(*node);
-                        }
-                        _ => {
-                            // the child is not a tree that exactly matches a subtree in at least one revision,
-                            // so we give up as its parent can also not be one either
-                            common_revisions = RevisionSet::new();
-                            break;
-                        }
+                for child in &children {
+                    if let MergedTree::ExactTree {
+                        node, revisions, ..
+                    } = child
+                    {
+                        common_revisions = common_revisions.intersection(revisions.set());
+                        children_revnodes.push(*node);
+                    } else {
+                        // the child is not a tree that exactly matches a subtree in at least one revision,
+                        // so we give up as its parent can also not be one either
+                        common_revisions = RevisionSet::new();
+                        break;
                     }
                 }
                 if !common_revisions.is_empty() {
@@ -475,7 +470,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         let mut result = Vec::new();
         let mut cursor = starting_node;
         loop {
-            let all_successors = successors.get(cursor);
+            let all_successors = successors.get(&cursor);
             let candidate = *all_successors
                 .iter()
                 .filter(|(rev, _)| *rev == revision)
@@ -543,9 +538,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     ) -> Result<Vec<MergedTree<'a>>, String> {
         match conflict {
             MergedTree::Conflict { base, left, right } => self.commutatively_merge_lists(
-                base,
-                left,
-                right,
+                &base,
+                &left,
+                &right,
                 commutative_parent,
                 visiting_state,
             ),
@@ -555,54 +550,55 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
     /// From a list of children of a commutative node, filter out separators
     /// and delimiters to return the content nodes only.
-    fn keep_content_only<T: FromIterator<Leader<'a>>>(
-        &self,
-        slice: &[&'a AstNode<'a>],
+    fn keep_content_only<'c>(
+        &'c self,
+        slice: &'c [&'a AstNode<'a>],
         revision: Revision,
-        trimmed_sep: &str,
-        trimmed_left_delim: &str,
-        trimmed_right_delim: &str,
-    ) -> T {
+        trimmed_sep: &'c str,
+        trimmed_left_delim: &'c str,
+        trimmed_right_delim: &'c str,
+    ) -> impl Iterator<Item = Leader<'a>> + use<'a, 'c> {
         slice
             .iter()
-            .filter(|n| {
+            .filter(move |n| {
                 let trimmed = n.source.trim();
                 trimmed != trimmed_sep
                     && trimmed != trimmed_left_delim
                     && trimmed != trimmed_right_delim
             })
-            .map(|n| self.class_mapping.map_to_leader(RevNode::new(revision, n)))
-            .collect::<T>()
+            .map(move |n| self.class_mapping.map_to_leader(RevNode::new(revision, n)))
     }
 
     /// Collects examples of separators with the surrounding whitespace
     /// among a list of children of a commutative parent.
-    fn find_separators_with_whitespace(
-        slice: &[&'a AstNode<'a>],
-        trimmed_sep: &str,
-    ) -> Vec<&'a str> {
+    fn find_separators_with_whitespace<'s>(
+        slice: &'s [&'a AstNode<'a>],
+        trimmed_sep: &'s str,
+    ) -> Box<dyn Iterator<Item = &'a str> + 's> {
         if trimmed_sep.is_empty() {
-            slice
-                .iter()
-                .skip(1)
-                .filter_map(|node| node.preceding_whitespace())
-                .filter(|s| !s.is_empty())
-                .collect_vec()
+            Box::new(
+                slice
+                    .iter()
+                    .skip(1)
+                    .filter_map(|node| node.preceding_whitespace())
+                    .filter(|s| !s.is_empty()),
+            )
         } else {
-            slice
-                .iter()
-                .filter(|n| n.source.trim() == trimmed_sep)
-                .map(|n| n.source_with_surrounding_whitespace())
-                .collect_vec()
+            Box::new(
+                slice
+                    .iter()
+                    .filter(move |n| n.source.trim() == trimmed_sep)
+                    .map(|n| n.source_with_surrounding_whitespace()),
+            )
         }
     }
 
     /// Merge three lists of nodes, knowing that their order does not matter
     fn commutatively_merge_lists(
         &self,
-        base: Vec<&'a AstNode<'a>>,
-        left: Vec<&'a AstNode<'a>>,
-        right: Vec<&'a AstNode<'a>>,
+        base: &[&'a AstNode<'a>],
+        left: &[&'a AstNode<'a>],
+        right: &[&'a AstNode<'a>],
         commutative_parent: &CommutativeParent,
         visiting_state: &mut VisitingState<'a>,
     ) -> Result<Vec<MergedTree<'a>>, String> {
@@ -615,31 +611,36 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         // TODO improve handling of comments? comments added by the right side should ideally be placed sensibly
 
         // first, map each list via class mapping to make each element comparable
-        let base_leaders = self.keep_content_only::<HashSet<Leader>>(
-            &base,
-            Revision::Base,
-            trimmed_sep,
-            trimmed_left_delim,
-            trimmed_right_delim,
-        );
-        let left_leaders = self.keep_content_only::<Vec<Leader>>(
-            &left,
-            Revision::Left,
-            trimmed_sep,
-            trimmed_left_delim,
-            trimmed_right_delim,
-        );
-        let right_leaders = self.keep_content_only::<Vec<Leader>>(
-            &right,
-            Revision::Right,
-            trimmed_sep,
-            trimmed_left_delim,
-            trimmed_right_delim,
-        );
+        let base_leaders: HashSet<_> = self
+            .keep_content_only(
+                base,
+                Revision::Base,
+                trimmed_sep,
+                trimmed_left_delim,
+                trimmed_right_delim,
+            )
+            .collect();
+        let left_leaders: Vec<_> = self
+            .keep_content_only(
+                left,
+                Revision::Left,
+                trimmed_sep,
+                trimmed_left_delim,
+                trimmed_right_delim,
+            )
+            .collect();
+        let right_leaders: Vec<_> = self
+            .keep_content_only(
+                right,
+                Revision::Right,
+                trimmed_sep,
+                trimmed_left_delim,
+                trimmed_right_delim,
+            )
+            .collect();
 
         // check that all the nodes involved are allowed to commute in this context
-        let child_types: HashSet<&str> = base_leaders
-            .iter()
+        let child_types: HashSet<&str> = (base_leaders.iter())
             .chain(left_leaders.iter())
             .chain(right_leaders.iter())
             .map(Leader::grammar_name)
@@ -717,13 +718,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             (&left, Revision::Left),
             (&right, Revision::Right),
         ]
-        .iter()
+        .into_iter()
         .find_map(|(nodes, revision)| {
             nodes.iter().next().and_then(|first| {
                 if first.source.trim() == trimmed_left_delim {
                     Some(
                         self.class_mapping
-                            .map_to_leader(RevNode::new(*revision, first)),
+                            .map_to_leader(RevNode::new(revision, first)),
                     )
                 } else {
                     None
@@ -735,26 +736,26 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             (&left, Revision::Left),
             (&right, Revision::Right),
         ]
-        .iter()
+        .into_iter()
         .find_map(|(nodes, revision)| {
             nodes.iter().last().and_then(|last| {
                 if last.source.trim() == trimmed_right_delim {
                     Some(
                         self.class_mapping
-                            .map_to_leader(RevNode::new(*revision, last)),
+                            .map_to_leader(RevNode::new(revision, last)),
                     )
                 } else {
                     None
                 }
             })
         });
-        let starts_with_separator = [&base, &left, &right].iter().any(|rev| {
+        let starts_with_separator = [&base, &left, &right].into_iter().any(|rev| {
             rev.iter()
                 .map(|n| n.source.trim())
                 .find(|s| *s != trimmed_left_delim)
                 .is_some_and(|s| s == trimmed_sep)
         });
-        let ends_with_separator = [&base, &left, &right].iter().any(|rev| {
+        let ends_with_separator = [&base, &left, &right].into_iter().any(|rev| {
             rev.iter()
                 .map(|n| n.source.trim())
                 .filter(|s| *s != trimmed_right_delim)
@@ -763,11 +764,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         });
 
         let separator = MergedTree::CommutativeChildSeparator {
-            separator: Self::find_separators_with_whitespace(&left, trimmed_sep)
-                .iter()
-                .chain(Self::find_separators_with_whitespace(&right, trimmed_sep).iter())
-                .chain(Self::find_separators_with_whitespace(&base, trimmed_sep).iter())
-                .copied()
+            separator: Self::find_separators_with_whitespace(left, trimmed_sep)
+                .chain(Self::find_separators_with_whitespace(right, trimmed_sep))
+                .chain(Self::find_separators_with_whitespace(base, trimmed_sep))
                 // remove the indentation at the end of separators
                 // (it will be added back when pretty-printing, possibly at a different level)
                 .map(|separator| {
@@ -778,8 +777,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     }
                 })
                 .next()
-                .unwrap_or(commutative_parent.separator)
-                .to_string(),
+                .unwrap_or(commutative_parent.separator),
         };
 
         // add delimiters and separators in the merged list
@@ -883,8 +881,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             })
             .collect_vec();
 
-        let mut merge_result =
-            self.commutatively_merge_lists(base, left, right, commutative_parent, visiting_state)?;
+        let mut merge_result = self.commutatively_merge_lists(
+            &base,
+            &left,
+            &right,
+            commutative_parent,
+            visiting_state,
+        )?;
         let mut prefix_trees = common_prefix
             .iter()
             .map(|revnode| {
@@ -1028,7 +1031,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_recover_exact_tree() {
+    fn recover_exact_tree() {
         let ctx = ctx();
         let lang_profile = LangProfile::detect_from_filename("test.json").unwrap();
 
@@ -1064,7 +1067,7 @@ mod tests {
     }
 
     #[test]
-    fn test_contains() {
+    fn contains() {
         let ctx = ctx();
         let lang_profile = LangProfile::detect_from_filename("test.json").unwrap();
 

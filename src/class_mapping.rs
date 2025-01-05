@@ -16,15 +16,15 @@ pub struct RevNode<'a> {
 #[derive(Debug, Copy, Clone, PartialEq, Hash)]
 pub struct Leader<'a>(RevNode<'a>);
 
-impl<'a> PartialEq for RevNode<'a> {
+impl PartialEq for RevNode<'_> {
     fn eq(&self, other: &Self) -> bool {
         // because we know the nodes are from the same revision, it's safe to compare them just by their ids
         self.rev == other.rev && self.node.id == other.node.id
     }
 }
 
-impl<'a> Eq for RevNode<'a> {}
-impl<'a> Eq for Leader<'a> {}
+impl Eq for RevNode<'_> {}
+impl Eq for Leader<'_> {}
 
 impl<'a> RevNode<'a> {
     pub fn new(rev: Revision, node: &'a AstNode<'a>) -> Self {
@@ -55,7 +55,7 @@ impl<'a> Leader<'a> {
     }
 }
 
-impl<'a> Display for RevNode<'a> {
+impl Display for RevNode<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -65,13 +65,13 @@ impl<'a> Display for RevNode<'a> {
     }
 }
 
-impl<'a> Display for Leader<'a> {
+impl Display for Leader<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl<'a> Hash for RevNode<'a> {
+impl Hash for RevNode<'_> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.rev.hash(state);
         self.node.id.hash(state);
@@ -275,7 +275,7 @@ impl RevisionSet {
     }
 
     /// Does this set of revisions contain the given revision?
-    pub fn contains(&self, revision: Revision) -> bool {
+    pub fn contains(self, revision: Revision) -> bool {
         match revision {
             Revision::Base => self.base,
             Revision::Left => self.left,
@@ -284,7 +284,7 @@ impl RevisionSet {
     }
 
     /// Set intersection
-    pub fn intersection(&self, other: RevisionSet) -> RevisionSet {
+    pub fn intersection(self, other: RevisionSet) -> RevisionSet {
         RevisionSet {
             base: self.base && other.base,
             left: self.left && other.left,
@@ -294,7 +294,7 @@ impl RevisionSet {
 
     /// Returns any revision contained in the set,
     /// by order of preference Left -> Right -> Base
-    pub fn any(&self) -> Option<Revision> {
+    pub fn any(self) -> Option<Revision> {
         if self.left {
             Some(Revision::Left)
         } else if self.right {
@@ -306,25 +306,25 @@ impl RevisionSet {
         }
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub fn is_empty(self) -> bool {
         !(self.base || self.left || self.right)
     }
 
     /// Checked version of `is_empty`
-    pub fn as_nonempty(&self) -> Option<RevisionNESet> {
+    pub fn as_nonempty(self) -> Option<RevisionNESet> {
         if self.is_empty() {
             None
         } else {
-            Some(RevisionNESet(*self))
+            Some(RevisionNESet(self))
         }
     }
 
-    pub fn is_full(&self) -> bool {
+    pub fn is_full(self) -> bool {
         self.base && self.left && self.right
     }
 
     /// Iterates on the revisions contained in this set (returned in decreasing priority)
-    pub fn iter(&self) -> impl Iterator<Item = Revision> {
+    pub fn iter(self) -> impl Iterator<Item = Revision> {
         let mut vector = Vec::new();
         if self.left {
             vector.push(Revision::Left);
@@ -363,7 +363,7 @@ pub struct RevisionNESet(RevisionSet);
 
 impl RevisionNESet {
     /// Forget non-emptiness
-    pub fn set(&self) -> RevisionSet {
+    pub fn set(self) -> RevisionSet {
         self.0
     }
 
@@ -385,24 +385,24 @@ impl RevisionNESet {
     }
 
     /// Does this set of revisions contain the given revision?
-    pub fn contains(&self, revision: Revision) -> bool {
+    pub fn contains(self, revision: Revision) -> bool {
         self.0.contains(revision)
     }
 
     /// Set intersection
-    pub fn intersection(&self, other: RevisionSet) -> RevisionSet {
+    pub fn intersection(self, other: RevisionSet) -> RevisionSet {
         self.0.intersection(other)
     }
 
     /// Returns any revision contained in the set,
     /// by order of preference Left -> Right -> Base
-    pub fn any(&self) -> Revision {
+    pub fn any(self) -> Revision {
         self.0
             .any()
             .expect("RevisionNonEmptySet is actually empty, oops")
     }
 
-    pub fn is_full(&self) -> bool {
+    pub fn is_full(self) -> bool {
         self.0.is_full()
     }
 }

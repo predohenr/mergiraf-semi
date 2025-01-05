@@ -12,7 +12,7 @@ use crate::tree::AstNode;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Signature<'a, 'b>(Vec<Vec<AstNodeEquiv<'a, 'b>>>);
 
-impl<'a, 'b> Display for Signature<'a, 'b> {
+impl Display for Signature<'_, '_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "Signature [{}]",
@@ -36,7 +36,7 @@ impl<'a, 'b> Display for Signature<'a, 'b> {
 /// with equality being defined as "quasi" isomorphism between them.
 /// Only "quasi" because this equality doesn't have access to the class mapping
 /// so has to resort to hash equality in some sub-cases.
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, Copy, Eq)]
 enum AstNodeEquiv<'a, 'b: 'a> {
     Original(&'b AstNode<'b>),
     Merged(&'a MergedTree<'b>),
@@ -219,19 +219,20 @@ impl<'a, 'b> AstNodeEquiv<'a, 'b> {
     }
 }
 
-impl<'a, 'b> PartialEq for AstNodeEquiv<'a, 'b> {
+impl PartialEq for AstNodeEquiv<'_, '_> {
     fn eq(&self, other: &Self) -> bool {
         self.isomorphic(other, None)
     }
 }
 
-impl<'a, 'b> Hash for AstNodeEquiv<'a, 'b> {
+impl Hash for AstNodeEquiv<'_, '_> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
             AstNodeEquiv::Original(ast_node) => ast_node.hash.hash(state),
             AstNodeEquiv::Merged(tree) => match tree {
-                MergedTree::ExactTree { hash, .. } => hash.hash(state),
-                MergedTree::MixedTree { hash, .. } => hash.hash(state),
+                MergedTree::ExactTree { hash, .. } | MergedTree::MixedTree { hash, .. } => {
+                    hash.hash(state);
+                }
                 MergedTree::Conflict { base, left, right } => {
                     base.hash(state);
                     left.hash(state);
@@ -249,7 +250,7 @@ impl<'a, 'b> Hash for AstNodeEquiv<'a, 'b> {
     }
 }
 
-impl<'a, 'b> Display for AstNodeEquiv<'a, 'b> {
+impl Display for AstNodeEquiv<'_, '_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AstNodeEquiv::Original(ast_node) => write!(f, "Original({ast_node})"),
@@ -316,11 +317,7 @@ impl SignatureDefinition {
         Signature(
             self.paths
                 .iter()
-                .map(|path| {
-                    path.extract(node.clone(), class_mapping)
-                        .into_iter()
-                        .collect_vec()
-                })
+                .map(|path| path.extract(node, class_mapping).into_iter().collect_vec())
                 .collect(),
         )
     }

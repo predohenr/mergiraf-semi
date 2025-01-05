@@ -13,7 +13,7 @@ use mergiraf::{
     bug_reporter::report_bug,
     line_merge_and_structured_resolution, resolve_merge_cascading,
     settings::{imitate_cr_lf_from_input, normalize_to_lf, DisplaySettings},
-    supported_langs::supported_languages,
+    supported_langs::SUPPORTED_LANGUAGES,
 };
 
 const DISABLING_ENV_VAR_LEGACY: &str = "MERGIRAF_DISABLE";
@@ -135,12 +135,16 @@ fn do_merge(
     thread::spawn(move || {
         let res = || {
             let fname_base = &base;
-            let contents_base = normalize_to_lf(&read_file_to_string(fname_base)?);
+            let original_contents_base = read_file_to_string(fname_base)?;
+            let contents_base = normalize_to_lf(&original_contents_base);
+
             let fname_left = &left;
             let original_contents_left = read_file_to_string(fname_left)?;
             let contents_left = normalize_to_lf(&original_contents_left);
+
             let fname_right = &right;
-            let contents_right = normalize_to_lf(&read_file_to_string(fname_right)?);
+            let original_contents_right = read_file_to_string(fname_right)?;
+            let contents_right = normalize_to_lf(&original_contents_right);
 
             let attempts_cache = AttemptsCache::new(None, None).ok();
 
@@ -218,9 +222,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let debug_dir: Option<&'static str> = args.debug_dir.map(String::leak).map(|s| &*s);
 
             let settings: DisplaySettings<'static> = DisplaySettings {
-                diff3: true,
                 compact,
-                conflict_marker_size: 7,
                 base_revision_name: match base_name {
                     Some(s) if s == "%S" => default_base_name,
                     Some(name) => name.leak(),
@@ -236,6 +238,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     Some(name) => name.leak(),
                     None => right,
                 },
+                ..Default::default()
             };
 
             {
@@ -261,9 +264,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             ) {
                 Ok((return_code, merge_output)) => {
                     if let Some(fname_out) = output {
-                        write_string_to_file(&fname_out, &merge_output)?
+                        write_string_to_file(&fname_out, &merge_output)?;
                     } else if git {
-                        write_string_to_file(left, &merge_output)?
+                        write_string_to_file(left, &merge_output)?;
                     } else {
                         print!("{merge_output}");
                     };
@@ -281,12 +284,11 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             keep,
         } => {
             let settings = DisplaySettings {
-                diff3: true,
                 compact,
-                conflict_marker_size: 7,
                 base_revision_name: default_base_name, // TODO detect from file
                 left_revision_name: default_left_name,
                 right_revision_name: default_right_name,
+                ..Default::default()
             };
 
             let original_conflict_contents = read_file_to_string(&fname_conflicts)?;
@@ -326,9 +328,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             0
         }
         CliCommand::Languages { gitattributes } => {
-            for lang_profile in supported_languages() {
+            for lang_profile in &*SUPPORTED_LANGUAGES {
                 if gitattributes {
-                    for extension in lang_profile.extensions {
+                    for extension in &lang_profile.extensions {
                         println!("*{extension} merge=mergiraf");
                     }
                 } else {
@@ -346,7 +348,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             0
         }
         CliCommand::Report { merge_id_or_file } => {
-            report_bug(merge_id_or_file)?;
+            report_bug(&merge_id_or_file)?;
             0
         }
     };

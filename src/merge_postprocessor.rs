@@ -62,20 +62,20 @@ fn highlight_duplicate_signatures<'a>(
     commutative_parent: &CommutativeParent,
 ) -> Vec<MergedTree<'a>> {
     // compute signatures and index them
-    let mut sig_to_indices: HashMap<Signature<'_, 'a>, Vec<usize>> = HashMap::new();
-    let mut sigs = Vec::new();
+    let mut sig_to_indices: HashMap<&Signature<'_, 'a>, Vec<usize>> = HashMap::new();
     let mut conflict_found = false;
-    for (idx, element) in elements.iter().enumerate() {
-        let sig = lang_profile.extract_signature_from_merged_node(element, class_mapping);
-        sigs.push(sig.clone());
+    let sigs: Vec<_> = elements
+        .iter()
+        .map(|element| lang_profile.extract_signature_from_merged_node(element, class_mapping))
+        .collect();
+    for (idx, sig) in sigs.iter().enumerate() {
         if let Some(signature) = sig {
-            let sig_clone = signature.clone();
             let existing_indices = sig_to_indices.entry(signature).or_default();
             if !existing_indices.is_empty() {
                 conflict_found = true;
                 debug!(
                     "signature conflict found in {}: {}",
-                    commutative_parent.parent_type, sig_clone
+                    commutative_parent.parent_type, signature
                 );
             }
             existing_indices.push(idx);
@@ -113,10 +113,14 @@ fn highlight_duplicate_signatures<'a>(
     // locations to be grouped with other elements with the same signature
     let mut filtered_elements = Vec::new();
     let mut skip_next_separator = true;
-    for (idx, element) in elements.iter().enumerate().rev() {
-        let sig = sigs
-            .get(idx)
-            .expect("Inconsistent of length of signature arrays and elements array");
+    // NOTE: can't use `itertools::zip_eq` here because it doesn't implement `DoubleEndedIterator`
+    // which is needed for `.rev()`. See https://github.com/rust-itertools/itertools/pull/531
+    debug_assert_eq!(
+        elements.len(),
+        sigs.len(),
+        "Inconsistent length of signature arrays and elements array"
+    );
+    for (idx, (element, sig)) in std::iter::zip(&elements, &sigs).enumerate().rev() {
         match sig {
             None => {
                 let is_separator = is_separator(element, trimmed_separator);
@@ -188,14 +192,14 @@ fn highlight_duplicate_signatures<'a>(
                             } /* TODO set to OnlyInside if we are the last content node */
                         };
                         let mut merged = merge_same_sigs(
-                            cluster
+                            &cluster
                                 .iter()
                                 .map(|idx| {
                                     elements
                                         .get(*idx)
                                         .expect("Invalid element index in sig_to_indices")
                                 })
-                                .collect(),
+                                .collect::<Vec<_>>(),
                             class_mapping,
                             separator_node,
                             conflict_add_separator,
@@ -236,21 +240,21 @@ enum AddSeparator {
 /// Given a list of elements having the same signature, create a conflict highlighting this fact,
 /// or if they happen to be isomorphic in the left/right revisions, output them as-is.
 fn merge_same_sigs<'a>(
-    elements: Vec<&MergedTree<'a>>,
+    elements: &[&MergedTree<'a>],
     class_mapping: &ClassMapping<'a>,
     separator: Option<&'a AstNode<'a>>,
     add_separator: AddSeparator,
 ) -> Vec<MergedTree<'a>> {
-    if let &[first, second] = elements.as_slice() {
+    if let &[first, second] = elements {
         if isomorphic_merged_trees(first, second, class_mapping) {
             // The two elements don't just have the same signature, they are actually isomorphic!
             // So let's just deduplicate them.
             return vec![first.clone()];
         }
     }
-    let base = filter_by_revision(&elements, Revision::Base, class_mapping);
-    let left = filter_by_revision(&elements, Revision::Left, class_mapping);
-    let right = filter_by_revision(&elements, Revision::Right, class_mapping);
+    let base = filter_by_revision(elements, Revision::Base, class_mapping);
+    let left = filter_by_revision(elements, Revision::Left, class_mapping);
+    let right = filter_by_revision(elements, Revision::Right, class_mapping);
 
     if left.len() == right.len()
         && left
@@ -258,7 +262,7 @@ fn merge_same_sigs<'a>(
             .zip(right.iter())
             .all(|(elem_left, elem_right)| elem_left.isomorphic_to(elem_right))
     {
-        add_separators(left, separator, add_separator)
+        add_separators(&left, separator, add_separator)
             .iter()
             .map(|ast_node| {
                 MergedTree::new_exact(
@@ -270,9 +274,9 @@ fn merge_same_sigs<'a>(
             .collect()
     } else {
         vec![MergedTree::Conflict {
-            base: add_separators(base, separator, add_separator),
-            left: add_separators(left, separator, add_separator),
-            right: add_separators(right, separator, add_separator),
+            base: add_separators(&base, separator, add_separator),
+            left: add_separators(&left, separator, add_separator),
+            right: add_separators(&right, separator, add_separator),
         }]
     }
 }
@@ -297,7 +301,7 @@ fn filter_by_revision<'a>(
 
 /// Insert separators between a list of merged elements
 fn add_separators<'a>(
-    elements: Vec<&'a AstNode<'a>>,
+    elements: &[&'a AstNode<'a>],
     separator: Option<&'a AstNode<'a>>,
     add_separator: AddSeparator,
 ) -> Vec<&'a AstNode<'a>> {
@@ -308,7 +312,7 @@ fn add_separators<'a>(
             result.push(separator);
         }
     }
-    for element in &elements {
+    for element in elements {
         if first {
             first = false;
         } else if let Some(separator) = separator {
