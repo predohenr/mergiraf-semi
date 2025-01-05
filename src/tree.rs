@@ -623,9 +623,10 @@ impl<'a> AstNode<'a> {
             .flatten()
             .unwrap_or_default();
 
-        let mut result =
-            format!("{prefix}{tree_sym}{key}\x1b[0m{grammar_name}{source}{commutative}{sig}\n");
-        result.extend(
+        std::iter::once(format!(
+            "{prefix}{tree_sym}{key}\x1b[0m{grammar_name}{source}{commutative}{sig}\n"
+        ))
+        .chain(
             self.children
                 .iter()
                 .enumerate()
@@ -639,8 +640,8 @@ impl<'a> AstNode<'a> {
                         next_parent,
                     )
                 }),
-        );
-        result
+        )
+        .collect()
     }
 }
 
