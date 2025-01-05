@@ -231,6 +231,10 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             compact,
             timeout,
         } => {
+            let base: &'static str = base.leak();
+            let left: &'static str = left.leak();
+            let right: &'static str = right.leak();
+
             let settings = DisplaySettings {
                 diff3: true,
                 compact,
@@ -238,17 +242,17 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 base_revision_name: match base_name.as_deref() {
                     Some("%S") => default_base_name,
                     Some(name) => name,
-                    None => &base,
+                    None => base,
                 },
                 left_revision_name: match left_name.as_deref() {
                     Some("%X") => default_left_name,
                     Some(name) => name,
-                    None => &left,
+                    None => left,
                 },
                 right_revision_name: match right_name.as_deref() {
                     Some("%Y") => default_right_name,
                     Some(name) => name,
-                    None => &right,
+                    None => right,
                 },
             };
 
@@ -257,16 +261,16 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     || env::var(DISABLING_ENV_VAR_LEGACY).is_ok_and(|v| !v.is_empty()); // TODO: deprecate
 
                 if mergiraf_disabled {
-                    return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
+                    return fallback_to_git_merge_file(base, left, right, git, &settings);
                 }
             }
 
             let timeout = Duration::from_millis(timeout);
 
             match do_merge(
-                &base,
-                &left,
-                &right,
+                base,
+                left,
+                right,
                 fast,
                 path_name,
                 timeout,
@@ -279,7 +283,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     } else if let Some(fname_out) = output {
                         write_string_to_file(&fname_out, &merge_output)?
                     } else if git {
-                        write_string_to_file(&left, &merge_output)?
+                        write_string_to_file(left, &merge_output)?
                     } else {
                         print!("{merge_output}");
                     };
@@ -287,7 +291,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 }
                 Err(err) => {
                     log::error!("Mergiraf: {err}");
-                    return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
+                    return fallback_to_git_merge_file(base, left, right, git, &settings);
                 }
             }
         }
