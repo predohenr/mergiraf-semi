@@ -122,6 +122,7 @@ fn main() {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn do_merge(
     base: &str,
     left: &str,
@@ -192,7 +193,7 @@ fn do_merge(
         &contents_left,
         &contents_right,
         fname_base,
-        &settings,
+        settings,
         !fast,
         attempts_cache.as_ref(),
         debug_dir,
@@ -284,7 +285,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     } else if git {
                         write_string_to_file(&left, &merge_output)?
                     } else {
-                        print!("{}", merge_output);
+                        print!("{merge_output}");
                     };
                     return_code
                 }
