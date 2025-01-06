@@ -269,47 +269,49 @@ pub fn cascading_merge(
         return vec![line_based_merge];
     }
 
-    if let Some(lang_profile) = lang_profile {
-        // second attempt: to solve the conflicts from the line-based merge
-        if !line_based_merge.has_additional_issues {
-            let parsed_conflicts = ParsedMerge::parse(&line_based_merge.contents)
-                .expect("the diffy-imara rust library produced inconsistent conflict markers");
+    let Some(lang_profile) = lang_profile else {
+        return vec![line_based_merge];
+    };
 
-            let solved_merge = resolve_merge(&parsed_conflicts, settings, lang_profile, debug_dir);
+    // second attempt: to solve the conflicts from the line-based merge
+    if !line_based_merge.has_additional_issues {
+        let parsed_conflicts = ParsedMerge::parse(&line_based_merge.contents)
+            .expect("the diffy-imara rust library produced inconsistent conflict markers");
 
-            match solved_merge {
-                Ok(recovered_merge) => {
-                    if recovered_merge.conflict_count == 0 && !recovered_merge.has_additional_issues
-                    {
-                        return vec![line_based_merge, recovered_merge];
-                    }
-                    merges.push(recovered_merge);
+        let solved_merge = resolve_merge(&parsed_conflicts, settings, lang_profile, debug_dir);
+
+        match solved_merge {
+            Ok(recovered_merge) => {
+                if recovered_merge.conflict_count == 0 && !recovered_merge.has_additional_issues {
+                    return vec![line_based_merge, recovered_merge];
                 }
-                Err(err) => {
-                    debug!("error while attempting conflict resolution of line-based merge: {err}");
-                }
+                merges.push(recovered_merge);
+            }
+            Err(err) => {
+                debug!("error while attempting conflict resolution of line-based merge: {err}");
             }
         }
-
-        if full_merge || line_based_merge.has_additional_issues {
-            // third attempt: full-blown structured merge
-            let structured_merge = structured_merge(
-                contents_base,
-                contents_left,
-                contents_right,
-                None,
-                settings,
-                lang_profile,
-                debug_dir,
-            );
-            match structured_merge {
-                Ok(successful_merge) => merges.push(successful_merge),
-                Err(parse_error) => {
-                    debug!("full structured merge encountered an error: {parse_error}");
-                }
-            };
-        }
     }
+
+    if full_merge || line_based_merge.has_additional_issues {
+        // third attempt: full-blown structured merge
+        let structured_merge = structured_merge(
+            contents_base,
+            contents_left,
+            contents_right,
+            None,
+            settings,
+            lang_profile,
+            debug_dir,
+        );
+        match structured_merge {
+            Ok(successful_merge) => merges.push(successful_merge),
+            Err(parse_error) => {
+                debug!("full structured merge encountered an error: {parse_error}");
+            }
+        };
+    }
+
     merges.push(line_based_merge);
     merges
 }
