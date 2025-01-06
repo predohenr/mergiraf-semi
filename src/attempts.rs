@@ -108,7 +108,7 @@ impl AttemptsCache {
         contents_base: &str,
         contents_left: &str,
         contents_right: &str,
-    ) -> Result<Attempt, String> {
+    ) -> Result<Attempt<'a>, String> {
         let file_name = final_path
             .file_name()
             .and_then(|file_name| file_name.to_str())
@@ -141,7 +141,10 @@ impl AttemptsCache {
         Ok(attempt)
     }
 
-    pub(crate) fn parse_attempt_id<'a>(&'a self, attempt_id: &'a str) -> Result<Attempt, String> {
+    pub(crate) fn parse_attempt_id<'a>(
+        &'a self,
+        attempt_id: &'a str,
+    ) -> Result<Attempt<'a>, String> {
         let (file_name, uid) = attempt_id
             .rsplit_once('_')
             .ok_or_else(|| "Invalid attempt id, should contain a '_' character".to_owned())?;
@@ -235,7 +238,7 @@ mod tests {
     use super::AttemptsCache;
 
     #[test]
-    fn test_lifecycle() {
+    fn lifecycle() {
         let tmpdir = tempfile::tempdir().expect("Could not create a temporary directory");
 
         let cache = AttemptsCache::new(Some(tmpdir.path()), Some(2))
@@ -275,7 +278,7 @@ mod tests {
     }
 
     #[test]
-    fn test_no_extension() {
+    fn no_extension() {
         let tmpdir = tempfile::tempdir().expect("Could not create a temporary directory");
 
         let cache = AttemptsCache::new(Some(tmpdir.path()), Some(2))
@@ -310,7 +313,7 @@ mod tests {
     }
 
     #[test]
-    fn test_prune() {
+    fn prune() {
         let tmpdir = tempfile::tempdir().expect("Could not create a temporary directory");
 
         let cache = AttemptsCache::new(Some(tmpdir.path()), Some(2))

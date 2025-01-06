@@ -141,27 +141,24 @@ impl<'a> MergedText<'a> {
             match section {
                 MergeSection::Merged(contents) => {
                     if gathering_conflict {
-                        match contents.find('\n') {
-                            Some(newline_idx) => {
-                                let to_append = &contents[..(newline_idx + 1)];
-                                left_buffer.push_str(to_append);
-                                base_buffer.push_str(to_append);
-                                right_buffer.push_str(to_append);
-                                Self::render_conflict(
-                                    &base_buffer,
-                                    &left_buffer,
-                                    &right_buffer,
-                                    settings,
-                                    &mut output,
-                                );
-                                output.push_str(&contents[(newline_idx + 1)..]);
-                                gathering_conflict = false
-                            }
-                            None => {
-                                left_buffer.push_str(contents);
-                                base_buffer.push_str(contents);
-                                right_buffer.push_str(contents);
-                            }
+                        if let Some(newline_idx) = contents.find('\n') {
+                            let to_append = &contents[..(newline_idx + 1)];
+                            left_buffer.push_str(to_append);
+                            base_buffer.push_str(to_append);
+                            right_buffer.push_str(to_append);
+                            Self::render_conflict(
+                                &base_buffer,
+                                &left_buffer,
+                                &right_buffer,
+                                settings,
+                                &mut output,
+                            );
+                            output.push_str(&contents[(newline_idx + 1)..]);
+                            gathering_conflict = false;
+                        } else {
+                            left_buffer.push_str(contents);
+                            base_buffer.push_str(contents);
+                            right_buffer.push_str(contents);
                         }
                     } else {
                         output.push_str(contents);
@@ -320,7 +317,7 @@ mod tests {
     }
 
     #[test]
-    fn test_compact_mode() {
+    fn compact_mode() {
         let merged_text = MergedText {
             sections: vec![
                 merged("hello"),
@@ -344,7 +341,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multiple_conflicts_on_same_line() {
+    fn multiple_conflicts_on_same_line() {
         let merged_text = MergedText {
             sections: vec![
                 merged("let's start "),
@@ -362,7 +359,7 @@ mod tests {
     }
 
     #[test]
-    fn test_spurious_conflict() {
+    fn spurious_conflict() {
         let mut merged_text = MergedText::new();
         merged_text.push_merged("let's start ".into());
         merged_text.push_conflict("tomorrow".into(), "now".into(), "now".into());

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::parsed_merge::{MergedChunk, ParsedMerge};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -132,8 +134,13 @@ pub fn imitate_cr_lf_from_input(input_contents: &str, output_contents: &str) -> 
     }
 }
 
-pub fn normalize_to_lf(contents: &str) -> String {
-    contents.replace("\r\n", "\n").replace('\r', "\n")
+pub fn normalize_to_lf(contents: &str) -> Cow<str> {
+    if !contents.contains('\r') {
+        Cow::Borrowed(contents)
+    } else {
+        let res = contents.replace("\r\n", "\n").replace('\r', "\n");
+        Cow::Owned(res)
+    }
 }
 
 #[cfg(test)]
@@ -141,7 +148,7 @@ mod tests {
     use super::imitate_cr_lf_from_input;
 
     #[test]
-    fn test_normalize_cr_lf_to_lf() {
+    fn normalize_cr_lf_to_lf() {
         let input_contents = "a\nb\nc\nd";
         let output_contents = "A\nB\r\nC\rD";
 
@@ -151,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn test_normalize_lf_to_cr_lf() {
+    fn normalize_lf_to_cr_lf() {
         let input_contents = "a\r\nb\r\nc\nd";
         let output_contents = "A\nB\r\nC\rD";
 
@@ -161,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn test_normalize_lf_to_cr() {
+    fn normalize_lf_to_cr() {
         let input_contents = "a\rb\rc\nd";
         let output_contents = "A\rB\r\nC\nD";
 

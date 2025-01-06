@@ -3,21 +3,21 @@ use std::fs::{self, read_dir};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use diffy::{create_patch, PatchFormatter};
+use diffy_imara::{create_patch, PatchFormatter};
 use mergiraf::settings::{normalize_to_lf, DisplaySettings};
 use mergiraf::{line_merge_and_structured_resolution, resolve_merge_cascading};
 use rstest::rstest;
 
-fn run_git(args: Vec<&str>, repo_dir: &Path) {
+fn run_git(args: &[&str], repo_dir: &Path) {
     let command_str = format!("git {}", args.join(" "));
     let mut command = Command::new("git");
     command.current_dir(repo_dir);
-    command.args(args.iter());
+    command.args(args);
     command.env_remove("HOME"); // disable ~/.gitconfig to isolate the test better
     let output = command.output().expect("Failed to execute git command");
     if !output.status.success() {
         eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
-        panic!("git command failed: {}", command_str);
+        panic!("git command failed: {command_str}");
     }
 }
 
@@ -54,7 +54,7 @@ fn detect_extension(test_dir: &Path) -> String {
 #[rstest]
 #[case("merge")]
 #[case("diff3")]
-fn test_solve_command(#[case] conflict_style: &str) {
+fn solve_command(#[case] conflict_style: &str) {
     let test_dir = PathBuf::from("examples/java/working/demo");
     let extension = detect_extension(&test_dir);
 
@@ -62,12 +62,12 @@ fn test_solve_command(#[case] conflict_style: &str) {
     let repo_dir = tempfile::tempdir().expect("failed to create the temp dir");
     let repo_dir = repo_dir.path();
     // init git repository
-    run_git(vec!["init", "."], repo_dir);
-    run_git(vec!["checkout", "-b", "first_branch"], repo_dir);
+    run_git(&["init", "."], repo_dir);
+    run_git(&["checkout", "-b", "first_branch"], repo_dir);
     let file_name = write_file_from_rev(repo_dir, &test_dir, "Base", &extension);
-    run_git(vec!["add", &file_name], repo_dir);
+    run_git(&["add", &file_name], repo_dir);
     run_git(
-        vec![
+        &[
             "-c",
             "user.email=author@example.com",
             "-c",
@@ -81,7 +81,7 @@ fn test_solve_command(#[case] conflict_style: &str) {
     );
     write_file_from_rev(repo_dir, &test_dir, "Left", &extension);
     run_git(
-        vec![
+        &[
             "-c",
             "user.email=author@example.com",
             "-c",
@@ -93,11 +93,11 @@ fn test_solve_command(#[case] conflict_style: &str) {
         ],
         repo_dir,
     );
-    run_git(vec!["checkout", "HEAD~"], repo_dir);
-    run_git(vec!["checkout", "-b", "second_branch"], repo_dir);
+    run_git(&["checkout", "HEAD~"], repo_dir);
+    run_git(&["checkout", "-b", "second_branch"], repo_dir);
     write_file_from_rev(repo_dir, &test_dir, "Right", &extension);
     run_git(
-        vec![
+        &[
             "-c",
             "user.email=author@example.com",
             "-c",
@@ -192,5 +192,5 @@ fn integration(#[files("examples/*/working/*")] path: PathBuf) {
 // use this test to debug a specific test case by changing the path in it.
 #[rstest]
 fn debug_test() {
-    run_test_from_dir(&PathBuf::from("examples/go/working/remove_and_add_imports"));
+    run_test_from_dir(Path::new("examples/go/working/remove_and_add_imports"));
 }

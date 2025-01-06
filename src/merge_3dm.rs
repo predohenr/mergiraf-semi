@@ -25,7 +25,7 @@ pub fn three_way_merge<'a>(
     base: &'a Ast<'a>,
     left: &'a Ast<'a>,
     right: &'a Ast<'a>,
-    initial_matchings: Option<(Matching<'a>, Matching<'a>)>,
+    initial_matchings: Option<&(Matching<'a>, Matching<'a>)>,
     primary_matcher: &TreeMatcher,
     auxiliary_matcher: &TreeMatcher,
     debug_dir: Option<&str>,
@@ -194,7 +194,7 @@ pub fn three_way_merge<'a>(
         &cleaned_changeset,
         &base_changeset,
         &class_mapping,
-        &primary_matcher.lang_profile,
+        primary_matcher.lang_profile,
     );
     let merged_tree = tree_builder.build_tree();
     debug!("constructing the merged tree took {:?}", start.elapsed());
@@ -203,7 +203,7 @@ pub fn three_way_merge<'a>(
     let start: Instant = Instant::now();
     let postprocessed_tree = post_process_merged_tree_for_duplicate_signatures(
         merged_tree,
-        &primary_matcher.lang_profile,
+        primary_matcher.lang_profile,
         &class_mapping,
     );
     debug!(
@@ -216,8 +216,6 @@ pub fn three_way_merge<'a>(
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
-
     use crate::{lang_profile::LangProfile, settings::DisplaySettings, test_utils::ctx};
 
     use super::*;
@@ -229,20 +227,20 @@ mod tests {
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: true,
-            lang_profile: Cow::Owned(lang_profile.clone()),
+            lang_profile,
         };
         let auxiliary_matcher = TreeMatcher {
             min_height: 1,
             sim_threshold: 0.5,
             max_recovery_size: 100,
             use_rted: false,
-            lang_profile: Cow::Owned(lang_profile),
+            lang_profile,
         };
         (primary_matcher, auxiliary_matcher)
     }
 
     #[test]
-    fn test_single_tree_has_no_conflicts() {
+    fn single_tree_has_no_conflicts() {
         let ctx = ctx();
 
         let base = ctx.parse_json("[1, {\"a\":2}]");
@@ -267,7 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_conflict() {
+    fn merge_conflict() {
         let ctx = ctx();
 
         let base = ctx.parse_json("[1, 2]");
@@ -295,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_delete() {
+    fn delete_delete() {
         let ctx = ctx();
 
         let base = ctx.parse_json("[1, 2]");
@@ -323,7 +321,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_insert() {
+    fn delete_insert() {
         let ctx = ctx();
 
         let base = ctx.parse_json("[1, 2]");
@@ -351,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_modify() {
+    fn delete_modify() {
         let ctx = ctx();
 
         let base = ctx.parse_json("[1, {\"a\": 3}, 2]");
@@ -375,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn test_commutative_conflict_end_separator() {
+    fn commutative_conflict_end_separator() {
         let ctx = ctx();
 
         let base = ctx.parse_json("{\"x\": 0}");
@@ -399,7 +397,7 @@ mod tests {
     }
 
     #[test]
-    fn test_commutative_conflict_no_end_separator() {
+    fn commutative_conflict_no_end_separator() {
         let ctx = ctx();
 
         let base = ctx.parse_json("{}");
@@ -423,7 +421,7 @@ mod tests {
     }
 
     #[test]
-    fn test_commutative_conflict_double_delete() {
+    fn commutative_conflict_double_delete() {
         let ctx = ctx();
 
         let base = ctx.parse_json("{\"a\": 1, \"b\": 2}");
@@ -447,7 +445,7 @@ mod tests {
     }
 
     #[test]
-    fn test_commutative_conflict_delete_modified() {
+    fn commutative_conflict_delete_modified() {
         let ctx = ctx();
 
         let base = ctx.parse_json("{\"a\": {\"x\": 1}, \"b\": 2}");

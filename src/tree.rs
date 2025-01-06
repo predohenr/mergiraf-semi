@@ -66,7 +66,7 @@ impl<'a> Ast<'a> {
     /// Create a new tree from a `tree_sitter` tree, the source code it was generated from,
     /// and an arena to allocate the nodes from.
     pub fn new(
-        tree: Tree,
+        tree: &Tree,
         source: &'a str,
         lang_profile: &LangProfile,
         arena: &'a Arena<AstNode<'a>>,
@@ -147,7 +147,7 @@ impl<'a> AstNode<'a> {
         // if this is a leaf that spans multiple lines, create one child per line,
         // to ease matching and diffing (typically, for multi-line comments)
         if children.is_empty() && local_source.contains('\n') {
-            let lines = local_source.split("\n");
+            let lines = local_source.split('\n');
             let mut offset = range.start;
             for line in lines {
                 let trimmed = line.trim_start();
@@ -170,7 +170,7 @@ impl<'a> AstNode<'a> {
                     parent: UnsafeCell::new(None),
                     dfs: UnsafeCell::new(None),
                 }));
-                offset += line.len() + 1
+                offset += line.len() + 1;
             }
         }
 
@@ -212,7 +212,7 @@ impl<'a> AstNode<'a> {
     }
 
     fn internal_set_parent_on_children(&'a self) {
-        for child in self.children.iter() {
+        for child in &self.children {
             unsafe { *child.parent.get() = Some(self) }
         }
     }
@@ -347,18 +347,18 @@ impl<'a> AstNode<'a> {
 
     fn internal_s_expr(&self, output: &mut String) {
         if self.is_leaf() {
-            output.push_str(self.source)
+            output.push_str(self.source);
         } else {
             output.push_str(self.grammar_name);
             output.push('(');
             let mut first = true;
-            for child in self.children.iter() {
+            for child in &self.children {
                 if first {
                     first = false;
                 } else {
                     output.push(' ');
                 }
-                child.internal_s_expr(output)
+                child.internal_s_expr(output);
             }
             output.push(')');
         }
@@ -369,11 +369,11 @@ impl<'a> AstNode<'a> {
     pub fn predecessor(&'a self) -> Option<&'a AstNode<'a>> {
         let parent = self.parent()?;
         let mut previous = None;
-        for sibling in parent.children.iter() {
+        for sibling in &parent.children {
             if sibling.id == self.id {
                 return previous;
             }
-            previous = Some(sibling)
+            previous = Some(sibling);
         }
         None
     }
@@ -452,7 +452,7 @@ impl<'a> AstNode<'a> {
     /// This is None if the preceding whitespace does not contain any newline.
     pub fn preceding_indentation(&'a self) -> Option<&'a str> {
         let whitespace = self.preceding_whitespace()?;
-        let last_newline = whitespace.rfind("\n")?;
+        let last_newline = whitespace.rfind('\n')?;
         Some(&whitespace[(last_newline + 1)..])
     }
 
@@ -501,8 +501,7 @@ impl<'a> AstNode<'a> {
                         ]
                         .into_iter()
                         .flatten()
-                        .sorted_by_key(|indentation| indentation.len()) // try to find the minimal shift
-                        .next()
+                        .min_by_key(|indentation| indentation.len()) // try to find the minimal shift
                     })
             }
             None => Some(own_indentation),
@@ -515,8 +514,8 @@ impl<'a> AstNode<'a> {
         tab_width: usize,
     ) -> Option<&'b str> {
         let tab_spaces = " ".repeat(tab_width);
-        let own_spaces = own_indentation.replace("\t", &tab_spaces);
-        let suffix = own_spaces.strip_prefix(&ancestor_indentation.replace("\t", &tab_spaces))?;
+        let own_spaces = own_indentation.replace('\t', &tab_spaces);
+        let suffix = own_spaces.strip_prefix(&ancestor_indentation.replace('\t', &tab_spaces))?;
         // convert back the suffix of the normalized strings to a suffix of the original string
         let mut idx = own_indentation.len();
         let mut remaining_spaces = suffix.len();
@@ -540,11 +539,11 @@ impl<'a> AstNode<'a> {
     }
 
     /// The source of this node, stripped from any indentation inherited by the node or its ancestors
-    pub fn unindented_source(&'a self) -> Cow<str> {
+    pub fn unindented_source(&'a self) -> Cow<'a, str> {
         match self.preceding_indentation().or(self.ancestor_indentation()) {
             Some(indentation) => {
                 // TODO FIXME this is invalid for multiline string literals!
-                Cow::from(self.source.replace(&format!("\n{}", indentation), "\n"))
+                Cow::from(self.source.replace(&format!("\n{indentation}"), "\n"))
             }
             None => Cow::from(self.source),
         }
@@ -553,13 +552,12 @@ impl<'a> AstNode<'a> {
     /// The source of this node, stripped from any indentation inherited by the node or its ancestors
     /// and shifted back to the desired indentation.
     pub fn reindented_source(&'a self, new_indentation: &str) -> String {
-        let new_newlines = format!("\n{}", new_indentation);
-        let indentation = self
-            .preceding_indentation()
+        let new_newlines = format!("\n{new_indentation}");
+        let indentation = (self.preceding_indentation())
             .or(self.ancestor_indentation())
             .unwrap_or("");
         self.source
-            .replace(&format!("\n{}", indentation), &new_newlines) // TODO FIXME this is invalid for multiline string literals!
+            .replace(&format!("\n{indentation}"), &new_newlines) // TODO FIXME this is invalid for multiline string literals!
     }
 
     /// Source of the node, including any whitespace before and after,
@@ -596,10 +594,10 @@ impl<'a> AstNode<'a> {
         let num_children = self.children.len();
         let next_parent = lang_profile.get_commutative_parent(self.grammar_name);
         let mut result = format!(
-            "{prefix}{}{}\x1b[0m{}{}\n",
+            "{prefix}{}{}\x1b[0m{}{}{}{}\n",
             if last_child { "└" } else { "├" },
             if let Some(key) = self.field_name {
-                format!("{}: ", key)
+                format!("{key}: ")
             } else {
                 "".to_owned()
             },
@@ -609,14 +607,20 @@ impl<'a> AstNode<'a> {
                 format!("\x1b[0;31m{}\x1b[0m", self.grammar_name)
             },
             if num_children == 0 && self.source != self.grammar_name {
-                format!(" \x1b[0;31m{}\x1b[0m", self.source.replace("\n", "\\n"))
-            } else if next_parent.is_some() {
+                format!(" \x1b[0;31m{}\x1b[0m", self.source.replace('\n', "\\n"))
+            } else {
+                "".to_owned()
+            },
+            if next_parent.is_some() {
                 " \x1b[0;95mCommutative\x1b[0m".to_string()
-            } else if let (Some(_), Some(sig)) = (
+            } else {
+                "".to_owned()
+            },
+            if let (Some(_), Some(sig)) = (
                 parent,
                 lang_profile.extract_signature_from_original_node(self)
             ) {
-                format!(" \x1b[0;96m{}\x1b[0m", sig)
+                format!(" \x1b[0;96m{sig}\x1b[0m")
             } else {
                 "".to_owned()
             }
@@ -629,7 +633,7 @@ impl<'a> AstNode<'a> {
                     index == num_children - 1,
                     lang_profile,
                     next_parent,
-                ))
+                ));
             }
         }
         result
@@ -639,7 +643,7 @@ impl<'a> AstNode<'a> {
 /// We pre-compute hash values for all nodes,
 /// so we make sure those are used instead of recursively walking the tree
 /// each time a hash is computed.
-impl<'a> Hash for AstNode<'a> {
+impl Hash for AstNode<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.hash.hash(state);
         self.id.hash(state);
@@ -648,7 +652,7 @@ impl<'a> Hash for AstNode<'a> {
     }
 }
 
-impl<'a> PartialEq for AstNode<'a> {
+impl PartialEq for AstNode<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.hash == other.hash
             && self.id == other.id
@@ -657,16 +661,16 @@ impl<'a> PartialEq for AstNode<'a> {
     }
 }
 
-impl<'a> Eq for AstNode<'a> {}
+impl Eq for AstNode<'_> {}
 
 // AstNode fails to be Sync by default because it contains
 // an UnsafeCell. But this cell is only mutated during initialization and only
 // ever refers to something that lives as long as the node itself (thanks to the
 // use of arenas) so it's fine to share it across threads.
-unsafe impl<'a> Sync for AstNode<'a> {}
-unsafe impl<'a> Send for AstNode<'a> {}
+unsafe impl Sync for AstNode<'_> {}
+unsafe impl Send for AstNode<'_> {}
 
-impl<'a> Display for AstNode<'a> {
+impl Display for AstNode<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -876,7 +880,7 @@ mod tests {
                 "number",
                 "}"
             ]
-        )
+        );
     }
 
     #[test]
@@ -901,7 +905,7 @@ mod tests {
                 "object",
                 "document"
             ]
-        )
+        );
     }
 
     #[test]
@@ -1171,7 +1175,7 @@ mod tests {
         let lang_profile = LangProfile::detect_from_filename("file.json")
             .expect("Could not find JSON language profile");
 
-        let ascii_tree = tree.root().ascii_tree(&lang_profile);
+        let ascii_tree = tree.root().ascii_tree(lang_profile);
 
         let re = Regex::new("\x1b\\[0(;[0-9]*)?m").unwrap();
         let without_colors = re.replace_all(&ascii_tree, "");
