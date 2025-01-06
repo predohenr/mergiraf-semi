@@ -44,14 +44,16 @@ pub(crate) mod tree_matcher;
 pub(crate) mod visualizer;
 
 use core::cmp::Ordering;
-use std::{borrow::Cow, fs, path::Path, time::Instant};
+use std::{fs, path::Path, time::Instant};
 
 use attempts::AttemptsCache;
 use git::extract_revision_from_git;
 
 use itertools::Itertools;
 use lang_profile::LangProfile;
-use line_based::{line_based_merge, with_final_newline, MergeResult, LINE_BASED_METHOD};
+use line_based::{
+    line_based_merge_with_duplicate_signature_detection, MergeResult, LINE_BASED_METHOD,
+};
 use log::{debug, info, warn};
 
 use parsed_merge::{ParsedMerge, PARSED_MERGE_DIFF2_DETECTED};
@@ -196,49 +198,6 @@ fn line_based_and_best(mut merges: Vec<MergeResult>) -> LineBasedAndBestAre {
             LineBasedAndBestAre::NotTheSame { line_based, best }
         }
     }
-}
-
-/// Do a line-based merge. If it is conflict-free, also check if it introduced any duplicate signatures,
-/// in which case this is logged as an additional issue on the merge result.
-fn line_based_merge_with_duplicate_signature_detection(
-    contents_base: &str,
-    contents_left: &str,
-    contents_right: &str,
-    settings: &DisplaySettings,
-    lang_profile: Option<&LangProfile>,
-) -> MergeResult {
-    let mut line_based_merge = line_based_merge(
-        &with_final_newline(Cow::from(contents_base)),
-        &with_final_newline(Cow::from(contents_left)),
-        &with_final_newline(Cow::from(contents_right)),
-        settings,
-    );
-
-    if line_based_merge.conflict_count == 0 {
-        // If we support this language, check that there aren't any signature conflicts in the line-based merge
-        if let Some(lang_profile) = lang_profile {
-            let mut parser = TSParser::new();
-            parser
-                .set_language(&lang_profile.language)
-                .unwrap_or_else(|_| panic!("Error loading {} grammar", lang_profile.name));
-            let arena = Arena::new();
-            let ref_arena = Arena::new();
-            let tree_left = parse(
-                &mut parser,
-                &line_based_merge.contents,
-                lang_profile,
-                &arena,
-                &ref_arena,
-            );
-
-            if let Ok(ast) = tree_left {
-                if lang_profile.has_signature_conflicts(ast.root()) {
-                    line_based_merge.has_additional_issues = true;
-                }
-            }
-        }
-    }
-    line_based_merge
 }
 
 /// Attempts various merging method in turn, and stops early when
