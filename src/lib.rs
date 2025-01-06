@@ -30,6 +30,7 @@ pub(crate) mod merged_text;
 pub(crate) mod merged_tree;
 #[allow(clippy::mutable_key_type)]
 pub(crate) mod multimap;
+pub mod newline;
 pub(crate) mod parsed_merge;
 pub(crate) mod pcs;
 pub(crate) mod priority_list;
