@@ -25,6 +25,7 @@ pub(crate) mod line_based;
 pub(crate) mod matching;
 pub(crate) mod merge_3dm;
 pub(crate) mod merge_postprocessor;
+pub(crate) mod merge_result;
 pub(crate) mod merged_text;
 pub(crate) mod merged_tree;
 #[allow(clippy::mutable_key_type)]
@@ -51,11 +52,10 @@ use git::extract_revision_from_git;
 
 use itertools::Itertools;
 use lang_profile::LangProfile;
-use line_based::{
-    line_based_merge_with_duplicate_signature_detection, MergeResult, LINE_BASED_METHOD,
-};
+use line_based::{line_based_merge_with_duplicate_signature_detection, LINE_BASED_METHOD};
 use log::{debug, info, warn};
 
+use merge_result::MergeResult;
 use parsed_merge::{ParsedMerge, PARSED_MERGE_DIFF2_DETECTED};
 use pcs::Revision;
 use settings::DisplaySettings;

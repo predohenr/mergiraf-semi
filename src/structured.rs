@@ -5,15 +5,13 @@ use typed_arena::Arena;
 
 use crate::{
     lang_profile::LangProfile,
-    line_based::{
-        with_final_newline, MergeResult, FULLY_STRUCTURED_METHOD, STRUCTURED_RESOLUTION_METHOD,
-    },
+    line_based::{with_final_newline, FULLY_STRUCTURED_METHOD, STRUCTURED_RESOLUTION_METHOD},
     merge_3dm::three_way_merge,
     parse,
     parsed_merge::ParsedMerge,
     settings::DisplaySettings,
     tree_matcher::TreeMatcher,
-    Revision, TSParser,
+    MergeResult, Revision, TSParser,
 };
 
 /// Performs a fully structured merge, parsing the contents of all three revisions,
