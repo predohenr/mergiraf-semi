@@ -52,6 +52,9 @@ enum CliCommand {
         /// Display compact conflicts, breaking down lines
         #[arg(short, long)]
         compact: Option<bool>,
+        #[arg(short = 'l', long)]
+        // the choice of 'l' is inherited from Git's merge driver interface
+        conflict_marker_size: Option<usize>,
         /// Behave as a git merge driver: overwrite the left revision
         #[clap(short, long)]
         git: bool,
@@ -146,12 +149,13 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             left_name,
             right_name,
             compact,
+            conflict_marker_size,
         } => {
             let old_git_detected = base_name.as_deref().is_some_and(|n| n == "%S");
 
             let settings = DisplaySettings {
                 compact,
-                conflict_marker_size: None, // TODO: get as flag
+                conflict_marker_size,
                 base_revision_name: match base_name.as_deref() {
                     Some("%S") => None,
                     Some(name) => Some(name),
