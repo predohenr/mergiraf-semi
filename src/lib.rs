@@ -510,14 +510,12 @@ pub fn resolve_merge_cascading<'a>(
                 Err(err) => warn!("Error while resolving conflicts: {err}"),
             }
 
-            let rendered_from_parsed = {
-                MergeResult {
-                    contents: parsed_merge.render(&settings),
-                    conflict_count: parsed_merge.conflict_count(),
-                    conflict_mass: parsed_merge.conflict_mass(),
-                    method: FROM_PARSED_ORIGINAL,
-                    has_additional_issues: false,
-                }
+            let rendered_from_parsed = MergeResult {
+                contents: parsed_merge.render(&settings),
+                conflict_count: parsed_merge.conflict_count(),
+                conflict_mass: parsed_merge.conflict_mass(),
+                method: FROM_PARSED_ORIGINAL,
+                has_additional_issues: false,
             };
             merges.push(rendered_from_parsed);
         }
