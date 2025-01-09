@@ -92,3 +92,29 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
     }
     line_based_merge
 }
+
+#[cfg(test)]
+mod test {
+    use std::borrow::Cow;
+
+    use super::*;
+
+    #[test]
+    fn line_based_always_adds_newline() {
+        let contents_base = "hello world";
+        let contents_left = "hello world";
+        let contents_right = "hello world\nbye\n";
+
+        // without added newlines, this would become `hello worldbye\n`
+        let expected = "hello world\nbye\n";
+        let actual = line_based_merge(
+            Cow::Borrowed(contents_base),
+            Cow::Borrowed(contents_left),
+            Cow::Borrowed(contents_right),
+            &Default::default(),
+        )
+        .contents;
+
+        assert_eq!(expected, &actual);
+    }
+}
