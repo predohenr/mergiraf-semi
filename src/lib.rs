@@ -46,7 +46,7 @@ pub(crate) mod tree_matcher;
 pub(crate) mod visualizer;
 
 use core::cmp::Ordering;
-use std::{fs, path::Path, time::Instant};
+use std::{borrow::Cow, fs, path::Path, time::Instant};
 
 use attempts::AttemptsCache;
 use git::extract_revision_from_git;
@@ -54,7 +54,8 @@ use git::extract_revision_from_git;
 use itertools::Itertools;
 use lang_profile::LangProfile;
 use line_based::{
-    line_based_merge, line_based_merge_with_duplicate_signature_detection, LINE_BASED_METHOD,
+    line_based_merge, line_based_merge_with_duplicate_signature_detection, with_final_newline,
+    LINE_BASED_METHOD,
 };
 use log::{debug, info, warn};
 
@@ -89,9 +90,9 @@ pub(crate) fn parse<'a>(
 /// merge (independently of the textual merge) is attempted
 #[allow(clippy::too_many_arguments)]
 pub fn line_merge_and_structured_resolution(
-    contents_base: &str,
-    contents_left: &str,
-    contents_right: &str,
+    contents_base: Cow<str>,
+    contents_left: Cow<str>,
+    contents_right: Cow<str>,
     fname_base: &str,
     settings: &DisplaySettings,
     full_merge: bool,
@@ -101,13 +102,13 @@ pub fn line_merge_and_structured_resolution(
     let Some(lang_profile) = LangProfile::detect_from_filename(fname_base) else {
         // can't do anything fancier anyway
         warn!("Could not find a supported language for {fname_base}. Falling back to a line-based merge.");
-        return line_based_merge(contents_base, contents_left, contents_right, settings);
+        return line_based_merge(&contents_base, &contents_left, &contents_right, settings);
     };
 
     let merges = cascading_merge(
-        contents_base,
-        contents_left,
-        contents_right,
+        &contents_base,
+        &contents_left,
+        &contents_right,
         lang_profile,
         settings,
         full_merge,
@@ -123,9 +124,9 @@ pub fn line_merge_and_structured_resolution(
                 if let Some(cache) = attempts_cache {
                     match cache.new_attempt(
                         Path::new(fname_base),
-                        contents_base,
-                        contents_left,
-                        contents_right,
+                        &contents_base,
+                        &contents_left,
+                        &contents_right,
                     ) {
                         Ok(attempt) => {
                             best.store_in_attempt(&attempt);

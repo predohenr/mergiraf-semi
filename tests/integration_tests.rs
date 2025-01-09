@@ -1,4 +1,5 @@
 use core::str;
+use std::borrow::Cow;
 use std::fs::{self, read_dir};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -163,9 +164,9 @@ fn run_test_from_dir(test_dir: &Path) {
     let contents_expected = fs::read_to_string(fname_expected).expect("Unable to read right file");
 
     let merge_result = line_merge_and_structured_resolution(
-        &contents_base,
-        &contents_left,
-        &contents_right,
+        Cow::Owned(contents_base),
+        Cow::Owned(contents_left),
+        Cow::Owned(contents_right),
         &fname_base,
         &DisplaySettings::default(),
         true,
