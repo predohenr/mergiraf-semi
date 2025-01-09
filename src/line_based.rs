@@ -20,11 +20,15 @@ pub(crate) fn with_final_newline(s: Cow<str>) -> Cow<str> {
 
 /// Perform a textual merge with the diff3 algorithm.
 pub(crate) fn line_based_merge(
-    contents_base: &str,
-    contents_left: &str,
-    contents_right: &str,
+    contents_base: Cow<str>,
+    contents_left: Cow<str>,
+    contents_right: Cow<str>,
     settings: &DisplaySettings,
 ) -> MergeResult {
+    let contents_base = with_final_newline(contents_base);
+    let contents_left = with_final_newline(contents_left);
+    let contents_right = with_final_newline(contents_right);
+
     let merge_options = MergeOptions {
         conflict_marker_length: settings.conflict_marker_size,
         style: if settings.diff3 {
@@ -34,7 +38,7 @@ pub(crate) fn line_based_merge(
         },
         algorithm: Algorithm::Histogram,
     };
-    let merged = merge_options.merge(contents_base, contents_left, contents_right);
+    let merged = merge_options.merge(&contents_base, &contents_left, &contents_right);
     let merged_contents = match merged {
         Ok(contents) | Err(contents) => contents,
     };
@@ -59,9 +63,9 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
     lang_profile: &LangProfile,
 ) -> MergeResult {
     let mut line_based_merge = line_based_merge(
-        &with_final_newline(Cow::from(contents_base)),
-        &with_final_newline(Cow::from(contents_left)),
-        &with_final_newline(Cow::from(contents_right)),
+        Cow::from(contents_base),
+        Cow::from(contents_left),
+        Cow::from(contents_right),
         settings,
     );
 
