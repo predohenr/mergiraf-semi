@@ -188,9 +188,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let fname_base = path_name.as_deref().unwrap_or(fname_base);
 
             let merge_result = line_merge_and_structured_resolution(
-                contents_base,
-                contents_left,
-                contents_right,
+                &contents_base,
+                &contents_left,
+                &contents_right,
                 fname_base,
                 &settings,
                 !fast,
