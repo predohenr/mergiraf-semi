@@ -58,12 +58,8 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
     settings: &DisplaySettings,
     lang_profile: &LangProfile,
 ) -> MergeResult {
-    let mut line_based_merge = line_based_merge(
-        &with_final_newline(Cow::from(contents_base)),
-        &with_final_newline(Cow::from(contents_left)),
-        &with_final_newline(Cow::from(contents_right)),
-        settings,
-    );
+    let mut line_based_merge =
+        line_based_merge(contents_base, contents_left, contents_right, settings);
 
     if line_based_merge.conflict_count == 0 {
         let mut parser = TSParser::new();

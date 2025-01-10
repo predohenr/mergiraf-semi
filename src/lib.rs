@@ -99,15 +99,14 @@ pub fn line_merge_and_structured_resolution(
     attempts_cache: Option<&AttemptsCache>,
     debug_dir: Option<&str>,
 ) -> MergeResult {
+    let contents_base = with_final_newline(contents_base);
+    let contents_left = with_final_newline(contents_left);
+    let contents_right = with_final_newline(contents_right);
+
     let Some(lang_profile) = LangProfile::detect_from_filename(fname_base) else {
         // can't do anything fancier anyway
         warn!("Could not find a supported language for {fname_base}. Falling back to a line-based merge.");
-        return line_based_merge(
-            &with_final_newline(contents_base),
-            &with_final_newline(contents_left),
-            &with_final_newline(contents_right),
-            settings,
-        );
+        return line_based_merge(&contents_base, &contents_left, &contents_right, settings);
     };
 
     let merges = cascading_merge(
