@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use crate::{parse, MergeResult, TSParser};
 use diffy_imara::{Algorithm, ConflictStyle, MergeOptions};
 use typed_arena::Arena;
@@ -8,15 +6,6 @@ use crate::{lang_profile::LangProfile, parsed_merge::ParsedMerge, settings::Disp
 pub const LINE_BASED_METHOD: &str = "line_based";
 pub const STRUCTURED_RESOLUTION_METHOD: &str = "structured_resolution";
 pub const FULLY_STRUCTURED_METHOD: &str = "fully_structured";
-
-/// Ensures a given string has a newline at the end.
-pub(crate) fn with_final_newline(s: Cow<str>) -> Cow<str> {
-    if s.ends_with('\n') {
-        s
-    } else {
-        s + "\n"
-    }
-}
 
 /// Perform a textual merge with the diff3 algorithm.
 pub(crate) fn line_based_merge(
