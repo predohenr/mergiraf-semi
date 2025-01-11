@@ -19,7 +19,7 @@ pub(crate) fn with_final_newline(s: Cow<str>) -> Cow<str> {
 }
 
 /// Perform a textual merge with the diff3 algorithm.
-pub(crate) fn line_based_merge(
+pub fn line_based_merge(
     contents_base: &str,
     contents_left: &str,
     contents_right: &str,

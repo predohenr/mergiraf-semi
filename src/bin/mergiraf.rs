@@ -1,4 +1,4 @@
-use std::{env, fs, process::exit, process::Command};
+use std::{env, fs, process::{exit, Command}, time::Duration};
 
 use clap::{Parser, Subcommand};
 use itertools::Itertools;
@@ -71,6 +71,9 @@ enum CliCommand {
         #[clap(short = 'y', long)]
         // the choice of 'y' is inherited from Git's merge driver interface
         right_name: Option<String>,
+        /// Maximum number of milliseconds to try doing the merging for, after which we fall back on git's own algorithm. Set to 0 to disable this limit.
+        #[clap(short, long, default_value_t = 10000)]
+        timeout: u64,
     },
     /// Solve the conflicts in a merged file
     Solve {
@@ -136,6 +139,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             left_name,
             right_name,
             compact,
+            timeout,
         } => {
             let old_git_detected = base_name.as_deref().is_some_and(|n| n == "%S");
 
@@ -193,6 +197,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 !fast,
                 attempts_cache.as_ref(),
                 args.debug_dir.as_deref(),
+                Duration::from_millis(timeout),
             );
             if let Some(fname_out) = output {
                 write_string_to_file(&fname_out, &merge_result.contents)?;
