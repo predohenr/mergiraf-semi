@@ -54,8 +54,7 @@ use git::extract_revision_from_git;
 use itertools::Itertools;
 use lang_profile::LangProfile;
 use line_based::{
-    line_based_merge, line_based_merge_with_duplicate_signature_detection,
-    LINE_BASED_METHOD,
+    line_based_merge, line_based_merge_with_duplicate_signature_detection, LINE_BASED_METHOD,
 };
 use log::{debug, info, warn};
 
