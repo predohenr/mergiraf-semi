@@ -33,6 +33,20 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
         signature("pair_pattern", vec![vec![Field("key")]]),
     ];
 
+    let tsx_commutative_parents = [
+        typescript_commutative_parents.clone(),
+        vec![CommutativeParent::new("jsx_opening_element", "<", " ", ">")],
+    ]
+    .concat();
+    let tsx_signatures = [
+        typescript_signatures.clone(),
+        vec![signature(
+            "jsx_attribute",
+            vec![vec![ChildType("identifier")]],
+        )],
+    ]
+    .concat();
+
     vec![
         LangProfile {
             name: "Java",
@@ -349,6 +363,14 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             atomic_nodes: vec![],
             commutative_parents: typescript_commutative_parents,
             signatures: typescript_signatures,
+        },
+        LangProfile {
+            name: "Typescript (TSX)",
+            extensions: vec![".tsx"],
+            language: tree_sitter_typescript::LANGUAGE_TSX.into(),
+            atomic_nodes: vec![],
+            commutative_parents: tsx_commutative_parents,
+            signatures: tsx_signatures,
         },
         LangProfile {
             name: "Python",
