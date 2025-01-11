@@ -349,6 +349,8 @@ fn fallback_to_git_merge_file(
     };
 
     command
+        .arg("--marker-size")
+        .arg(settings.conflict_marker_size_or_default().to_string())
         .arg(left)
         .arg(base)
         .arg(right)
