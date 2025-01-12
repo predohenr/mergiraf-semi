@@ -148,9 +148,8 @@ impl<'a> AstNode<'a> {
         // if this is a leaf that spans multiple lines, create one child per line,
         // to ease matching and diffing (typically, for multi-line comments)
         if children.is_empty() && local_source.contains('\n') {
-            let lines = local_source.split('\n');
             let mut offset = range.start;
-            for line in lines {
+            for line in local_source.lines() {
                 let trimmed = line.trim_start();
                 let start_position = offset + line.len() - trimmed.len();
                 let mut hasher = crate::fxhasher();
