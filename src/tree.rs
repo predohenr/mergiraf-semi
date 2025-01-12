@@ -385,7 +385,7 @@ impl<'a> AstNode<'a> {
             .children
             .iter()
             .skip_while(|sibling| sibling.id != self.id)
-            .dropping(1)
+            .skip(1)
             .copied()
             .next()
     }
