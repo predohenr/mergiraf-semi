@@ -241,10 +241,12 @@ impl<'a> AstNode<'a> {
 
     /// The height of the subtree under that node
     pub fn height(&self) -> i32 {
-        match self.children.iter().copied().map(AstNode::height).max() {
-            None => 0,
-            Some(x) => x + 1,
-        }
+        self.children
+            .iter()
+            .copied()
+            .map(AstNode::height)
+            .max()
+            .map_or(0, |x| x + 1)
     }
 
     /// The number of descendants of the node (including itself).
