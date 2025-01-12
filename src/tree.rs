@@ -293,7 +293,7 @@ impl<'a> AstNode<'a> {
     /// Depth-first search iterator
     pub fn dfs(&'a self) -> impl Iterator<Item = &'a AstNode<'a>> {
         // SAFETY: This is not written to after construction.
-        if let Some(dfs) = unsafe { &*self.dfs.get() } {
+        if let Some(dfs) = unsafe { *self.dfs.get() } {
             Either::Left(dfs.iter().copied())
         } else {
             Either::Right(DfsIterator {
