@@ -161,10 +161,7 @@ impl<'a> AstNode<'a> {
                     source: trimmed,
                     grammar_name: "@virtual_line@",
                     field_name: None,
-                    byte_range: Range {
-                        start: start_position,
-                        end: start_position + trimmed.len(),
-                    },
+                    byte_range: start_position..start_position + trimmed.len(),
                     id: 2 * start_position + 1, // start_position is known to be unique among virtual lines
                     descendant_count: 1,
                     parent: UnsafeCell::new(None),
