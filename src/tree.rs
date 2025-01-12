@@ -737,7 +737,6 @@ impl<'a> Iterator for AncestorsIterator<'a> {
 mod tests {
 
     use itertools::Itertools;
-    use regex::Regex;
 
     use crate::test_utils::ctx;
 
@@ -1182,30 +1181,28 @@ mod tests {
 
         let ascii_tree = tree.root().ascii_tree(lang_profile);
 
-        let re = Regex::new("\x1b\\[0(;[0-9]*)?m").unwrap();
-        let without_colors = re.replace_all(&ascii_tree, "");
+        let expected = "\
+\u{1b}[0;90m└\u{1b}[0mdocument
+\u{1b}[0;90m  └\u{1b}[0mobject \u{1b}[0;95mCommutative\u{1b}[0m
+\u{1b}[0;90m    ├\u{1b}[0m\u{1b}[0;31m{\u{1b}[0m
+\u{1b}[0;90m    ├\u{1b}[0mpair \u{1b}[0;96mSignature [[\"foo\"]]\u{1b}[0m
+\u{1b}[0;90m    │ ├key: \u{1b}[0mstring
+\u{1b}[0;90m    │ │ ├\u{1b}[0m\u{1b}[0;31m\"\u{1b}[0m
+\u{1b}[0;90m    │ │ ├\u{1b}[0mstring_content \u{1b}[0;31mfoo\u{1b}[0m
+\u{1b}[0;90m    │ │ └\u{1b}[0m\u{1b}[0;31m\"\u{1b}[0m
+\u{1b}[0;90m    │ ├\u{1b}[0m\u{1b}[0;31m:\u{1b}[0m
+\u{1b}[0;90m    │ └value: \u{1b}[0mnumber \u{1b}[0;31m3\u{1b}[0m
+\u{1b}[0;90m    ├\u{1b}[0m\u{1b}[0;31m,\u{1b}[0m
+\u{1b}[0;90m    ├\u{1b}[0mpair \u{1b}[0;96mSignature [[\"bar\"]]\u{1b}[0m
+\u{1b}[0;90m    │ ├key: \u{1b}[0mstring
+\u{1b}[0;90m    │ │ ├\u{1b}[0m\u{1b}[0;31m\"\u{1b}[0m
+\u{1b}[0;90m    │ │ ├\u{1b}[0mstring_content \u{1b}[0;31mbar\u{1b}[0m
+\u{1b}[0;90m    │ │ └\u{1b}[0m\u{1b}[0;31m\"\u{1b}[0m
+\u{1b}[0;90m    │ ├\u{1b}[0m\u{1b}[0;31m:\u{1b}[0m
+\u{1b}[0;90m    │ └value: \u{1b}[0mnumber \u{1b}[0;31m4\u{1b}[0m
+\u{1b}[0;90m    └\u{1b}[0m\u{1b}[0;31m}\u{1b}[0m
+";
 
-        let expected = r#"└document
-  └object Commutative
-    ├{
-    ├pair Signature [["foo"]]
-    │ ├key: string
-    │ │ ├"
-    │ │ ├string_content foo
-    │ │ └"
-    │ ├:
-    │ └value: number 3
-    ├,
-    ├pair Signature [["bar"]]
-    │ ├key: string
-    │ │ ├"
-    │ │ ├string_content bar
-    │ │ └"
-    │ ├:
-    │ └value: number 4
-    └}
-"#;
-
-        assert_eq!(without_colors, expected);
+        assert_eq!(ascii_tree, expected);
     }
 }
