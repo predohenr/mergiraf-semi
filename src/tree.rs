@@ -10,6 +10,7 @@ use std::{
 
 use either::Either;
 use itertools::Itertools;
+use nu_ansi_term::Color;
 use tree_sitter::{Tree, TreeCursor};
 use typed_arena::Arena;
 
@@ -581,7 +582,12 @@ impl<'a> AstNode<'a> {
 
     /// Represents the node and its sub-structure in ASCII art
     pub fn ascii_tree(&'a self, lang_profile: &LangProfile) -> String {
-        self.internal_ascii_tree("\x1b[0;90m", true, lang_profile, None)
+        self.internal_ascii_tree(
+            &Color::DarkGray.prefix().to_string(),
+            true,
+            lang_profile,
+            None,
+        )
     }
 
     fn internal_ascii_tree(
@@ -603,22 +609,22 @@ impl<'a> AstNode<'a> {
         let grammar_name = if self.source != self.grammar_name {
             self.grammar_name
         } else {
-            &format!("\x1b[0;31m{}\x1b[0m", self.grammar_name)
+            &Color::Red.paint(self.grammar_name).to_string()
         };
 
         let source = (num_children == 0 && self.source != self.grammar_name)
-            .then(|| format!(" \x1b[0;31m{}\x1b[0m", self.source.replace('\n', "\\n")))
+            .then(|| format!(" {}", Color::Red.paint(self.source.replace('\n', "\\n"))))
             .unwrap_or_default();
 
         let commutative = (next_parent.is_some())
-            .then_some(" \x1b[0;95mCommutative\x1b[0m")
+            .then(|| Color::LightPurple.paint(" Commutative").to_string())
             .unwrap_or_default();
 
         let sig = (parent.is_some())
             .then(|| {
                 lang_profile
                     .extract_signature_from_original_node(self)
-                    .map(|sig| format!(" \x1b[0;96m{sig}\x1b[0m"))
+                    .map(|sig| format!(" {}", Color::LightCyan.paint(sig.to_string())))
             })
             .flatten()
             .unwrap_or_default();
@@ -1182,25 +1188,25 @@ mod tests {
         let ascii_tree = tree.root().ascii_tree(lang_profile);
 
         let expected = "\
-\u{1b}[0;90m└\u{1b}[0mdocument
-\u{1b}[0;90m  └\u{1b}[0mobject \u{1b}[0;95mCommutative\u{1b}[0m
-\u{1b}[0;90m    ├\u{1b}[0m\u{1b}[0;31m{\u{1b}[0m
-\u{1b}[0;90m    ├\u{1b}[0mpair \u{1b}[0;96mSignature [[\"foo\"]]\u{1b}[0m
-\u{1b}[0;90m    │ ├key: \u{1b}[0mstring
-\u{1b}[0;90m    │ │ ├\u{1b}[0m\u{1b}[0;31m\"\u{1b}[0m
-\u{1b}[0;90m    │ │ ├\u{1b}[0mstring_content \u{1b}[0;31mfoo\u{1b}[0m
-\u{1b}[0;90m    │ │ └\u{1b}[0m\u{1b}[0;31m\"\u{1b}[0m
-\u{1b}[0;90m    │ ├\u{1b}[0m\u{1b}[0;31m:\u{1b}[0m
-\u{1b}[0;90m    │ └value: \u{1b}[0mnumber \u{1b}[0;31m3\u{1b}[0m
-\u{1b}[0;90m    ├\u{1b}[0m\u{1b}[0;31m,\u{1b}[0m
-\u{1b}[0;90m    ├\u{1b}[0mpair \u{1b}[0;96mSignature [[\"bar\"]]\u{1b}[0m
-\u{1b}[0;90m    │ ├key: \u{1b}[0mstring
-\u{1b}[0;90m    │ │ ├\u{1b}[0m\u{1b}[0;31m\"\u{1b}[0m
-\u{1b}[0;90m    │ │ ├\u{1b}[0mstring_content \u{1b}[0;31mbar\u{1b}[0m
-\u{1b}[0;90m    │ │ └\u{1b}[0m\u{1b}[0;31m\"\u{1b}[0m
-\u{1b}[0;90m    │ ├\u{1b}[0m\u{1b}[0;31m:\u{1b}[0m
-\u{1b}[0;90m    │ └value: \u{1b}[0mnumber \u{1b}[0;31m4\u{1b}[0m
-\u{1b}[0;90m    └\u{1b}[0m\u{1b}[0;31m}\u{1b}[0m
+\u{1b}[90m└\u{1b}[0mdocument
+\u{1b}[90m  └\u{1b}[0mobject\u{1b}[95m Commutative\u{1b}[0m
+\u{1b}[90m    ├\u{1b}[0m\u{1b}[31m{\u{1b}[0m
+\u{1b}[90m    ├\u{1b}[0mpair \u{1b}[96mSignature [[\"foo\"]]\u{1b}[0m
+\u{1b}[90m    │ ├key: \u{1b}[0mstring
+\u{1b}[90m    │ │ ├\u{1b}[0m\u{1b}[31m\"\u{1b}[0m
+\u{1b}[90m    │ │ ├\u{1b}[0mstring_content \u{1b}[31mfoo\u{1b}[0m
+\u{1b}[90m    │ │ └\u{1b}[0m\u{1b}[31m\"\u{1b}[0m
+\u{1b}[90m    │ ├\u{1b}[0m\u{1b}[31m:\u{1b}[0m
+\u{1b}[90m    │ └value: \u{1b}[0mnumber \u{1b}[31m3\u{1b}[0m
+\u{1b}[90m    ├\u{1b}[0m\u{1b}[31m,\u{1b}[0m
+\u{1b}[90m    ├\u{1b}[0mpair \u{1b}[96mSignature [[\"bar\"]]\u{1b}[0m
+\u{1b}[90m    │ ├key: \u{1b}[0mstring
+\u{1b}[90m    │ │ ├\u{1b}[0m\u{1b}[31m\"\u{1b}[0m
+\u{1b}[90m    │ │ ├\u{1b}[0mstring_content \u{1b}[31mbar\u{1b}[0m
+\u{1b}[90m    │ │ └\u{1b}[0m\u{1b}[31m\"\u{1b}[0m
+\u{1b}[90m    │ ├\u{1b}[0m\u{1b}[31m:\u{1b}[0m
+\u{1b}[90m    │ └value: \u{1b}[0mnumber \u{1b}[31m4\u{1b}[0m
+\u{1b}[90m    └\u{1b}[0m\u{1b}[31m}\u{1b}[0m
 ";
 
         assert_eq!(ascii_tree, expected);
