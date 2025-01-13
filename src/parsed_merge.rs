@@ -67,12 +67,18 @@ struct OffsetMap {
 impl<'a> ParsedMerge<'a> {
     /// Parse a file into a series of chunks.
     /// Fails if the conflict markers do not appear in a consistent order.
-    pub(crate) fn parse(source: &str) -> Result<ParsedMerge, String> {
+    pub(crate) fn parse(source: &'a str, settings: &DisplaySettings) -> Result<Self, String> {
+        let marker_size = settings.conflict_marker_size_or_default();
+
         let mut chunks = Vec::new();
-        let left_marker = Regex::new(r"<<<<<<<(?: (.*))?\r?\n").unwrap();
-        let base_marker = Regex::new(r"\|\|\|\|\|\|\|(?: (.*))?\r?\n").unwrap();
-        let middle_marker = Regex::new(r"=======\r?\n").unwrap();
-        let right_marker = Regex::new(r">>>>>>>(?: (.*))?\r?\n").unwrap();
+
+        let left_marker =
+            Regex::new(&format!(r"{}(?: (.*))?\r?\n", "<".repeat(marker_size))).unwrap();
+        let base_marker =
+            Regex::new(&format!(r"({}?: (.*))?\r?\n", r"\|".repeat(marker_size))).unwrap();
+        let middle_marker = Regex::new(&format!(r"{}\r?\n", "=".repeat(marker_size))).unwrap();
+        let right_marker =
+            Regex::new(&format!(r"{}(?: (.*))?\r?\n", ">".repeat(marker_size))).unwrap();
 
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
@@ -362,7 +368,8 @@ mod tests {
     #[test]
     fn parse() {
         let source = "\nwe reached a junction.\n<<<<<<< left\nlet's go to the left!\n||||||| base\nwhere should we go?\n=======\nturn right please!\n>>>>>>>\nrest of file\n";
-        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+        let parsed =
+            ParsedMerge::parse(source, &Default::default()).expect("unexpected parse error");
 
         let expected_parse = ParsedMerge::new(vec![
             MergedChunk::Resolved {
@@ -468,7 +475,8 @@ mod tests {
     #[test]
     fn parse_start_with_conflict() {
         let source = "<<<<<<< left\nlet's go to the left!\n||||||| base\nwhere should we go?\n=======\nturn right please!\n>>>>>>>\nrest of file\n";
-        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+        let parsed =
+            ParsedMerge::parse(source, &Default::default()).expect("unexpected parse error");
 
         let expected_parse = ParsedMerge::new(vec![
             MergedChunk::Conflict {
@@ -503,7 +511,8 @@ mod tests {
     #[test]
     fn parse_end_with_conflict() {
         let source = "\nwe reached a junction.\n<<<<<<< left\nlet's go to the left!\n||||||| base\nwhere should we go?\n=======\nturn right please!\n>>>>>>>\n";
-        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+        let parsed =
+            ParsedMerge::parse(source, &Default::default()).expect("unexpected parse error");
 
         let expected_parse = ParsedMerge::new(vec![
             MergedChunk::Resolved {
@@ -539,7 +548,7 @@ mod tests {
     fn parse_diffy_imara() {
         let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n||||||| BASE\n    .foo = 3,\n=======\n>>>>>>> RIGHT\n};\n";
 
-        let parsed = ParsedMerge::parse(source).expect("could not parse!");
+        let parsed = ParsedMerge::parse(source, &Default::default()).expect("could not parse!");
 
         let expected_parse = ParsedMerge::new(vec![
             MergedChunk::Resolved {
@@ -574,8 +583,8 @@ mod tests {
     fn parse_diff2() {
         let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n=======\n>>>>>>> RIGHT\n};\n";
 
-        let parse_err =
-            ParsedMerge::parse(source).expect_err("expected a parse failure for diff2 conflicts");
+        let parse_err = ParsedMerge::parse(source, &Default::default())
+            .expect_err("expected a parse failure for diff2 conflicts");
 
         assert_eq!(parse_err, PARSED_MERGE_DIFF2_DETECTED);
     }
@@ -584,7 +593,7 @@ mod tests {
     fn matching() {
         let ctx = ctx();
         let source = "struct MyType {\n    field: bool,\n<<<<<<< LEFT\n    foo: int,\n    bar: String,\n||||||| BASE\n    foo: String,\n=======\n>>>>>>> RIGHT\n};\n";
-        let parsed = ParsedMerge::parse(source).expect("could not parse!");
+        let parsed = ParsedMerge::parse(source, &Default::default()).expect("could not parse!");
 
         let left_rev = parsed.reconstruct_revision(Revision::Left);
         let right_rev = parsed.reconstruct_revision(Revision::Right);
@@ -655,7 +664,8 @@ mod tests {
     #[test]
     fn add_revision_names_to_settings() {
         let source = "<<<<<<< my_left\nlet's go to the left!\n||||||| my_base\nwhere should we go?\n=======\nturn right please!\n>>>>>>> my_right\nrest of file\n";
-        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+        let parsed =
+            ParsedMerge::parse(source, &Default::default()).expect("unexpected parse error");
 
         let initial_settings = DisplaySettings::default();
 
@@ -676,7 +686,8 @@ mod tests {
     #[test]
     fn add_revision_names_to_settings_no_names() {
         let source = "<<<<<<<\nlet's go to the left!\n|||||||\nwhere should we go?\n=======\nturn right please!\n>>>>>>>\nrest of file\n";
-        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+        let parsed =
+            ParsedMerge::parse(source, &Default::default()).expect("unexpected parse error");
 
         let initial_settings = DisplaySettings::default();
 
@@ -689,7 +700,8 @@ mod tests {
     #[test]
     fn add_revision_names_to_settings_no_conflict() {
         let source = "start of file\nrest of file\n";
-        let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
+        let parsed =
+            ParsedMerge::parse(source, &Default::default()).expect("unexpected parse error");
 
         let initial_settings = DisplaySettings::default();
 
