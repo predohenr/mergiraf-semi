@@ -99,9 +99,10 @@ impl<'a> ParsedMerge<'a> {
             }
             offset += resolved_end;
             if let Some(left_captures) = left_captures {
+                let mut local_offset = 0;
                 let left_name = left_captures.get(1).map_or("", |m| m.as_str().trim());
                 let left_marker = left_captures.get(0).unwrap();
-                let mut local_offset = left_marker.end();
+                local_offset += left_match.end();
 
                 let base_captures = base_marker
                     .captures(&remaining_source[local_offset..])
@@ -129,6 +130,8 @@ impl<'a> ParsedMerge<'a> {
                 let right_match = right_captures.get(0).unwrap();
                 let right_name = right_captures.get(1).map_or("", |m| m.as_str().trim());
                 let right = &remaining_source[local_offset..][..right_match.start()];
+                local_offset += right_match.end();
+
                 chunks.push(MergedChunk::Conflict {
                     left,
                     base,
@@ -137,7 +140,7 @@ impl<'a> ParsedMerge<'a> {
                     base_name,
                     right_name,
                 });
-                offset += local_offset + right_match.end() - resolved_end;
+                offset += local_offset - resolved_end;
             }
         }
         Ok(ParsedMerge::new(chunks))
