@@ -596,10 +596,10 @@ mod tests {
 };
 "#;
 
-        match ParsedMerge::parse(source) {
-            Ok(_) => panic!("expected a parse failure for diff2 conflicts"),
-            Err(e) => assert_eq!(e, PARSED_MERGE_DIFF2_DETECTED),
-        };
+        let parse_err =
+            ParsedMerge::parse(source).expect_err("expected a parse failure for diff2 conflicts");
+
+        assert_eq!(parse_err, PARSED_MERGE_DIFF2_DETECTED);
     }
 
     #[test]
