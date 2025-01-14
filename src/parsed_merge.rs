@@ -76,10 +76,11 @@ impl<'a> ParsedMerge<'a> {
         let middle_marker = "=".repeat(marker_size);
         let right_marker = ">".repeat(marker_size);
 
-        let left_marker = Regex::new(&format!(r"{left_marker}(?: (.*))?\r?\n")).unwrap();
-        let base_marker = Regex::new(&format!(r"{base_marker}(?: (.*))?\r?\n")).unwrap();
-        let middle_marker = Regex::new(&format!(r"{middle_marker}\r?\n")).unwrap();
-        let right_marker = Regex::new(&format!(r"{right_marker}(?: (.*))?\r?\n",)).unwrap();
+        let left_marker = Regex::new(&format!(r"(?m)^(?-m){left_marker}(?: (.*))?\r?\n")).unwrap();
+        let base_marker = Regex::new(&format!(r"(?m)^(?-m){base_marker}(?: (.*))?\r?\n")).unwrap();
+        let middle_marker = Regex::new(&format!(r"(?m)^(?-m){middle_marker}\r?\n")).unwrap();
+        let right_marker =
+            Regex::new(&format!(r"(?m)^(?-m){right_marker}(?: (.*))?\r?\n",)).unwrap();
 
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
@@ -627,6 +628,54 @@ mod tests {
         )
         .expect("could not parse a conflict with `conflict_marker_size=9`");
         assert_eq!(parsed_with_9, parsed_expected);
+    }
+
+    #[test]
+    fn parse_left_marker_not_at_line_start() {
+        let source = "my_struct_t instance = {\n <<<<<<< LIAR LEFT\n    .foo = 3,\n    .bar = 2,\n||||||| BASE\n    .foo = 3,\n=======\n>>>>>>> RIGHT\n};\n";
+        let parsed = ParsedMerge::parse(source, &Default::default())
+            .expect("should just not see this conflict at all");
+
+        let expected_parse = ParsedMerge::new(vec![MergedChunk::Resolved {
+            offset: 0,
+            contents: source,
+        }]);
+
+        assert_eq!(parsed, expected_parse);
+    }
+
+    #[test]
+    fn parse_base_marker_not_at_line_start() {
+        let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n ||||||| LIAR BASE\n    .foo = 3,\n=======\n>>>>>>> RIGHT\n};\n";
+        let parse_err = ParsedMerge::parse(source, &Default::default()).expect_err(
+            "because of the missing base marker, this should like a diff2-style conflict",
+        );
+
+        assert_eq!(parse_err, PARSED_MERGE_DIFF2_DETECTED);
+    }
+
+    #[test]
+    fn parse_middle_marker_not_at_line_start() {
+        let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n||||||| BASE\n    .foo = 3,\n =======\n>>>>>>> RIGHT\n};\n";
+        let parse_err = ParsedMerge::parse(source, &Default::default())
+            .expect_err("shouldn't be able parse because of the missing middle marker");
+
+        assert_eq!(
+            parse_err,
+            "unexpected end of file before middle conflict marker"
+        );
+    }
+
+    #[test]
+    fn parse_right_marker_not_at_line_start() {
+        let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n||||||| BASE\n    .foo = 3,\n=======\n >>>>>>> LIAR RIGHT\n};\n";
+        let parse_err = ParsedMerge::parse(source, &Default::default())
+            .expect_err("shouldn't be able parse because of the missing right marker");
+
+        assert_eq!(
+            parse_err,
+            "unexpected end of file before right conflict marker"
+        );
     }
 
     #[test]
