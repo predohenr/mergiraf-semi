@@ -100,8 +100,9 @@ impl<'a> ParsedMerge<'a> {
             offset += resolved_end;
             if let Some(left_captures) = left_captures {
                 let mut local_offset = 0;
+
+                let left_match = left_captures.get(0).unwrap();
                 let left_name = left_captures.get(1).map_or("", |m| m.as_str().trim());
-                let left_marker = left_captures.get(0).unwrap();
                 local_offset += left_match.end();
 
                 let base_captures = base_marker
@@ -114,9 +115,9 @@ impl<'a> ParsedMerge<'a> {
                         }
                     })?;
                 let base_match = base_captures.get(0).unwrap();
+                let base_name = base_captures.get(1).map_or("", |m| m.as_str().trim());
                 let left = &remaining_source[local_offset..][..base_match.start()];
                 local_offset += base_match.end();
-                let base_name = base_captures.get(1).map_or("", |m| m.as_str().trim());
 
                 let middle_match = middle_marker
                     .find(&remaining_source[local_offset..])
