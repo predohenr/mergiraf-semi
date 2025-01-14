@@ -543,16 +543,7 @@ mod tests {
 
     #[test]
     fn test_parse_diffy_imara() {
-        let source = r#"my_struct_t instance = {
-<<<<<<< LEFT
-    .foo = 3,
-    .bar = 2,
-||||||| BASE
-    .foo = 3,
-=======
->>>>>>> RIGHT
-};
-"#;
+        let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n||||||| BASE\n    .foo = 3,\n=======\n>>>>>>> RIGHT\n};\n";
 
         let parsed = ParsedMerge::parse(source).expect("could not parse!");
 
@@ -587,14 +578,7 @@ mod tests {
 
     #[test]
     fn parse_diff2() {
-        let source = r#"my_struct_t instance = {
-<<<<<<< LEFT
-    .foo = 3,
-    .bar = 2,
-=======
->>>>>>> RIGHT
-};
-"#;
+        let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n=======\n>>>>>>> RIGHT\n};\n";
 
         let parse_err =
             ParsedMerge::parse(source).expect_err("expected a parse failure for diff2 conflicts");
@@ -605,17 +589,7 @@ mod tests {
     #[test]
     fn matching() {
         let ctx = ctx();
-        let source = r#"struct MyType {
-    field: bool,
-<<<<<<< LEFT
-    foo: int,
-    bar: String,
-||||||| BASE
-    foo: String,
-=======
->>>>>>> RIGHT
-};
-"#;
+        let source = "struct MyType {\n    field: bool,\n<<<<<<< LEFT\n    foo: int,\n    bar: String,\n||||||| BASE\n    foo: String,\n=======\n>>>>>>> RIGHT\n};\n";
         let parsed = ParsedMerge::parse(source).expect("could not parse!");
 
         let left_rev = parsed.reconstruct_revision(Revision::Left);
