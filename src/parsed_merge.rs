@@ -439,55 +439,34 @@ mod tests {
             parsed.rev_range_to_merged_range(&Range { start: 25, end: 28 }, Revision::Right),
             None
         );
+        #[rustfmt::skip]
         assert_eq!(
             parsed.rev_range_to_merged_range(&Range { start: 45, end: 49 }, Revision::Base),
-            Some(Range {
-                start: 128,
-                end: 132
-            })
+            Some(Range { start: 128, end: 132 })
         );
+        #[rustfmt::skip]
         assert_eq!(
             parsed.rev_range_to_merged_range(&Range { start: 47, end: 49 }, Revision::Left),
-            Some(Range {
-                start: 128,
-                end: 130
-            })
+            Some(Range { start: 128, end: 130 })
         );
+        #[rustfmt::skip]
         assert_eq!(
             parsed.rev_range_to_merged_range(&Range { start: 45, end: 48 }, Revision::Right),
-            Some(Range {
-                start: 129,
-                end: 132
-            })
+            Some(Range { start: 129, end: 132 })
         );
+        #[rustfmt::skip]
         assert_eq!(
-            parsed.rev_range_to_merged_range(
-                &Range {
-                    start: 180,
-                    end: 183
-                },
-                Revision::Base
-            ),
+            parsed.rev_range_to_merged_range(&Range { start: 180, end: 183 }, Revision::Base),
             None
         );
+        #[rustfmt::skip]
         assert_eq!(
-            parsed.rev_range_to_merged_range(
-                &Range {
-                    start: 190,
-                    end: 193
-                },
-                Revision::Left
-            ),
+            parsed.rev_range_to_merged_range(&Range { start: 190, end: 193 }, Revision::Left),
             None
         );
+        #[rustfmt::skip]
         assert_eq!(
-            parsed.rev_range_to_merged_range(
-                &Range {
-                    start: 200,
-                    end: 203
-                },
-                Revision::Right
-            ),
+            parsed.rev_range_to_merged_range(&Range { start: 200, end: 203 }, Revision::Right),
             None
         );
     }
