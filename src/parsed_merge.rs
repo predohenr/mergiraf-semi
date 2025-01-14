@@ -77,8 +77,8 @@ impl<'a> ParsedMerge<'a> {
         let mut offset = 0;
         while offset < source.len() {
             let remaining_source = &source[offset..];
-            let left_marker = &left_marker.captures(remaining_source);
-            let resolved_end = match left_marker {
+            let left_captures = &left_marker.captures(remaining_source);
+            let resolved_end = match left_captures {
                 None => remaining_source.len(),
                 Some(occurrence) => {
                     let whole_occurrence = occurrence
@@ -98,10 +98,10 @@ impl<'a> ParsedMerge<'a> {
                 });
             }
             offset += resolved_end;
-            if let Some(left_marker) = left_marker {
-                let left_name = left_marker.get(2).map_or("", |m| m.as_str().trim());
-                let whole_left_marker = left_marker.get(0).unwrap();
-                let mut local_offset = whole_left_marker.end();
+            if let Some(left_captures) = left_captures {
+                let left_name = left_captures.get(2).map_or("", |m| m.as_str().trim());
+                let left_marker = left_captures.get(0).unwrap();
+                let mut local_offset = left_marker.end();
 
                 let base_captures = base_marker
                     .captures(&remaining_source[local_offset..])
