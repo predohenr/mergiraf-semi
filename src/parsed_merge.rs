@@ -536,7 +536,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_diffy_imara() {
+    fn parse_diffy_imara() {
         let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n||||||| BASE\n    .foo = 3,\n=======\n>>>>>>> RIGHT\n};\n";
 
         let parsed = ParsedMerge::parse(source).expect("could not parse!");
