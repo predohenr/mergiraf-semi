@@ -101,7 +101,7 @@ impl<'a> ParsedMerge<'a> {
             if let Some(left_marker) = left_marker {
                 let left_name = left_marker.get(2).map_or("", |m| m.as_str().trim());
                 let whole_left_marker = left_marker.get(0).unwrap();
-                let local_offset = whole_left_marker.end();
+                let mut local_offset = whole_left_marker.end();
 
                 let base_captures = base_marker
                     .captures(&remaining_source[local_offset..])
@@ -114,14 +114,14 @@ impl<'a> ParsedMerge<'a> {
                     })?;
                 let base_match = base_captures.get(0).unwrap();
                 let left = &remaining_source[local_offset..][..base_match.start()];
-                let local_offset = local_offset + base_match.end();
+                local_offset += base_match.end();
                 let base_name = base_captures.get(1).map_or("", |m| m.as_str().trim());
 
                 let middle_match = middle_marker
                     .find(&remaining_source[local_offset..])
                     .ok_or("unexpected end of file before middle conflict marker")?;
                 let base = &remaining_source[local_offset..][..middle_match.start()];
-                let local_offset = local_offset + middle_match.end();
+                local_offset += middle_match.end();
 
                 let right_captures = right_marker
                     .captures(&remaining_source[local_offset..])
