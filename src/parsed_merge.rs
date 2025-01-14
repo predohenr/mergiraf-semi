@@ -97,7 +97,6 @@ impl<'a> ParsedMerge<'a> {
                     contents: &remaining_source[..resolved_end],
                 });
             }
-            offset += resolved_end;
             if let Some(left_captures) = left_captures {
                 let mut local_offset = 0;
 
@@ -141,7 +140,9 @@ impl<'a> ParsedMerge<'a> {
                     base_name,
                     right_name,
                 });
-                offset += local_offset - resolved_end;
+                offset += local_offset;
+            } else {
+                offset += resolved_end;
             }
         }
         Ok(ParsedMerge::new(chunks))
