@@ -69,7 +69,7 @@ impl<'a> ParsedMerge<'a> {
     /// Fails if the conflict markers do not appear in a consistent order.
     pub(crate) fn parse(source: &str) -> Result<ParsedMerge, String> {
         let mut chunks = Vec::new();
-        let left_marker = Regex::new(r"(?:^|\n)<<<<<<<( .*)?\n").unwrap();
+        let left_marker = Regex::new(r"<<<<<<<( .*)?\n").unwrap();
         let base_marker = Regex::new(r"\|\|\|\|\|\|\|( [^\n]*)?\r?\n").unwrap();
         let middle_marker = Regex::new(r"=======\r?\n").unwrap();
         let right_marker = Regex::new(r">>>>>>>( [^\n]*)?\r?\n").unwrap();
@@ -79,16 +79,10 @@ impl<'a> ParsedMerge<'a> {
             let left_captures = &left_marker.captures(remaining_source);
             let resolved_end = match left_captures {
                 None => remaining_source.len(),
-                Some(occurrence) => {
-                    let whole_occurrence = occurrence
-                        .get(0)
-                        .expect("whole match is guaranteed to exist");
-                    if whole_occurrence.as_str().starts_with('\n') {
-                        whole_occurrence.start() + 1
-                    } else {
-                        whole_occurrence.start()
-                    }
-                }
+                Some(occurrence) => occurrence
+                    .get(0)
+                    .expect("whole match is guaranteed to exist")
+                    .start(),
             };
             if resolved_end > 0 {
                 // SAFETY: `remaining_source` is derived from `source`
