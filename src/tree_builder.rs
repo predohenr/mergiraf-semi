@@ -263,7 +263,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     }
                 }
                 _ => {
-                    panic!("unexpected conflict size: more than two diverging sides!")
+                    unreachable!("unexpected conflict size: more than two diverging sides!")
                 }
             }
         }
