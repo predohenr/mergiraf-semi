@@ -70,9 +70,9 @@ impl<'a> ParsedMerge<'a> {
     pub(crate) fn parse(source: &str) -> Result<ParsedMerge, String> {
         let mut chunks = Vec::new();
         let left_marker = Regex::new(r"<<<<<<<( .*)?\n").unwrap();
-        let base_marker = Regex::new(r"\|\|\|\|\|\|\|( [^\n]*)?\r?\n").unwrap();
+        let base_marker = Regex::new(r"\|\|\|\|\|\|\|( .*)?\r?\n").unwrap();
         let middle_marker = Regex::new(r"=======\r?\n").unwrap();
-        let right_marker = Regex::new(r">>>>>>>( [^\n]*)?\r?\n").unwrap();
+        let right_marker = Regex::new(r">>>>>>>( .*)?\r?\n").unwrap();
 
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
