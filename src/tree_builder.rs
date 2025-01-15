@@ -211,20 +211,18 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                             self.commutative_or_line_based_local_fallback(node, visiting_state);
                         return line_diff;
                     }
-                    if let Ok(child_result_tree) =
-                        self.build_subtree(*current_child, visiting_state)
-                    {
-                        children.push(child_result_tree);
-                        predecessor = *current_child;
-                        seen_nodes.insert(predecessor);
-                        cursor = children_map.get(&predecessor);
-                    } else {
+                    let Ok(child_result_tree) = self.build_subtree(*current_child, visiting_state)
+                    else {
                         // we failed to build the result tree for a child of this node, because of a nasty conflict.
                         // We fall back on line diffing
                         let line_diff =
                             self.commutative_or_line_based_local_fallback(node, visiting_state);
                         return line_diff;
-                    }
+                    };
+                    children.push(child_result_tree);
+                    predecessor = *current_child;
+                    seen_nodes.insert(predecessor);
+                    cursor = children_map.get(&predecessor);
                 }
                 2 => {
                     let conflict = self.build_conflict(
@@ -504,27 +502,26 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     ) -> Result<MergedTree<'a>, String> {
         let pad = visiting_state.indentation();
         debug!("{pad}{node} commutative_or_line_based_local_fallback");
-        // If the root happens to be commutative, we can merge all children accordingly.
-        if let PCSNode::Node { node, .. } = node {
-            if let Some(commutative_parent) = self
-                .lang_profile
-                .get_commutative_parent(node.grammar_name())
-            {
-                let commutative_merge =
-                    self.commutatively_merge_children(node, commutative_parent, visiting_state);
-                if let Ok(successful_merge) = commutative_merge {
-                    return Ok(MergedTree::new_mixed(node, successful_merge));
-                }
-            }
-            Ok(MergedTree::line_based_local_fallback_for_revnode(
-                node,
-                self.class_mapping,
-            ))
-        } else {
-            Err(format!(
+        let PCSNode::Node { node, .. } = node else {
+            return Err(format!(
                 "impossible to do a line-based local fallback for a virtual PCS node {node}"
-            ))
+            ));
+        };
+        // If the root happens to be commutative, we can merge all children accordingly.
+        if let Some(commutative_parent) = self
+            .lang_profile
+            .get_commutative_parent(node.grammar_name())
+        {
+            let commutative_merge =
+                self.commutatively_merge_children(node, commutative_parent, visiting_state);
+            if let Ok(successful_merge) = commutative_merge {
+                return Ok(MergedTree::new_mixed(node, successful_merge));
+            }
         }
+        Ok(MergedTree::line_based_local_fallback_for_revnode(
+            node,
+            self.class_mapping,
+        ))
     }
 
     /// knowing that the order of all elements of the conflict does not matter, solve the conflict
