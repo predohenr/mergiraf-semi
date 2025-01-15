@@ -211,8 +211,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                             self.commutative_or_line_based_local_fallback(node, visiting_state);
                         return line_diff;
                     }
-                    let Ok(child_result_tree) = self.build_subtree(*current_child, visiting_state)
-                    else {
+
+                    let subtree = self.build_subtree(*current_child, visiting_state);
+                    let Ok(child_result_tree) = subtree else {
                         // we failed to build the result tree for a child of this node, because of a nasty conflict.
                         // We fall back on line diffing
                         let line_diff =
