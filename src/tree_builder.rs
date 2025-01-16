@@ -1003,9 +1003,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     // at least one child could not be covered at all - the root is our only last possibility
                 }
                 if available_in_revs.contains(target_revision) {
-                    let mut set = HashSet::new();
-                    set.insert(*node);
-                    Some(set)
+                    Some(HashSet::from([*node]))
                 } else {
                     None
                 }
