@@ -831,9 +831,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
         // remove the common prefix of all three
         let common_prefix_length = Self::common_prefix(
-            Box::new(children_base.iter()),
-            Box::new(children_left.iter()),
-            Box::new(children_right.iter()),
+            children_base.iter(),
+            children_left.iter(),
+            children_right.iter(),
         );
         let common_prefix = &children_base[..common_prefix_length];
         let children_base = &children_base[common_prefix_length..];
@@ -842,9 +842,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
         // remove the common suffix of all three
         let common_suffix_length = Self::common_prefix(
-            Box::new(children_base.iter().rev()),
-            Box::new(children_left.iter().rev()),
-            Box::new(children_right.iter().rev()),
+            children_base.iter().rev(),
+            children_left.iter().rev(),
+            children_right.iter().rev(),
         );
         let common_suffix = &children_base[children_base.len() - common_suffix_length..];
         let children_base = &children_base[..children_base.len() - common_suffix_length];
@@ -915,10 +915,10 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     }
 
     /// Find the common prefix of three lists
-    fn common_prefix<'c, T: Eq>(
-        first: Box<dyn Iterator<Item = T> + 'c>,
-        second: Box<dyn Iterator<Item = T> + 'c>,
-        third: Box<dyn Iterator<Item = T> + 'c>,
+    fn common_prefix<T: Eq>(
+        first: impl Iterator<Item = T>,
+        second: impl Iterator<Item = T>,
+        third: impl Iterator<Item = T>,
     ) -> usize {
         first
             .zip(second)
