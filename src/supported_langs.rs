@@ -105,28 +105,31 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
         LangProfile {
             name: "Kotlin",
             extensions: vec![".kt"],
-            language: tree_sitter_kotlin::language(),
+            language: tree_sitter_kotlin_ng::LANGUAGE.into(),
             atomic_nodes: vec![],
             commutative_parents: vec![
                 // top-level node, for imports and class declarations
                 CommutativeParent::without_delimiters("source_file", "\n\n")
-                    .restricted_to_groups(&[&["import_list"], &["function_declaration"]]),
-                CommutativeParent::without_delimiters("import_list", "\n"),
+                    .restricted_to_groups(&[&["import"], &["function_declaration"]]),
                 CommutativeParent::new("class_body", " {\n", "\n\n", "\n}\n")
                     .restricted_to_groups(&[&["property_declaration"], &["function_declaration"]]),
                 CommutativeParent::without_delimiters("modifiers", "\n").restricted_to_groups(&[
                     &["annotation"],
-                    &["visibility_modifier", "inheritance_modifier"],
+                    &[
+                        "visibility_modifier",
+                        "inheritance_modifier",
+                        "member_modifier",
+                    ],
                 ]),
                 CommutativeParent::without_delimiters("class_declaration", ", ")
                     .restricted_to_groups(&[&["delegation_specifier"]]),
             ],
             signatures: vec![
-                signature("import_header", vec![vec![]]),
+                signature("import", vec![vec![]]),
                 signature(
                     "function_declaration",
                     vec![
-                        vec![ChildType("simple_identifier")],
+                        vec![Field("name")],
                         vec![
                             ChildType("function_value_parameters"),
                             ChildType("parameter"),
