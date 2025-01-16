@@ -997,7 +997,12 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     // if all children can be covered then return the union of all children's covers
                     if let Some(children_covers) = children_covers {
                         let union: HashSet<Leader<'a>> =
-                            children_covers.into_iter().flatten().collect();
+                            children_covers
+                                .into_iter()
+                                .fold(HashSet::new(), |mut acc, s| {
+                                    acc.extend(s);
+                                    acc
+                                });
                         return Some(union);
                     }
                     // at least one child could not be covered at all - the root is our only last possibility
