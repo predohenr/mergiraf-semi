@@ -117,11 +117,10 @@ impl<'tree> Matching<'tree> {
     }
 
     /// Retrieve match ids from left to right
-    pub fn as_ids(&self) -> Vec<(usize, usize)> {
+    pub fn as_ids<'s>(&'s self) -> impl Iterator<Item = (usize, usize)> + use<'s, 'tree> {
         self.left_to_right
             .iter()
             .map(|(source, target)| (source.id, target.id))
-            .collect()
     }
 
     /// Computes the dice coefficient of two trees according to this matching
@@ -172,6 +171,8 @@ impl<'tree> Matching<'tree> {
 
 #[cfg(test)]
 mod tests {
+    use itertools::Itertools;
+
     use crate::test_utils::ctx;
 
     use super::*;
@@ -188,7 +189,10 @@ mod tests {
 
         matching.add(tree.root(), tree2.root());
         assert_eq!(matching.len(), 1);
-        assert_eq!(matching.as_ids(), vec![(tree.root().id, tree2.root().id)]);
+        assert_eq!(
+            matching.as_ids().collect_vec(),
+            vec![(tree.root().id, tree2.root().id)]
+        );
     }
 
     #[test]
