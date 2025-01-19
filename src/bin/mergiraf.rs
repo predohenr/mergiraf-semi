@@ -17,7 +17,8 @@ use mergiraf::{
     supported_langs::SUPPORTED_LANGUAGES,
 };
 
-const DISABLING_ENV_VAR: &str = "MERGIRAF_DISABLE";
+const DISABLING_ENV_VAR: &str = "mergiraf";
+const DISABLING_ENV_VAR_LEGACY: &str = "MERGIRAF_DISABLE";
 
 /// Syntax-aware merge driver for Git.
 #[derive(Parser, Debug)]
@@ -163,8 +164,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             };
 
             {
-                let mergiraf_disabled = env::var("mergiraf").is_ok_and(|v| v == "0")
-                    || env::var(DISABLING_ENV_VAR).is_ok_and(|v| !v.is_empty()); // TODO: deprecate
+                let mergiraf_disabled = env::var(DISABLING_ENV_VAR).is_ok_and(|v| v == "0")
+                    || env::var(DISABLING_ENV_VAR_LEGACY).is_ok_and(|v| !v.is_empty()); // TODO: deprecate
 
                 if mergiraf_disabled {
                     return fallback_to_git_merge_file(&base, &left, &right, git, &settings);
