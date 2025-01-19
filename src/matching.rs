@@ -41,18 +41,12 @@ impl<'tree> Matching<'tree> {
 
     /// Set of left node ids that are matched to any node on the right
     pub fn left_matched(&self) -> HashSet<usize> {
-        self.left_to_right
-            .keys()
-            .map(|c| c.id)
-            .collect::<HashSet<usize>>()
+        self.left_to_right.keys().map(|c| c.id).collect()
     }
 
     /// Set of right node ids that are matched to any node on the left
     pub fn right_matched(&self) -> HashSet<usize> {
-        self.right_to_left
-            .keys()
-            .map(|c| c.id)
-            .collect::<HashSet<usize>>()
+        self.right_to_left.keys().map(|c| c.id).collect()
     }
 
     /// Adds a match between two nodes (in both directions)
@@ -127,7 +121,7 @@ impl<'tree> Matching<'tree> {
         self.left_to_right
             .iter()
             .map(|(source, target)| (source.id, target.id))
-            .collect::<Vec<(usize, usize)>>()
+            .collect()
     }
 
     /// Computes the dice coefficient of two trees according to this matching
@@ -135,7 +129,7 @@ impl<'tree> Matching<'tree> {
         let size_left = left.size();
         let size_right = right.size();
 
-        let right_descendants = right.dfs().collect::<HashSet<&AstNode>>();
+        let right_descendants: HashSet<&AstNode<'_>> = right.dfs().collect();
         let mapped = left
             .dfs()
             .flat_map(|left_descendant| self.get_from_left(left_descendant).into_iter())
