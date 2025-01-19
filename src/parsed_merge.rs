@@ -1,6 +1,5 @@
 use std::{collections::HashMap, ops::Range};
 
-use itertools::Itertools;
 use regex::Regex;
 
 use crate::{
@@ -204,7 +203,7 @@ impl<'a> ParsedMerge<'a> {
     pub(crate) fn reconstruct_revision(&self, revision: Revision) -> String {
         self.chunks
             .iter()
-            .map(|chunk| match chunk {
+            .map(|chunk| match *chunk {
                 MergedChunk::Resolved { contents, .. } => contents,
                 MergedChunk::Conflict {
                     left, base, right, ..
@@ -214,7 +213,7 @@ impl<'a> ParsedMerge<'a> {
                     Revision::Right => right,
                 },
             })
-            .join("")
+            .collect()
     }
 
     /// Find out at which index of the merged file a byte range in the reconstructed revision can be found.
