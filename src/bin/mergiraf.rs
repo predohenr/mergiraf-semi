@@ -15,10 +15,9 @@ use mergiraf::{
     resolve_merge_cascading,
     settings::DisplaySettings,
     supported_langs::SUPPORTED_LANGUAGES,
+    DISABLING_ENV_VAR,
+    DISABLING_ENV_VAR_LEGACY,
 };
-
-const DISABLING_ENV_VAR: &str = "mergiraf";
-const DISABLING_ENV_VAR_LEGACY: &str = "MERGIRAF_DISABLE";
 
 /// Syntax-aware merge driver for Git.
 #[derive(Parser, Debug)]

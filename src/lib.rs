@@ -67,6 +67,8 @@ use tree::{Ast, AstNode};
 use tree_sitter::Parser as TSParser;
 use typed_arena::Arena;
 
+pub const DISABLING_ENV_VAR: &str = "mergiraf";
+pub const DISABLING_ENV_VAR_LEGACY: &str = "MERGIRAF_DISABLE";
 pub const FROM_PARSED_ORIGINAL: &str = "from_parsed_original";
 
 /// Helper to parse a source text with a given tree-sitter parser.
