@@ -69,10 +69,10 @@ impl<'a> ParsedMerge<'a> {
     /// Fails if the conflict markers do not appear in a consistent order.
     pub(crate) fn parse(source: &str) -> Result<ParsedMerge, String> {
         let mut chunks = Vec::new();
-        let left_marker = Regex::new(r"<<<<<<<( .*)?\n").unwrap();
-        let base_marker = Regex::new(r"\|\|\|\|\|\|\|( .*)?\r?\n").unwrap();
+        let left_marker = Regex::new(r"<<<<<<<(?: (.*))?\n").unwrap();
+        let base_marker = Regex::new(r"\|\|\|\|\|\|\|(?: (.*))?\r?\n").unwrap();
         let middle_marker = Regex::new(r"=======\r?\n").unwrap();
-        let right_marker = Regex::new(r">>>>>>>( .*)?\r?\n").unwrap();
+        let right_marker = Regex::new(r">>>>>>>(?: (.*))?\r?\n").unwrap();
 
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
@@ -96,7 +96,7 @@ impl<'a> ParsedMerge<'a> {
             }
             if let Some(left_captures) = left_captures {
                 let left_match = left_captures.get(0).unwrap();
-                let left_name = left_captures.get(1).map_or("", |m| m.as_str().trim());
+                let left_name = left_captures.get(1).map_or("", |m| m.as_str());
                 remaining_source = &remaining_source[left_match.end()..];
 
                 let base_captures = base_marker.captures(remaining_source).ok_or_else(|| {
@@ -107,7 +107,7 @@ impl<'a> ParsedMerge<'a> {
                     }
                 })?;
                 let base_match = base_captures.get(0).unwrap();
-                let base_name = base_captures.get(1).map_or("", |m| m.as_str().trim());
+                let base_name = base_captures.get(1).map_or("", |m| m.as_str());
                 let left = &remaining_source[..base_match.start()];
                 remaining_source = &remaining_source[base_match.end()..];
 
@@ -121,7 +121,7 @@ impl<'a> ParsedMerge<'a> {
                     .captures(remaining_source)
                     .ok_or("unexpected end of file before right conflict marker")?;
                 let right_match = right_captures.get(0).unwrap();
-                let right_name = right_captures.get(1).map_or("", |m| m.as_str().trim());
+                let right_name = right_captures.get(1).map_or("", |m| m.as_str());
                 let right = &remaining_source[..right_match.start()];
                 remaining_source = &remaining_source[right_match.end()..];
 
