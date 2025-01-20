@@ -69,7 +69,7 @@ impl<'a> ParsedMerge<'a> {
     /// Fails if the conflict markers do not appear in a consistent order.
     pub(crate) fn parse(source: &str) -> Result<ParsedMerge, String> {
         let mut chunks = Vec::new();
-        let left_marker = Regex::new(r"<<<<<<<(?: (.*))?\n").unwrap();
+        let left_marker = Regex::new(r"<<<<<<<(?: (.*))?\r?\n").unwrap();
         let base_marker = Regex::new(r"\|\|\|\|\|\|\|(?: (.*))?\r?\n").unwrap();
         let middle_marker = Regex::new(r"=======\r?\n").unwrap();
         let right_marker = Regex::new(r">>>>>>>(?: (.*))?\r?\n").unwrap();
