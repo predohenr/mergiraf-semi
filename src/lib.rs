@@ -280,7 +280,14 @@ pub fn cascading_merge(
 }
 
 /// Takes a non-empty vector of merge results and picks the best one
-fn select_best_solve(mut merges: Vec<MergeResult>) -> MergeResult {
+fn select_best_solve(mut merges: Vec<MergeResult>) -> Result<MergeResult, String> {
+    if merges.is_empty() ||
+        // the only "merge" is the parsed input
+        (merges.len() == 1 && merges[0].method == FROM_PARSED_ORIGINAL)
+    {
+        return Err("Could not generate any merge".to_string());
+    }
+
     merges.sort_by_key(|merge| merge.conflict_mass);
     debug!("~~~ Merge statistics ~~~");
     for merge in &merges {
@@ -289,10 +296,10 @@ fn select_best_solve(mut merges: Vec<MergeResult>) -> MergeResult {
             merge.method, merge.conflict_count, merge.conflict_mass, merge.has_additional_issues
         );
     }
-    merges
+    Ok(merges
         .into_iter()
         .find_or_first(|merge| !merge.has_additional_issues)
-        .expect("At least one merge result should be present")
+        .expect("checked for non-emptiness above"))
 }
 
 /// Takes the result of an earlier merge process (likely line-based)
@@ -420,14 +427,7 @@ pub fn resolve_merge_cascading<'a>(
         Ok(structured_merge) => merges.push(structured_merge),
         Err(err) => warn!("Full structured merge failed: {err}"),
     }
-
-    if merges.is_empty() ||
-    // the only "merge" is the parsed input
-    (merges.len() == 1 && merges[0].method == FROM_PARSED_ORIGINAL)
-    {
-        return Err("Could not generate any merge".to_string());
-    }
-    let best_solve = select_best_solve(merges);
+    let best_solve = select_best_solve(merges)?;
 
     match best_solve.conflict_count {
         0 => info!("Solved all conflicts."),
