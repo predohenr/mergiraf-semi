@@ -280,28 +280,28 @@ pub fn cascading_merge(
 }
 
 /// Takes a non-empty vector of merge results and picks the best one
-fn select_best_solve(mut merges: Vec<MergeResult>) -> Result<MergeResult, String> {
-    if merges.is_empty() {
-        return Err("Could not generate any merge".to_string());
+fn select_best_solve(mut solves: Vec<MergeResult>) -> Result<MergeResult, String> {
+    if solves.is_empty() {
+        return Err("Could not generate any solution".to_string());
     }
 
-    merges.sort_by_key(|merge| merge.conflict_mass);
-    debug!("~~~ Merge statistics ~~~");
-    for merge in &merges {
+    solves.sort_by_key(|solve| solve.conflict_mass);
+    debug!("~~~ Solve statistics ~~~");
+    for solve in &solves {
         debug!(
             "{}: {} conflict(s), {} mass, has_additional_issues: {}",
-            merge.method, merge.conflict_count, merge.conflict_mass, merge.has_additional_issues
+            solve.method, solve.conflict_count, solve.conflict_mass, solve.has_additional_issues
         );
     }
 
-    let best_solve = merges
+    let best_solve = solves
         .into_iter()
-        .find_or_first(|merge| !merge.has_additional_issues)
+        .find_or_first(|solve| !solve.has_additional_issues)
         .expect("checked for non-emptiness above");
 
     if best_solve.method == FROM_PARSED_ORIGINAL {
         // the best solve we've got is the line-based one
-        Err("Could not generate any merge".to_string())
+        Err("Could not generate any solution".to_string())
     } else {
         Ok(best_solve)
     }
@@ -383,7 +383,7 @@ pub fn resolve_merge_cascading<'a>(
     debug_dir: Option<&str>,
     working_dir: &Path,
 ) -> Result<MergeResult, String> {
-    let mut merges = Vec::with_capacity(3);
+    let mut solves = Vec::with_capacity(3);
 
     let lang_profile = LangProfile::detect_from_filename(fname_base)
         .ok_or_else(|| format!("Could not find a supported language for {fname_base}"))?;
@@ -402,11 +402,11 @@ pub fn resolve_merge_cascading<'a>(
             settings.add_revision_names(&parsed_merge);
 
             match resolve_merge(&parsed_merge, &settings, lang_profile, debug_dir) {
-                Ok(merge) if merge.conflict_count == 0 => {
+                Ok(solve) if solve.conflict_count == 0 => {
                     info!("Solved all conflicts.");
-                    return Ok(merge);
+                    return Ok(solve);
                 }
-                Ok(merge) => merges.push(merge),
+                Ok(solve) => solves.push(solve),
                 Err(err) => warn!("Error while resolving conflicts: {err}"),
             }
 
@@ -417,7 +417,7 @@ pub fn resolve_merge_cascading<'a>(
                 method: FROM_PARSED_ORIGINAL,
                 has_additional_issues: false,
             };
-            merges.push(rendered_from_parsed);
+            solves.push(rendered_from_parsed);
         }
     }
 
@@ -429,10 +429,10 @@ pub fn resolve_merge_cascading<'a>(
         working_dir,
         lang_profile,
     ) {
-        Ok(structured_merge) => merges.push(structured_merge),
+        Ok(structured_merge) => solves.push(structured_merge),
         Err(err) => warn!("Full structured merge failed: {err}"),
     }
-    let best_solve = select_best_solve(merges)?;
+    let best_solve = select_best_solve(solves)?;
 
     match best_solve.conflict_count {
         0 => info!("Solved all conflicts."),
