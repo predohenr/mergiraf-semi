@@ -281,10 +281,7 @@ pub fn cascading_merge(
 
 /// Takes a non-empty vector of merge results and picks the best one
 fn select_best_solve(mut merges: Vec<MergeResult>) -> Result<MergeResult, String> {
-    if merges.is_empty() ||
-        // the only "merge" is the parsed input
-        (merges.len() == 1 && merges[0].method == FROM_PARSED_ORIGINAL)
-    {
+    if merges.is_empty() {
         return Err("Could not generate any merge".to_string());
     }
 
@@ -296,10 +293,18 @@ fn select_best_solve(mut merges: Vec<MergeResult>) -> Result<MergeResult, String
             merge.method, merge.conflict_count, merge.conflict_mass, merge.has_additional_issues
         );
     }
-    Ok(merges
+
+    let best_solve = merges
         .into_iter()
         .find_or_first(|merge| !merge.has_additional_issues)
-        .expect("checked for non-emptiness above"))
+        .expect("checked for non-emptiness above");
+
+    if best_solve.method == FROM_PARSED_ORIGINAL {
+        // the best solve we've got is the line-based one
+        Err("Could not generate any merge".to_string())
+    } else {
+        Ok(best_solve)
+    }
 }
 
 /// Takes the result of an earlier merge process (likely line-based)
