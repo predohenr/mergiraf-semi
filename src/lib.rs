@@ -83,7 +83,7 @@ pub const DISABLING_ENV_VAR: &str = "mergiraf";
 /// MERGIRAF_DISABLE=1 mergiraf merge foo bar baz
 /// ```
 pub const DISABLING_ENV_VAR_LEGACY: &str = "MERGIRAF_DISABLE"; // TODO(0.5.0): deprecate
-pub const FROM_PARSED_ORIGINAL: &str = "from_parsed_original";
+pub(crate) const FROM_PARSED_ORIGINAL: &str = "from_parsed_original";
 
 /// Helper to parse a source text with a given tree-sitter parser.
 pub(crate) fn parse<'a>(
