@@ -130,7 +130,7 @@ pub fn line_merge_and_structured_resolution(
         debug_dir,
     );
 
-    match line_based_and_best(merges) {
+    match select_best_merge(merges) {
         LineBasedAndBestAre::TheSame(merge) => merge,
         LineBasedAndBestAre::NotTheSame { line_based, best } => {
             if best.conflict_count == 0 {
@@ -159,22 +159,6 @@ pub fn line_merge_and_structured_resolution(
     }
 }
 
-/// Takes a non-empty vector of merge results and picks the best one
-fn select_best_merge(mut merges: Vec<MergeResult>) -> MergeResult {
-    merges.sort_by_key(|merge| merge.conflict_mass);
-    debug!("~~~ Merge statistics ~~~");
-    for merge in &merges {
-        debug!(
-            "{}: {} conflict(s), {} mass, has_additional_issues: {}",
-            merge.method, merge.conflict_count, merge.conflict_mass, merge.has_additional_issues
-        );
-    }
-    merges
-        .into_iter()
-        .find_or_first(|merge| !merge.has_additional_issues)
-        .expect("At least one merge result should be present")
-}
-
 enum LineBasedAndBestAre {
     TheSame(MergeResult),
     NotTheSame {
@@ -186,7 +170,7 @@ enum LineBasedAndBestAre {
 /// Takes a non-empty vector of merge results
 /// Returns both the line-based and the best one
 /// These may happen to coincide, so returns either one or two merges
-fn line_based_and_best(mut merges: Vec<MergeResult>) -> LineBasedAndBestAre {
+fn select_best_merge(mut merges: Vec<MergeResult>) -> LineBasedAndBestAre {
     merges.sort_by_key(|merge| merge.conflict_mass);
     debug!("~~~ Merge statistics ~~~");
     for merge in &merges {
@@ -293,6 +277,22 @@ pub fn cascading_merge(
 
     merges.push(line_based_merge);
     merges
+}
+
+/// Takes a non-empty vector of merge results and picks the best one
+fn select_best_solve(mut merges: Vec<MergeResult>) -> MergeResult {
+    merges.sort_by_key(|merge| merge.conflict_mass);
+    debug!("~~~ Merge statistics ~~~");
+    for merge in &merges {
+        debug!(
+            "{}: {} conflict(s), {} mass, has_additional_issues: {}",
+            merge.method, merge.conflict_count, merge.conflict_mass, merge.has_additional_issues
+        );
+    }
+    merges
+        .into_iter()
+        .find_or_first(|merge| !merge.has_additional_issues)
+        .expect("At least one merge result should be present")
 }
 
 /// Takes the result of an earlier merge process (likely line-based)
@@ -427,13 +427,13 @@ pub fn resolve_merge_cascading<'a>(
     {
         return Err("Could not generate any merge".to_string());
     }
-    let best_merge = select_best_merge(merges);
+    let best_solve = select_best_solve(merges);
 
-    match best_merge.conflict_count {
+    match best_solve.conflict_count {
         0 => info!("Solved all conflicts."),
         n => info!("{n} conflict(s) remaining."),
     }
-    Ok(best_merge)
+    Ok(best_solve)
 }
 
 fn extract_revision(working_dir: &Path, path: &str, revision: Revision) -> Result<String, String> {
