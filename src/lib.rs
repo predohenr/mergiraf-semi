@@ -279,7 +279,7 @@ pub fn cascading_merge(
     merges
 }
 
-/// Takes a non-empty vector of merge results and picks the best one
+/// Takes a vector of merge results produced by [`resolve_merge_cascading`] and picks the best one
 fn select_best_solve(mut solves: Vec<MergeResult>) -> Result<MergeResult, String> {
     if solves.is_empty() {
         return Err("Could not generate any solution".to_string());
