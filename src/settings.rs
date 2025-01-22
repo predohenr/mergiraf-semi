@@ -47,7 +47,6 @@ impl<'a> DisplaySettings<'a> {
     /// It does not contain any newline character.
     /// Uses the default values of `conflict_marker_size` and `left_revision_name` if not set
     pub fn left_marker_or_default(&self) -> String {
-        println!("called left_marker_or_default");
         format!(
             "{} {}",
             "<".repeat(self.conflict_marker_size_or_default()),
