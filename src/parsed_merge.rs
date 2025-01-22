@@ -621,6 +621,38 @@ mod tests {
     }
 
     #[test]
+    fn render_non_standard_conflict_marker_size() {
+        let merge = ParsedMerge::new(vec![
+            MergedChunk::Resolved {
+                offset: 0,
+                contents: "resolved line\n",
+            },
+            MergedChunk::Conflict {
+                left_name: "",
+                left: "left line\n",
+                base: "base line\n",
+                right: "right line\n",
+                right_name: "",
+                base_name: "",
+            },
+        ]);
+
+        let rendered_with_4 = merge.render(&DisplaySettings {
+            conflict_marker_size: Some(4),
+            ..Default::default()
+        });
+        let expected_with_4 = "resolved line\n<<<< LEFT\nleft line\n|||| BASE\nbase line\n====\nright line\n>>>> RIGHT\n";
+        assert_eq!(rendered_with_4, expected_with_4);
+
+        let rendered_with_9 = merge.render(&DisplaySettings {
+            conflict_marker_size: Some(9),
+            ..Default::default()
+        });
+        let expected_with_9 = "resolved line\n<<<<<<<<< LEFT\nleft line\n||||||||| BASE\nbase line\n=========\nright line\n>>>>>>>>> RIGHT\n";
+        assert_eq!(rendered_with_9, expected_with_9);
+    }
+
+    #[test]
     fn add_revision_names_to_settings() {
         let source = "<<<<<<< my_left\nlet's go to the left!\n||||||| my_base\nwhere should we go?\n=======\nturn right please!\n>>>>>>> my_right\nrest of file\n";
         let parsed = ParsedMerge::parse(source).expect("unexpected parse error");
