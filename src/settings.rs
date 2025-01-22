@@ -85,12 +85,8 @@ impl<'a> DisplaySettings<'a> {
 
     pub fn default_compact() -> Self {
         Self {
-            diff3: true,
             compact: Some(true),
-            conflict_marker_size: None,
-            left_revision_name: None,
-            base_revision_name: None,
-            right_revision_name: None,
+            ..Default::default()
         }
     }
 
