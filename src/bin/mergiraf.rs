@@ -3,7 +3,7 @@ use std::{
     process::{exit, Command},
 };
 
-use clap::{Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand};
 use itertools::Itertools;
 use log::warn;
 use mergiraf::{
@@ -85,6 +85,16 @@ enum CliCommand {
         /// Keep file untouched and show the results of resolution on standard output instead
         #[clap(short, long)]
         keep: bool,
+        /// Create a copy of the original file by adding the `.orig` suffix to it (`true` by default)
+        #[clap(
+            long,
+            default_missing_value = "true",
+            default_value_t = true,
+            num_args = 0..=1,
+            require_equals = true,
+            action = ArgAction::Set,
+        )]
+        keep_backup: bool,
     },
     /// Review the resolution of a merge by showing the differences with a line-based merge
     Review {
@@ -218,6 +228,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             conflicts: fname_conflicts,
             compact,
             keep,
+            keep_backup,
         } => {
             let settings = DisplaySettings {
                 compact,
@@ -249,7 +260,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                         );
                     } else {
                         write_string_to_file(&fname_conflicts, &merged.contents)?;
-                        write_string_to_file(&(fname_conflicts + ".orig"), &conflict_contents)?;
+                        if keep_backup {
+                            write_string_to_file(&(fname_conflicts + ".orig"), &conflict_contents)?;
+                        }
                     };
                     0
                 }
