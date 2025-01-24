@@ -352,8 +352,49 @@ fn fallback_to_git_merge_file(
         .map_err(|err| err.to_string())
 }
 
-#[test]
-fn verify_cli() {
-    use clap::CommandFactory;
-    CliArgs::command().debug_assert();
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        CliArgs::command().debug_assert();
+    }
+
+    #[test]
+    fn keep_backup_flag() {
+        // `true` when nothing passed
+        let CliCommand::Solve { keep_backup, .. } =
+            CliArgs::parse_from(["mergiraf", "solve", "foo.c"]).command
+        else {
+            unreachable!("`mergiraf solve` should invoke the `Solve` submcommand")
+        };
+        assert!(keep_backup);
+
+        // `true` when passed without value
+        // (and doesn't try to parse `foo.c` as value because of `require_equals`)
+        let CliCommand::Solve { keep_backup, .. } =
+            CliArgs::parse_from(["mergiraf", "solve", "--keep-backup", "foo.c"]).command
+        else {
+            unreachable!("`mergiraf solve` should invoke the `Solve` submcommand")
+        };
+        assert!(keep_backup);
+
+        // `true` when passed with explicit `=true`
+        let CliCommand::Solve { keep_backup, .. } =
+            CliArgs::parse_from(["mergiraf", "solve", "--keep-backup=true", "foo.c"]).command
+        else {
+            unreachable!("`mergiraf solve` should invoke the `Solve` submcommand")
+        };
+        assert!(keep_backup);
+
+        // `false` when passed with explicit `=false`
+        let CliCommand::Solve { keep_backup, .. } =
+            CliArgs::parse_from(["mergiraf", "solve", "--keep-backup=false", "foo.c"]).command
+        else {
+            unreachable!("`mergiraf solve` should invoke the `Solve` submcommand")
+        };
+        assert!(!keep_backup);
+    }
 }
