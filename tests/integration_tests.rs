@@ -32,7 +32,7 @@ fn write_file_from_rev(
     extension: &str,
 ) -> String {
     let file_name = format!("file.{extension}");
-    let fname_base = format!("{}/{}.{}", test_dir.display(), revision, extension);
+    let fname_base = test_dir.join(format!("{revision}.{extension}"));
     let contents = fs::read_to_string(&fname_base).expect("Unable to read left file");
     fs::write(repo_dir.join(&file_name), contents)
         .expect("failed to write test file to git repository");
