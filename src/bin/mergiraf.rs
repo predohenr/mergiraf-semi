@@ -397,4 +397,42 @@ mod test {
         };
         assert!(!keep_backup);
     }
+
+    #[test]
+    fn keep_backup_keeps_backup() {
+        let repo_dir = tempfile::tempdir().expect("failed to create the temp dir");
+        let repo_path = repo_dir.path();
+
+        let test_file_name = "test.c";
+
+        let test_file_abs_path = repo_path.join(test_file_name);
+        fs::write(&test_file_abs_path, "hello\nworld\n")
+            .expect("failed to write test file to git repository");
+
+        let test_file_orig_file_path = repo_path.join(format!("{test_file_name}.orig"));
+
+        // `solve` without keeping backup
+        Command::new("/home/ada4a/.cache/cargo/target/debug/mergiraf")
+            .args([
+                "solve",
+                "--keep-backup=false",
+                test_file_abs_path.to_str().unwrap(),
+            ])
+            .output()
+            .expect("failed to execute `mergiraf solve`");
+
+        assert!(!test_file_orig_file_path.exists());
+
+        // `solve` once again but with backup this time
+        Command::new("/home/ada4a/.cache/cargo/target/debug/mergiraf")
+            .args([
+                "solve",
+                "--keep-backup=true",
+                test_file_abs_path.to_str().unwrap(),
+            ])
+            .output()
+            .expect("failed to execute `mergiraf solve`");
+
+        assert!(test_file_orig_file_path.exists());
+    }
 }
