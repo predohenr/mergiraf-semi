@@ -116,6 +116,13 @@ enum CliCommand {
 
 fn main() {
     let args = CliArgs::parse();
+
+    stderrlog::new()
+        .module(module_path!())
+        .verbosity(if args.verbose { 3 } else { 2 })
+        .init()
+        .unwrap();
+
     match real_main(args) {
         Ok(exit_code) => exit(exit_code),
         Err(error) => {
@@ -126,12 +133,6 @@ fn main() {
 }
 
 fn real_main(args: CliArgs) -> Result<i32, String> {
-    stderrlog::new()
-        .module(module_path!())
-        .verbosity(if args.verbose { 3 } else { 2 })
-        .init()
-        .unwrap();
-
     let return_code = match args.command {
         CliCommand::Merge {
             base,
@@ -412,26 +413,24 @@ mod test {
         let test_file_orig_file_path = repo_path.join(format!("{test_file_name}.orig"));
 
         // `solve` without keeping backup
-        Command::new("/home/ada4a/.cache/cargo/target/debug/mergiraf")
-            .args([
-                "solve",
-                "--keep-backup=false",
-                test_file_abs_path.to_str().unwrap(),
-            ])
-            .output()
-            .expect("failed to execute `mergiraf solve`");
+        real_main(CliArgs::parse_from([
+            "mergiraf",
+            "solve",
+            "--keep-backup=false",
+            test_file_abs_path.to_str().unwrap(),
+        ]))
+        .expect("failed to execute `mergiraf solve`");
 
         assert!(!test_file_orig_file_path.exists());
 
         // `solve` once again but with backup this time
-        Command::new("/home/ada4a/.cache/cargo/target/debug/mergiraf")
-            .args([
-                "solve",
-                "--keep-backup=true",
-                test_file_abs_path.to_str().unwrap(),
-            ])
-            .output()
-            .expect("failed to execute `mergiraf solve`");
+        real_main(CliArgs::parse_from([
+            "mergiraf",
+            "solve",
+            "--keep-backup=true",
+            test_file_abs_path.to_str().unwrap(),
+        ]))
+        .expect("failed to execute `mergiraf solve`");
 
         assert!(test_file_orig_file_path.exists());
     }
