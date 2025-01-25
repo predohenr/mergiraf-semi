@@ -72,13 +72,15 @@ impl<'a> ParsedMerge<'a> {
 
         let mut chunks = Vec::new();
 
-        let left_marker =
-            Regex::new(&format!(r"{}(?: (.*))?\r?\n", "<".repeat(marker_size))).unwrap();
-        let base_marker =
-            Regex::new(&format!(r"({}?: (.*))?\r?\n", r"\|".repeat(marker_size))).unwrap();
-        let middle_marker = Regex::new(&format!(r"{}\r?\n", "=".repeat(marker_size))).unwrap();
-        let right_marker =
-            Regex::new(&format!(r"{}(?: (.*))?\r?\n", ">".repeat(marker_size))).unwrap();
+        let left_marker = "<".repeat(marker_size);
+        let base_marker = r"\|".repeat(marker_size);
+        let middle_marker = "=".repeat(marker_size);
+        let right_marker = ">".repeat(marker_size);
+
+        let left_marker = Regex::new(&format!(r"{left_marker}(?: (.*))?\r?\n")).unwrap();
+        let base_marker = Regex::new(&format!(r"{base_marker}(?: (.*))?\r?\n")).unwrap();
+        let middle_marker = Regex::new(&format!(r"{middle_marker}\r?\n")).unwrap();
+        let right_marker = Regex::new(&format!(r"{right_marker}(?: (.*))?\r?\n",)).unwrap();
 
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
