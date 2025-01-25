@@ -72,7 +72,7 @@ pub fn three_way_merge<'a>(
         thread::scope(|s| {
             s.spawn(|| {
                 write_matching_to_dotty_file(
-                    &debug_dir.join("base_left.dot"),
+                    debug_dir.join("base_left.dot"),
                     base,
                     left,
                     &base_left_matching,
@@ -80,7 +80,7 @@ pub fn three_way_merge<'a>(
             });
             s.spawn(|| {
                 write_matching_to_dotty_file(
-                    &debug_dir.join("base_right.dot"),
+                    debug_dir.join("base_right.dot"),
                     base,
                     right,
                     &base_right_matching,
@@ -88,7 +88,7 @@ pub fn three_way_merge<'a>(
             });
             s.spawn(|| {
                 write_matching_to_dotty_file(
-                    &debug_dir.join("left_right.dot"),
+                    debug_dir.join("left_right.dot"),
                     left,
                     right,
                     &left_right_matching,
