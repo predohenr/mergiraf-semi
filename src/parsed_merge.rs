@@ -590,6 +590,46 @@ mod tests {
     }
 
     #[test]
+    fn parse_non_standard_conflict_marker_size() {
+        let parsed_expected = ParsedMerge::new(vec![
+            MergedChunk::Resolved {
+                offset: 0,
+                contents: "resolved line\n",
+            },
+            MergedChunk::Conflict {
+                left: "left line\n",
+                base: "base line\n",
+                right: "right line\n",
+                left_name: "LEFT",
+                base_name: "BASE",
+                right_name: "RIGHT",
+            },
+        ]);
+
+        let conflict_with_4 = "resolved line\n<<<< LEFT\nleft line\n|||| BASE\nbase line\n====\nright line\n>>>> RIGHT\n";
+        let parsed_with_4 = ParsedMerge::parse(
+            conflict_with_4,
+            &DisplaySettings {
+                conflict_marker_size: Some(4),
+                ..Default::default()
+            },
+        )
+        .expect("could not parse a conflict with `conflict_marker_size=4`");
+        assert_eq!(parsed_with_4, parsed_expected);
+
+        let conflict_with_9 = "resolved line\n<<<<<<<<< LEFT\nleft line\n||||||||| BASE\nbase line\n=========\nright line\n>>>>>>>>> RIGHT\n";
+        let parsed_with_9 = ParsedMerge::parse(
+            conflict_with_9,
+            &DisplaySettings {
+                conflict_marker_size: Some(9),
+                ..Default::default()
+            },
+        )
+        .expect("could not parse a conflict with `conflict_marker_size=9`");
+        assert_eq!(parsed_with_9, parsed_expected);
+    }
+
+    #[test]
     fn matching() {
         let ctx = ctx();
         let source = "struct MyType {\n    field: bool,\n<<<<<<< LEFT\n    foo: int,\n    bar: String,\n||||||| BASE\n    foo: String,\n=======\n>>>>>>> RIGHT\n};\n";
