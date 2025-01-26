@@ -52,9 +52,7 @@ impl<'a, 'b> AstNodeEquiv<'a, 'b> {
         match self {
             Self::Original(ast_node) => ast_node
                 .children_by_field_name(field_name)
-                .iter()
-                .flat_map(|l| l.iter().copied().map(Self::Original))
-                .collect(),
+                .map_or(vec![], |l| l.iter().copied().map(Self::Original).collect()),
             Self::Merged(tree) => match tree {
                 MergedTree::ExactTree {
                     node, revisions, ..
