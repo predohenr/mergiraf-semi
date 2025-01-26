@@ -213,11 +213,8 @@ pub fn three_way_merge<'a>(
 
     // post-process to highlight signature conflicts
     let start: Instant = Instant::now();
-    let postprocessed_tree = MergedTree::post_process_for_duplicate_signatures(
-        merged_tree,
-        primary_matcher.lang_profile,
-        &class_mapping,
-    );
+    let postprocessed_tree = merged_tree
+        .post_process_for_duplicate_signatures(primary_matcher.lang_profile, &class_mapping);
     debug!(
         "post-processing the merged tree for signature conflicts took {:?}",
         start.elapsed()

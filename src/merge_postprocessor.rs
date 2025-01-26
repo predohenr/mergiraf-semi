@@ -17,20 +17,16 @@ impl<'a> MergedTree<'a> {
     /// If there are any, group the elements with identical signatures in the same location
     /// and potentially add a conflict there.
     pub(crate) fn post_process_for_duplicate_signatures(
-        tree: Self,
+        self,
         lang_profile: &LangProfile,
         class_mapping: &ClassMapping<'a>,
     ) -> Self {
-        match tree {
+        match self {
             Self::MixedTree { node, children, .. } => {
                 let recursively_processed = children
                     .into_iter()
                     .map(|element| {
-                        Self::post_process_for_duplicate_signatures(
-                            element,
-                            lang_profile,
-                            class_mapping,
-                        )
+                        element.post_process_for_duplicate_signatures(lang_profile, class_mapping)
                     })
                     .collect();
                 let commutative_parent = lang_profile.get_commutative_parent(node.grammar_name());
@@ -50,7 +46,7 @@ impl<'a> MergedTree<'a> {
             Self::ExactTree { .. }
             | Self::Conflict { .. }
             | Self::LineBasedMerge { .. }
-            | Self::CommutativeChildSeparator { .. } => tree,
+            | Self::CommutativeChildSeparator { .. } => self,
         }
     }
 }
