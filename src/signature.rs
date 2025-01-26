@@ -53,7 +53,7 @@ impl<'a, 'b> AstNodeEquiv<'a, 'b> {
             Self::Original(ast_node) => ast_node
                 .children_by_field_name(field_name)
                 .iter()
-                .flat_map(|l| l.iter().map(|c| Self::Original(c)))
+                .flat_map(|l| l.iter().copied().map(Self::Original))
                 .collect(),
             Self::Merged(tree) => match tree {
                 MergedTree::ExactTree {
@@ -89,7 +89,8 @@ impl<'a, 'b> AstNodeEquiv<'a, 'b> {
                 .children
                 .iter()
                 .filter(|child| child.grammar_name == grammar_name)
-                .map(|l| Self::Original(l))
+                .copied()
+                .map(Self::Original)
                 .collect(),
             Self::Merged(tree) => match tree {
                 MergedTree::ExactTree {
