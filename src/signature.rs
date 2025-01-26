@@ -23,7 +23,7 @@ impl Display for Signature<'_, '_> {
                     x.iter()
                         .map(|element| match element {
                             AstNodeEquiv::Original(ast_node) => ast_node.source.to_owned(),
-                            AstNodeEquiv::Merged(tree) => format!("{tree}"),
+                            AstNodeEquiv::Merged(tree) => tree.to_string(),
                         })
                         .join(", ")
                 ))
