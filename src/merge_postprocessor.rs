@@ -95,9 +95,9 @@ fn highlight_duplicate_signatures<'a>(
     let add_separator = {
         if let Some(node) = separator_example {
             let full_source = node.node.source_with_surrounding_whitespace();
-            if start_regex.find(full_source).is_some() {
+            if start_regex.is_match(full_source) {
                 AddSeparator::AtBeginning
-            } else if end_regex.find(full_source).is_some() {
+            } else if end_regex.is_match(full_source) {
                 AddSeparator::AtEnd
             } else {
                 AddSeparator::OnlyInside
