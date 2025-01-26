@@ -333,11 +333,11 @@ fn find_separator<'a>(
     class_mapping: &ClassMapping<'a>,
 ) -> Option<RevNode<'a>> {
     let revs = [Revision::Base, Revision::Left, Revision::Right];
-    revs.iter()
+    revs.into_iter()
         .filter_map(|rev| {
             class_mapping
-                .node_at_rev(parent, *rev)
-                .map(|node| (*rev, node))
+                .node_at_rev(parent, rev)
+                .map(|node| (rev, node))
         })
         .flat_map(|(rev, node)| {
             node.children
