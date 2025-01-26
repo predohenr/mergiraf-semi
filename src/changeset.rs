@@ -124,7 +124,10 @@ impl<'a> ChangeSet<'a> {
 
     /// Finds all the PCS that are successor-conflicting with this PCS
     #[cfg(test)]
-    pub(crate) fn other_successors(&self, pcs: PCS<'a>) -> impl Iterator<Item = &PCS<'a>> {
+    pub(crate) fn other_successors<'s, 'b>(
+        &'s self,
+        pcs: &'b PCS<'a>,
+    ) -> impl Iterator<Item = &'s PCS<'a>> + use<'s, 'a, 'b> {
         self.parents.get(&pcs.parent).iter().filter(move |other| {
             other.successor != pcs.successor && other.predecessor == pcs.predecessor
         })
@@ -231,7 +234,7 @@ mod tests {
 
         let empty_conflicts: Vec<&PCS> = vec![];
         for pcs in changeset.iter() {
-            let conflicts = changeset.other_successors(*pcs).collect_vec();
+            let conflicts = changeset.other_successors(pcs).collect_vec();
             for conflicting_pcs in &conflicts {
                 debug!("conflict between {pcs} and {conflicting_pcs}");
             }
