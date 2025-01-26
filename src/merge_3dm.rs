@@ -6,13 +6,10 @@ use crate::{
     changeset::ChangeSet,
     class_mapping::{ClassMapping, RevNode},
     line_based::line_based_merge,
-    matching::Matching,
-    merge_postprocessor::post_process_merged_tree_for_duplicate_signatures,
-    merged_tree::MergedTree,
+    matching::Matching, merged_tree::MergedTree,
     pcs::Revision,
     tree::Ast,
-    tree_builder::TreeBuilder,
-    tree_matcher::TreeMatcher,
+    tree_builder::TreeBuilder, tree_matcher::TreeMatcher,
     visualizer::write_matching_to_dotty_file,
 };
 
@@ -216,7 +213,7 @@ pub fn three_way_merge<'a>(
 
     // post-process to highlight signature conflicts
     let start: Instant = Instant::now();
-    let postprocessed_tree = post_process_merged_tree_for_duplicate_signatures(
+    let postprocessed_tree = MergedTree::post_process_for_duplicate_signatures(
         merged_tree,
         primary_matcher.lang_profile,
         &class_mapping,

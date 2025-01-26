@@ -12,44 +12,46 @@ use crate::{
     tree::AstNode,
 };
 
-/// Transforms a merged tree by checking that there are no signature conflicts.
-/// If there are any, group the elements with identical signatures in the same location
-/// and potentially add a conflict there.
-pub(crate) fn post_process_merged_tree_for_duplicate_signatures<'a>(
-    tree: MergedTree<'a>,
-    lang_profile: &LangProfile,
-    class_mapping: &ClassMapping<'a>,
-) -> MergedTree<'a> {
-    match tree {
-        MergedTree::MixedTree { node, children, .. } => {
-            let recursively_processed = children
-                .into_iter()
-                .map(|element| {
-                    post_process_merged_tree_for_duplicate_signatures(
-                        element,
+impl<'a> MergedTree<'a> {
+    /// Transforms a merged tree by checking that there are no signature conflicts.
+    /// If there are any, group the elements with identical signatures in the same location
+    /// and potentially add a conflict there.
+    pub(crate) fn post_process_for_duplicate_signatures(
+        tree: MergedTree<'a>,
+        lang_profile: &LangProfile,
+        class_mapping: &ClassMapping<'a>,
+    ) -> MergedTree<'a> {
+        match tree {
+            MergedTree::MixedTree { node, children, .. } => {
+                let recursively_processed = children
+                    .into_iter()
+                    .map(|element| {
+                        Self::post_process_for_duplicate_signatures(
+                            element,
+                            lang_profile,
+                            class_mapping,
+                        )
+                    })
+                    .collect();
+                let commutative_parent = lang_profile.get_commutative_parent(node.grammar_name());
+                if let Some(commutative_parent) = commutative_parent {
+                    let highlighted = highlight_duplicate_signatures(
+                        node,
+                        recursively_processed,
                         lang_profile,
                         class_mapping,
-                    )
-                })
-                .collect();
-            let commutative_parent = lang_profile.get_commutative_parent(node.grammar_name());
-            if let Some(commutative_parent) = commutative_parent {
-                let highlighted = highlight_duplicate_signatures(
-                    node,
-                    recursively_processed,
-                    lang_profile,
-                    class_mapping,
-                    commutative_parent,
-                );
-                MergedTree::new_mixed(node, highlighted)
-            } else {
-                MergedTree::new_mixed(node, recursively_processed)
+                        commutative_parent,
+                    );
+                    MergedTree::new_mixed(node, highlighted)
+                } else {
+                    MergedTree::new_mixed(node, recursively_processed)
+                }
             }
+            MergedTree::ExactTree { .. }
+            | MergedTree::Conflict { .. }
+            | MergedTree::LineBasedMerge { .. }
+            | MergedTree::CommutativeChildSeparator { .. } => tree,
         }
-        MergedTree::ExactTree { .. }
-        | MergedTree::Conflict { .. }
-        | MergedTree::LineBasedMerge { .. }
-        | MergedTree::CommutativeChildSeparator { .. } => tree,
     }
 }
 
