@@ -103,7 +103,7 @@ impl<'a> ChangeSet<'a> {
 
     /// Finds all the PCS which contain either the successor or predecessor of this PCS as successor or predecessor,
     /// and whose parent is different.
-    pub fn other_roots(&self, pcs: PCS<'a>) -> impl Iterator<Item = &PCS<'a>> {
+    pub fn other_roots(&self, pcs: &PCS<'a>) -> impl Iterator<Item = &PCS<'a>> {
         let mut results = Vec::new();
         if let PCSNode::Node { .. } = pcs.predecessor {
             results.extend(
@@ -131,7 +131,10 @@ impl<'a> ChangeSet<'a> {
     }
 
     /// Finds all the inconsistent triples
-    pub fn inconsistent_triples(&self, pcs: PCS<'a>) -> impl Iterator<Item = &PCS<'a>> {
+    pub fn inconsistent_triples<'s, 'b>(
+        &'s self,
+        pcs: &'b PCS<'a>,
+    ) -> impl Iterator<Item = &'s PCS<'a>> + use<'s, 'a, 'b> {
         self.parents
             .get(&pcs.parent)
             .iter()

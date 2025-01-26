@@ -167,8 +167,8 @@ pub fn three_way_merge<'a>(
     for pcs in changeset.iter() {
         let mut conflict_found = false;
         if pcs.revision == Revision::Base {
-            let mut conflicting_triples = changeset.inconsistent_triples(*pcs);
-            let count = changeset.inconsistent_triples(*pcs).count();
+            let mut conflicting_triples = changeset.inconsistent_triples(pcs);
+            let count = changeset.inconsistent_triples(pcs).count();
             if count > 0 {
                 debug!("number of conflicting triples: {count}");
             }
