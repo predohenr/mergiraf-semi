@@ -23,7 +23,7 @@ jobs:
             ~/.cargo/git
             ~/.cargo/registry
             target            
-          key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}}"
+          key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}} lock ${{ hashFiles('**/Cargo.lock') }}""
       - name: Format
         run: cargo fmt --all -- --check
       - name: Lint
