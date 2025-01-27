@@ -24,6 +24,7 @@ use mergiraf::{
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 #[command(propagate_version = true)]
+#[deny(missing_docs)]
 struct CliArgs {
     /// Write debug files to a particular directory to analyze
     /// the internal aspects of the merge
