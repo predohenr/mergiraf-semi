@@ -404,7 +404,7 @@ impl Display for PathStep {
 mod tests {
 
     use crate::{
-        class_mapping::{ClassMapping, RevNode, RevisionNESet},
+        class_mapping::{RevNode, RevisionNESet},
         pcs::Revision,
         test_utils::{ctx, hash},
     };
