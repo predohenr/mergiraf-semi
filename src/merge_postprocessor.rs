@@ -66,18 +66,21 @@ fn highlight_duplicate_signatures<'a>(
         .iter()
         .map(|element| lang_profile.extract_signature_from_merged_node(element, class_mapping))
         .collect();
-    for (idx, sig) in sigs.iter().enumerate() {
-        if let Some(signature) = sig {
-            let existing_indices = sig_to_indices.entry(signature).or_default();
-            if !existing_indices.is_empty() {
-                conflict_found = true;
-                debug!(
-                    "signature conflict found in {}: {}",
-                    commutative_parent.parent_type, signature
-                );
-            }
-            existing_indices.push(idx);
+    for (idx, signature) in sigs
+        .iter()
+        .enumerate()
+        // filter out `None`s, but keep indices of `Some`s
+        .filter_map(|(idx, sig)| sig.as_ref().map(|signature| (idx, signature)))
+    {
+        let existing_indices = sig_to_indices.entry(signature).or_default();
+        if !existing_indices.is_empty() {
+            conflict_found = true;
+            debug!(
+                "signature conflict found in {}: {}",
+                commutative_parent.parent_type, signature
+            );
         }
+        existing_indices.push(idx);
     }
     if !conflict_found {
         return elements;
