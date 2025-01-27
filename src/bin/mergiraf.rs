@@ -54,7 +54,7 @@ enum CliCommand {
         #[arg(short, long)]
         compact: Option<bool>,
         #[arg(short = 'l', long)]
-        // the choice of 'l' is inherited from Git's merge driver interface
+        /// the choice of 'l' is inherited from Git's merge driver interface
         conflict_marker_size: Option<usize>,
         /// Behave as a git merge driver: overwrite the left revision
         #[clap(short, long)]
@@ -87,7 +87,7 @@ enum CliCommand {
         #[clap(short, long)]
         compact: Option<bool>,
         #[arg(short = 'l', long)]
-        // the choice of 'l' is inherited from Git's merge driver interface
+        /// the choice of 'l' is inherited from Git's merge driver interface
         conflict_marker_size: Option<usize>,
         /// Keep file untouched and show the results of resolution on standard output instead
         #[clap(short, long)]
