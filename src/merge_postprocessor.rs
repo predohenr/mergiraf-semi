@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use itertools::Itertools;
 use log::debug;
 use regex::Regex;
 
@@ -8,7 +7,7 @@ use crate::{
     lang_profile::{CommutativeParent, LangProfile},
     merged_tree::MergedTree,
     pcs::Revision,
-    signature::{isomorphic_merged_trees, Signature},
+    signature::isomorphic_merged_trees,
     tree::AstNode,
 };
 
@@ -60,28 +59,28 @@ fn highlight_duplicate_signatures<'a>(
     commutative_parent: &CommutativeParent,
 ) -> Vec<MergedTree<'a>> {
     // compute signatures and index them
-    let mut sig_to_indices: HashMap<&Signature<'_, 'a>, Vec<usize>> = HashMap::new();
-    let mut conflict_found = false;
     let sigs: Vec<_> = elements
         .iter()
         .map(|element| lang_profile.extract_signature_from_merged_node(element, class_mapping))
         .collect();
-    for (idx, signature) in sigs
+    let sig_to_indices = sigs
         .iter()
         .enumerate()
         // filter out `None`s, but keep indices of `Some`s
-        .filter_map(|(idx, sig)| sig.as_ref().map(|signature| (idx, signature)))
-    {
-        let existing_indices = sig_to_indices.entry(signature).or_default();
-        if !existing_indices.is_empty() {
+        .filter_map(|(idx, sig)| sig.as_ref().map(|signature| (signature, idx)))
+        .into_group_map();
+
+    let mut conflict_found = false;
+    sig_to_indices
+        .iter()
+        .filter_map(|(signature, indices)| (indices.len() > 1).then_some(signature))
+        .for_each(|signature| {
             conflict_found = true;
             debug!(
                 "signature conflict found in {}: {}",
                 commutative_parent.parent_type, signature
             );
-        }
-        existing_indices.push(idx);
-    }
+        });
     if !conflict_found {
         return elements;
     }
