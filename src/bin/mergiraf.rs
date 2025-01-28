@@ -89,7 +89,7 @@ enum CliCommand {
     /// Solve the conflicts in a merged file
     Solve {
         /// Path to a file containing merge conflicts
-        conflicts: String,
+        conflicts: PathBuf,
         /// Display compact conflicts, breaking down lines
         #[clap(short, long)]
         compact: Option<bool>,
@@ -301,7 +301,10 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     } else {
                         write_string_to_file(&fname_conflicts, &merged.contents)?;
                         if keep_backup {
-                            write_string_to_file(&(fname_conflicts + ".orig"), &conflict_contents)?;
+                            write_string_to_file(
+                                fname_conflicts.with_added_extension("orig"),
+                                &conflict_contents,
+                            )?;
                         }
                     };
                     0

@@ -32,13 +32,13 @@ fn write_file_from_rev(
     test_dir: &Path,
     revision: &str,
     extension: &str,
-) -> String {
+) -> PathBuf {
     let file_name = format!("file.{extension}");
     let fname_base = test_dir.join(format!("{revision}.{extension}"));
     let contents = fs::read_to_string(&fname_base).expect("Unable to read left file");
     fs::write(repo_dir.join(&file_name), contents)
         .expect("failed to write test file to git repository");
-    file_name
+    PathBuf::from(file_name)
 }
 
 fn detect_extension(test_dir: &Path) -> String {
@@ -71,7 +71,7 @@ fn solve_command(#[case] conflict_style: &str) {
     run_git(&["init", "."], repo_dir);
     run_git(&["checkout", "-b", "first_branch"], repo_dir);
     let file_name = write_file_from_rev(repo_dir, test_dir, "Base", &extension);
-    run_git(&["add", &file_name], repo_dir);
+    run_git(&["add", &file_name.to_string_lossy()], repo_dir);
     run_git(
         &[
             "-c",

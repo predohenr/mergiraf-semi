@@ -387,7 +387,7 @@ fn resolve_merge<'a>(
 ///
 /// Returns either a merge or nothing if couldn't extract the revisions.
 fn structured_merge_from_git_revisions(
-    fname_base: &str,
+    fname_base: &Path,
     settings: &DisplaySettings,
     debug_dir: Option<&Path>,
     working_dir: &Path,
@@ -420,15 +420,19 @@ fn structured_merge_from_git_revisions(
 /// Cascading merge resolution starting from a user-supplied file with merge conflicts
 pub fn resolve_merge_cascading<'a>(
     merge_contents: &'a str,
-    fname_base: &str,
+    fname_base: &Path,
     mut settings: DisplaySettings<'a>,
     debug_dir: Option<&Path>,
     working_dir: &Path,
 ) -> Result<MergeResult, String> {
     let mut solves = Vec::with_capacity(3);
 
-    let lang_profile = LangProfile::detect_from_filename(fname_base)
-        .ok_or_else(|| format!("Could not find a supported language for {fname_base}"))?;
+    let lang_profile = LangProfile::detect_from_filename(fname_base).ok_or_else(|| {
+        format!(
+            "Could not find a supported language for {}",
+            fname_base.display()
+        )
+    })?;
 
     match ParsedMerge::parse(merge_contents, &settings) {
         Err(err) => {
@@ -483,8 +487,8 @@ pub fn resolve_merge_cascading<'a>(
     Ok(best_solve)
 }
 
-fn extract_revision(working_dir: &Path, path: &str, revision: Revision) -> Result<String, String> {
-    let temp_file = extract_revision_from_git(working_dir, Path::new(path), revision)?;
+fn extract_revision(working_dir: &Path, path: &Path, revision: Revision) -> Result<String, String> {
+    let temp_file = extract_revision_from_git(working_dir, path, revision)?;
     let contents = fs::read_to_string(temp_file.path()).map_err(|err| err.to_string())?;
     Ok(contents)
 }
