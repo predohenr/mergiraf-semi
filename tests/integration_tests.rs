@@ -167,7 +167,7 @@ fn timeout_support() {
     let contents_left = fs::read_to_string(fname_left)
         .expect("Unable to read left file")
         .leak();
-    let fname_right = format!("{test_dir}/Right.{ext}").leak();
+    let fname_right = format!("{test_dir}/Right.{ext}");
     let contents_right = fs::read_to_string(fname_right)
         .expect("Unable to read right file")
         .leak();
