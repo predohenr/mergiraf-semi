@@ -302,7 +302,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                         write_string_to_file(&fname_conflicts, &merged.contents)?;
                         if keep_backup {
                             write_string_to_file(
-                                fname_conflicts.with_added_extension("orig"),
+                                &fname_conflicts.with_added_extension("orig"),
                                 &conflict_contents,
                             )?;
                         }
@@ -348,13 +348,11 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
     Ok(return_code)
 }
 
-fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, String> {
-    let path = path.as_ref();
+fn read_file_to_string(path: &Path) -> Result<String, String> {
     fs::read_to_string(path).map_err(|err| format!("Could not read {}: {err}", path.display()))
 }
 
-fn write_string_to_file(path: impl AsRef<Path>, contents: &str) -> Result<(), String> {
-    let path = path.as_ref();
+fn write_string_to_file(path: &Path, contents: &str) -> Result<(), String> {
     fs::write(path, contents).map_err(|err| format!("Could not write {}: {err}", path.display()))
 }
 
