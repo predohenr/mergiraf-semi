@@ -9,7 +9,7 @@ use mergiraf::line_based::line_based_merge;
 use mergiraf::newline::normalize_to_lf;
 use mergiraf::settings::DisplaySettings;
 use mergiraf::{
-    line_merge_and_structured_resolution, resolve_merge_cascading, DISABLING_ENV_VAR,
+    line_merge_and_structured_resolution, resolve_merge_cascading, PathBufExt, DISABLING_ENV_VAR,
     DISABLING_ENV_VAR_LEGACY,
 };
 use rstest::rstest;
@@ -157,17 +157,18 @@ fn solve_command(#[case] conflict_style: &str) {
 
 #[rstest]
 fn timeout_support() {
-    let test_dir = "examples/java/working/move_and_modify_conflict";
+    let test_dir = Path::new("examples/java/working/move_and_modify_conflict");
     let ext = "java";
-    let fname_base = format!("{test_dir}/Base.{ext}").leak();
+    #[expect(unstable_name_collisions)]
+    let fname_base = test_dir.join(format!("Base.{ext}")).leak();
     let contents_base = fs::read_to_string(&fname_base)
         .expect("Unable to read left file")
         .leak();
-    let fname_left = format!("{test_dir}/Left.{ext}");
+    let fname_left = test_dir.join(format!("Left.{ext}"));
     let contents_left = fs::read_to_string(fname_left)
         .expect("Unable to read left file")
         .leak();
-    let fname_right = format!("{test_dir}/Right.{ext}");
+    let fname_right = test_dir.join(format!("Right.{ext}"));
     let contents_right = fs::read_to_string(fname_right)
         .expect("Unable to read right file")
         .leak();
@@ -192,27 +193,27 @@ fn timeout_support() {
         let patch = create_patch(expected, actual);
         let f = PatchFormatter::new().with_color();
         print!("{}", f.fmt_patch(&patch));
-        eprintln!("test failed: outputs differ for {test_dir}");
+        eprintln!("test failed: outputs differ for {}", test_dir.display());
         panic!();
     }
 }
 
 fn run_test_from_dir(test_dir: &Path) {
     let ext = detect_extension(test_dir);
-    let test_dir = test_dir.display();
-    let fname_base = format!("{test_dir}/Base.{ext}").leak();
+    #[expect(unstable_name_collisions)]
+    let fname_base = test_dir.join(format!("Base.{ext}")).leak();
     let contents_base = fs::read_to_string(&fname_base)
         .expect("Unable to read left file")
         .leak();
-    let fname_left = format!("{test_dir}/Left.{ext}");
+    let fname_left = test_dir.join(format!("Left.{ext}"));
     let contents_left = fs::read_to_string(fname_left)
         .expect("Unable to read left file")
         .leak();
-    let fname_right = format!("{test_dir}/Right.{ext}");
+    let fname_right = test_dir.join(format!("Right.{ext}"));
     let contents_right = fs::read_to_string(fname_right)
         .expect("Unable to read right file")
         .leak();
-    let fname_expected = format!("{test_dir}/Expected.{ext}");
+    let fname_expected = test_dir.join(format!("Expected.{ext}"));
     let contents_expected = fs::read_to_string(fname_expected).expect("Unable to read right file");
 
     let merge_result = line_merge_and_structured_resolution(
@@ -233,7 +234,7 @@ fn run_test_from_dir(test_dir: &Path) {
         let patch = create_patch(expected, actual);
         let f = PatchFormatter::new().with_color();
         print!("{}", f.fmt_patch(&patch));
-        eprintln!("test failed: outputs differ for {test_dir}");
+        eprintln!("test failed: outputs differ for {}", test_dir.display());
         panic!();
     }
 }

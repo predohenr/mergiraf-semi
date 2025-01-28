@@ -32,6 +32,7 @@ pub(crate) mod merged_tree;
 pub(crate) mod multimap;
 pub mod newline;
 pub(crate) mod parsed_merge;
+mod path_buf_ext;
 pub(crate) mod pcs;
 pub(crate) mod priority_list;
 pub mod settings;
@@ -71,6 +72,8 @@ use structured::structured_merge;
 use tree::{Ast, AstNode};
 use tree_sitter::Parser as TSParser;
 use typed_arena::Arena;
+
+pub use path_buf_ext::PathBufExt;
 
 /// Current way to disable Mergiraf
 /// ## Usage
@@ -113,7 +116,7 @@ pub fn line_merge_and_structured_resolution(
     contents_base: &'static str,
     contents_left: &'static str,
     contents_right: &'static str,
-    fname_base: &'static str,
+    fname_base: &'static Path,
     settings: DisplaySettings<'static>,
     full_merge: bool,
     attempts_cache: Option<&AttemptsCache>,
@@ -122,7 +125,10 @@ pub fn line_merge_and_structured_resolution(
 ) -> MergeResult {
     let Some(lang_profile) = LangProfile::detect_from_filename(fname_base) else {
         // can't do anything fancier anyway
-        debug!("Could not find a supported language for {fname_base}. Falling back to a line-based merge.");
+        debug!(
+            "Could not find a supported language for {}. Falling back to a line-based merge.",
+            fname_base.display()
+        );
         return line_based_merge(
             contents_base,
             contents_left,

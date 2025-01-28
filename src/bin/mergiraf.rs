@@ -1,6 +1,6 @@
 use std::{
     env, fs,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{exit, Command},
     time::Duration,
 };
@@ -68,7 +68,7 @@ enum CliCommand {
         /// Final path in which the merged result will be stored.
         /// It is used to detect the language of the files using the file extension.
         #[clap(short, long)]
-        path_name: Option<String>,
+        path_name: Option<PathBuf>,
         /// Name to use for the base revision in conflict markers
         #[clap(short = 's', long)]
         // the choice of 's' is inherited from Git's merge driver interface
@@ -169,6 +169,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let right = right.leak();
 
             // NOTE: reborrow to turn `&mut str` returned by `String::leak` into `&str`
+            #[expect(unstable_name_collisions)]
             let path_name = path_name.map(|s| &*s.leak());
 
             let base_name = base_name.map(|s| &*s.leak());
@@ -225,7 +226,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
 
             let attempts_cache = AttemptsCache::new(None, None).ok();
 
-            let fname_base = path_name.unwrap_or(fname_base);
+            let fname_base = path_name.unwrap_or(Path::new(fname_base));
 
             let merge_result = line_merge_and_structured_resolution(
                 contents_base,
