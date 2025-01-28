@@ -17,6 +17,7 @@ use mergiraf::{
     resolve_merge_cascading,
     settings::DisplaySettings,
     supported_langs::SUPPORTED_LANGUAGES,
+    PathBufExt,
     DISABLING_ENV_VAR,
     DISABLING_ENV_VAR_LEGACY,
 };
@@ -174,7 +175,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let left_name = left_name.map(|s| &*s.leak());
             let right_name = right_name.map(|s| &*s.leak());
 
-            let debug_dir = args.debug_dir.map(|s| &*Box::leak(s.into_boxed_path()));
+            #[expect(unstable_name_collisions)]
+            let debug_dir = args.debug_dir.map(|s| &*s.leak());
 
             let settings: DisplaySettings<'static> = DisplaySettings {
                 compact,
