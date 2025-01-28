@@ -64,7 +64,7 @@ enum CliCommand {
         git: bool,
         /// The path to the file to write the merge result to
         #[clap(short, long, conflicts_with = "git")]
-        output: Option<String>,
+        output: Option<PathBuf>,
         /// Final path in which the merged result will be stored.
         /// It is used to detect the language of the files using the file extension.
         #[clap(short, long)]
@@ -345,8 +345,9 @@ fn read_file_to_string(path: &str) -> Result<String, String> {
     fs::read_to_string(path).map_err(|err| format!("Could not read {path}: {err}"))
 }
 
-fn write_string_to_file(path: &str, contents: &str) -> Result<(), String> {
-    fs::write(path, contents).map_err(|err| format!("Could not write {path}: {err}"))
+fn write_string_to_file(path: impl AsRef<Path>, contents: &str) -> Result<(), String> {
+    let path = path.as_ref();
+    fs::write(path, contents).map_err(|err| format!("Could not write {}: {err}", path.display()))
 }
 
 fn fallback_to_git_merge_file(
