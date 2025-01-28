@@ -81,8 +81,8 @@ enum CliCommand {
         // the choice of 'y' is inherited from Git's merge driver interface
         right_name: Option<String>,
         /// Maximum number of milliseconds to try doing the merging for, after which we fall back on git's own algorithm. Set to 0 to disable this limit.
-        #[clap(short, long, default_value_t = 10000)]
-        timeout: u64,
+        #[clap(short, long)]
+        timeout: Option<u64>,
     },
     /// Solve the conflicts in a merged file
     Solve {
@@ -234,7 +234,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 !fast,
                 attempts_cache.as_ref(),
                 debug_dir,
-                Duration::from_millis(timeout),
+                Duration::from_millis(timeout.unwrap_or(if fast { 5000 } else { 10000 })),
             );
             if let Some(fname_out) = output {
                 write_string_to_file(&fname_out, &merge_result.contents)?;
