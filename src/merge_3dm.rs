@@ -6,10 +6,12 @@ use crate::{
     changeset::ChangeSet,
     class_mapping::{ClassMapping, RevNode},
     line_based::line_based_merge,
-    matching::Matching, merged_tree::MergedTree,
+    matching::Matching,
+    merged_tree::MergedTree,
     pcs::Revision,
     tree::Ast,
-    tree_builder::TreeBuilder, tree_matcher::TreeMatcher,
+    tree_builder::TreeBuilder,
+    tree_matcher::TreeMatcher,
     visualizer::write_matching_to_dotty_file,
 };
 
