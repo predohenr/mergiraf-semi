@@ -298,8 +298,7 @@ impl SignatureDefinition {
         node: &'a MergedTree<'b>,
         class_mapping: &ClassMapping<'b>,
     ) -> Signature<'a, 'b> {
-        let node_equiv = AstNodeEquiv::Merged(node);
-        self.extract_internal(node_equiv, class_mapping)
+        self.extract_internal(AstNodeEquiv::Merged(node), class_mapping)
     }
 
     /// Extracts a signature for the supplied node
