@@ -14,7 +14,8 @@ pub struct Signature<'a, 'b>(Vec<Vec<AstNodeEquiv<'a, 'b>>>);
 
 impl Display for Signature<'_, '_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!(
+        write!(
+            f,
             "Signature [{}]",
             self.0
                 .iter()
@@ -28,7 +29,7 @@ impl Display for Signature<'_, '_> {
                         .join(", ")
                 ))
                 .join(", ")
-        ))
+        )
     }
 }
 
