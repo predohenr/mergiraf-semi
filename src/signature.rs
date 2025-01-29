@@ -374,9 +374,9 @@ impl AstPath {
                     }
                 };
 
-                children.into_iter().for_each(|child| {
+                for child in children {
                     Self::extract_internal(rest, child, result, class_mapping);
-                });
+                }
             }
         }
     }
