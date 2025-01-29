@@ -364,21 +364,19 @@ impl AstPath {
         match path {
             [] => result.push(node),
             [step, rest @ ..] => {
-                match step {
-                    PathStep::Field(field_name) => node
+                let children = match step {
+                    PathStep::Field(field_name) => {
                         // select children of the node which have a matching type
-                        .children_by_field_name(field_name, class_mapping)
-                        .into_iter()
-                        .for_each(|child| {
-                            Self::extract_internal(rest, child, result, class_mapping);
-                        }),
-                    PathStep::ChildType(grammar_name) => node
-                        .children_by_grammar_name(grammar_name, class_mapping)
-                        .into_iter()
-                        .for_each(|child| {
-                            Self::extract_internal(rest, child, result, class_mapping);
-                        }),
-                }
+                        node.children_by_field_name(field_name, class_mapping)
+                    }
+                    PathStep::ChildType(grammar_name) => {
+                        node.children_by_grammar_name(grammar_name, class_mapping)
+                    }
+                };
+
+                children.into_iter().for_each(|child| {
+                    Self::extract_internal(rest, child, result, class_mapping);
+                });
             }
         }
     }
