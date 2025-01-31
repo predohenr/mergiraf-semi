@@ -606,7 +606,7 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
         },
         LangProfile {
             name: "Ruby",
-            extensions: vec![".rb"],
+            extensions: vec!["rb"],
             language: tree_sitter_ruby::LANGUAGE.into(),
             atomic_nodes: vec![],
             commutative_parents: vec![],
