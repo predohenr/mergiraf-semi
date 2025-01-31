@@ -79,9 +79,9 @@ impl<'a> ParsedMerge<'a> {
         let diff2conflict = Regex::new(&format!(
             r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
-            ((?s:.)*? \r?\n)
+            ((?s:.)*? \r?\n)?
             {middle_marker}            \r?\n
-            ((?s:.)*? \r?\n)
+            ((?s:.)*? \r?\n)?
             {right_marker} (?:\ (.*))? \r?\n
             "
         ))
@@ -90,11 +90,11 @@ impl<'a> ParsedMerge<'a> {
         let diff3conflict = Regex::new(&format!(
             r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
-            ((?s:.)*? \r?\n)
+            ((?s:.)*? \r?\n)?
             {base_marker}  (?:\ (.*))? \r?\n
-            ((?s:.)*? \r?\n)
+            ((?s:.)*? \r?\n)?
             {middle_marker}            \r?\n
-            ((?s:.)*? \r?\n)
+            ((?s:.)*? \r?\n)?
             {right_marker} (?:\ (.*))? \r?\n
             "
         ))
@@ -116,12 +116,18 @@ impl<'a> ParsedMerge<'a> {
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
             let diff3_captures = &diff3conflict.captures(remaining_source);
-            let resolved_end = match diff3_captures {
-                None => remaining_source.len(),
-                Some(occurrence) => occurrence
+            let diff3_no_newline_captures = &diff3conflict_no_newline.captures(remaining_source);
+            let resolved_end = if let Some(occurrence) = diff3_captures {
+                occurrence
                     .get(0)
                     .expect("whole match is guaranteed to exist")
-                    .start(),
+                    .start()
+            } else if let Some(occurence) = diff3_no_newline_captures {
+                occurence.get(0).unwrap().start()
+            } else if diff2conflict.is_match(remaining_source) {
+                return Err(PARSED_MERGE_DIFF2_DETECTED.to_owned());
+            } else {
+                remaining_source.len()
             };
             if resolved_end > 0 {
                 // SAFETY: `remaining_source` is derived from `source`
@@ -136,55 +142,32 @@ impl<'a> ParsedMerge<'a> {
             if let Some(captures) = diff3_captures {
                 chunks.push(MergedChunk::Conflict {
                     left_name: captures.get(1).map(|m| m.as_str()),
-                    left: captures.get(2).unwrap().as_str(),
+                    left: captures.get(2).map_or("", |m| m.as_str()),
                     base_name: captures.get(3).map(|m| m.as_str()),
-                    base: captures.get(4).unwrap().as_str(),
-                    right: captures.get(5).unwrap().as_str(),
+                    base: captures.get(4).map_or("", |m| m.as_str()),
+                    right: captures.get(5).map_or("", |m| m.as_str()),
                     right_name: captures.get(6).map(|m| m.as_str()),
                 });
 
-                remaining_source = &remaining_source;
-
-                let left_match = left_captures.get(0).unwrap();
-                let left_name = left_captures.get(1).map(|m| m.as_str());
-                remaining_source = &remaining_source[left_match.end()..];
-
-                let base_captures = base_marker.captures(remaining_source).ok_or_else(|| {
-                    if middle_marker.is_match(remaining_source) {
-                        PARSED_MERGE_DIFF2_DETECTED
-                    } else {
-                        "unexpected end of file before base conflict marker"
-                    }
-                })?;
-                let base_match = base_captures.get(0).unwrap();
-                let base_name = base_captures.get(1).map(|m| m.as_str());
-                let left = &remaining_source[..base_match.start()];
-                remaining_source = &remaining_source[base_match.end()..];
-
-                let middle_match = middle_marker
-                    .find(remaining_source)
-                    .ok_or("unexpected end of file before middle conflict marker")?;
-                let base = &remaining_source[..middle_match.start()];
-                remaining_source = &remaining_source[middle_match.end()..];
-
-                let right_captures = right_marker
-                    .captures(remaining_source)
-                    .ok_or("unexpected end of file before right conflict marker")?;
-                let right_match = right_captures.get(0).unwrap();
-                let right_name = right_captures.get(1).map(|m| m.as_str());
-                let right = &remaining_source[..right_match.start()];
-                remaining_source = &remaining_source[right_match.end()..];
-
+                remaining_source = &remaining_source[captures
+                    .get(0)
+                    .expect("whole match is guaranteed to exist")
+                    .end()..];
+            } else if let Some(captures) = diff3_no_newline_captures {
                 chunks.push(MergedChunk::Conflict {
-                    left,
-                    base,
-                    right,
-                    left_name,
-                    base_name,
-                    right_name,
+                    left_name: captures.get(1).map(|m| m.as_str()),
+                    left: captures.get(2).map_or("", |m| m.as_str()),
+                    base_name: captures.get(3).map(|m| m.as_str()),
+                    base: captures.get(4).map_or("", |m| m.as_str()),
+                    right: captures.get(5).map_or("", |m| m.as_str()),
+                    right_name: captures.get(6).map(|m| m.as_str()),
                 });
-            } else if diff2conflict.is_match(remaining_source) {
-                return Err(PARSED_MERGE_DIFF2_DETECTED.to_owned());
+
+                remaining_source = &remaining_source[captures
+                    .get(0)
+                    .expect("whole match is guaranteed to exist")
+                    .end()..];
+                assert!(remaining_source.is_empty());
             } else {
                 remaining_source = &remaining_source[resolved_end..];
             }
