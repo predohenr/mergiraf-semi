@@ -37,11 +37,11 @@ pub enum MergedChunk<'a> {
     },
     /// A diff3-style conflict
     Conflict {
-        /// The left part of the conflict, including the last newline before the next marker
+        /// The left part of the conflict, without the last newline before the next marker
         left: &'a str,
-        /// The base (or ancestor) part of the conflict, including the last newline before the next marker.
+        /// The base (or ancestor) part of the conflict, without the last newline before the next marker.
         base: &'a str,
-        /// The right part of the conflict, including the last newline before the next marker.
+        /// The right part of the conflict, without the last newline before the next marker.
         right: &'a str,
         /// The name of the left revision (potentially empty)
         left_name: Option<&'a str>,
@@ -76,16 +76,47 @@ impl<'a> ParsedMerge<'a> {
         let middle_marker = "=".repeat(marker_size);
         let right_marker = ">".repeat(marker_size);
 
-        let left_marker = Regex::new(&format!(r"(?m)^(?-m){left_marker}(?: (.*))?\r?\n")).unwrap();
-        let base_marker = Regex::new(&format!(r"(?m)^(?-m){base_marker}(?: (.*))?\r?\n")).unwrap();
-        let middle_marker = Regex::new(&format!(r"(?m)^(?-m){middle_marker}\r?\n")).unwrap();
-        let right_marker =
-            Regex::new(&format!(r"(?m)^(?-m){right_marker}(?: (.*))?\r?\n",)).unwrap();
+        let diff2conflict = Regex::new(&format!(
+            r"(?mx)
+            ^{left_marker} (?:\ (.*))? \r?\n
+            ([.|\r|\n]*? \r?\n)
+            {middle_marker}            \r?\n
+            ([.|\r|\n]*? \r?\n)
+            {right_marker} (?:\ (.*))? \r?\n
+            "
+        ))
+        .unwrap();
+
+        let diff3conflict = Regex::new(&format!(
+            r"(?mx)
+            ^{left_marker} (?:\ (.*))? \r?\n
+            ([.|\r|\n]*? \r?\n)
+            {base_marker}  (?:\ (.*))? \r?\n
+            ([.|\r|\n]*? \r?\n)
+            {middle_marker}            \r?\n
+            ([.|\r|\n]*? \r?\n)
+            {right_marker} (?:\ (.*))? \r?\n
+            "
+        ))
+        .unwrap();
+
+        let diff3conflict_no_newline = Regex::new(&format!(
+            r"(?mx)
+            ^{left_marker} (?:\ (.*))? \r?\n
+            ([.|\r|\n]*?)              \r?\n  # the newlines before the markers are
+            {base_marker}  (?:\ (.*))? \r?\n  # no longer part of conflicts sides themselves
+            ([.|\r|\n]*?)              \r?\n
+            {middle_marker}            \r?\n
+            ([.|\r|\n]*?)              \r?\n
+            {right_marker} (?:\ (.*))?     $  # no newline at the end
+            "
+        ))
+        .unwrap();
 
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
-            let left_captures = &left_marker.captures(remaining_source);
-            let resolved_end = match left_captures {
+            let diff3_captures = &diff3conflict.captures(remaining_source);
+            let resolved_end = match diff3_captures {
                 None => remaining_source.len(),
                 Some(occurrence) => occurrence
                     .get(0)
@@ -102,7 +133,18 @@ impl<'a> ParsedMerge<'a> {
                     contents: &remaining_source[..resolved_end],
                 });
             }
-            if let Some(left_captures) = left_captures {
+            if let Some(captures) = diff3_captures {
+                chunks.push(MergedChunk::Conflict {
+                    left_name: captures.get(1).map(|m| m.as_str()),
+                    left: captures.get(2).unwrap().as_str(),
+                    base_name: captures.get(3).map(|m| m.as_str()),
+                    base: captures.get(4).unwrap().as_str(),
+                    right: captures.get(5).unwrap().as_str(),
+                    right_name: captures.get(6).map(|m| m.as_str()),
+                });
+
+                remaining_source = &remaining_source;
+
                 let left_match = left_captures.get(0).unwrap();
                 let left_name = left_captures.get(1).map(|m| m.as_str());
                 remaining_source = &remaining_source[left_match.end()..];
@@ -141,6 +183,8 @@ impl<'a> ParsedMerge<'a> {
                     base_name,
                     right_name,
                 });
+            } else if diff2conflict.is_match(remaining_source) {
+                return Err(PARSED_MERGE_DIFF2_DETECTED.to_owned());
             } else {
                 remaining_source = &remaining_source[resolved_end..];
             }
