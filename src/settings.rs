@@ -103,14 +103,12 @@ impl<'a> DisplaySettings<'a> {
                 ..
             } => Some((*left_name, *base_name, *right_name)),
         }) {
-            Some((left_name, base_name, right_name))
-                if !left_name.is_empty() && !base_name.is_empty() && !right_name.is_empty() =>
-            {
-                self.left_revision_name = Some(Cow::Borrowed(left_name));
-                self.base_revision_name = Some(Cow::Borrowed(base_name));
-                self.right_revision_name = Some(Cow::Borrowed(right_name));
+            Some((left_name, base_name, right_name)) => {
+                self.left_revision_name = left_name.map(Cow::Borrowed);
+                self.base_revision_name = base_name.map(Cow::Borrowed);
+                self.right_revision_name = right_name.map(Cow::Borrowed);
             }
-            _ => {}
+            _ => (),
         }
     }
 }
