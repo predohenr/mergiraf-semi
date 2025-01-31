@@ -94,21 +94,20 @@ impl<'a> DisplaySettings<'a> {
 
     /// Update display settings by taking revision names from merge (if there are any conflicts)
     pub fn add_revision_names(&mut self, parsed_merge: &ParsedMerge<'a>) {
-        match parsed_merge.chunks.iter().find_map(|chunk| match chunk {
-            MergedChunk::Resolved { .. } => None,
-            MergedChunk::Conflict {
-                left_name,
-                base_name,
-                right_name,
-                ..
-            } => Some((*left_name, *base_name, *right_name)),
-        }) {
-            Some((left_name, base_name, right_name)) => {
-                self.left_revision_name = left_name.map(Cow::Borrowed);
-                self.base_revision_name = base_name.map(Cow::Borrowed);
-                self.right_revision_name = right_name.map(Cow::Borrowed);
-            }
-            _ => (),
+        if let Some((left_name, base_name, right_name)) =
+            parsed_merge.chunks.iter().find_map(|chunk| match chunk {
+                MergedChunk::Resolved { .. } => None,
+                MergedChunk::Conflict {
+                    left_name,
+                    base_name,
+                    right_name,
+                    ..
+                } => Some((*left_name, *base_name, *right_name)),
+            })
+        {
+            self.left_revision_name = left_name.map(Cow::Borrowed);
+            self.base_revision_name = base_name.map(Cow::Borrowed);
+            self.right_revision_name = right_name.map(Cow::Borrowed);
         }
     }
 }
