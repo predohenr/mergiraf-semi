@@ -493,7 +493,7 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
         },
         LangProfile {
             name: "Devicetree Source",
-            extensions: vec![".dts"],
+            extensions: vec!["dts"],
             language: tree_sitter_devicetree::LANGUAGE.into(),
             atomic_nodes: vec!["string_literal"],
             commutative_parents: vec![CommutativeParent::new("node", "{", "\n", "}")],
