@@ -684,25 +684,29 @@ mod tests {
     #[test]
     fn parse_middle_marker_not_at_line_start() {
         let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n||||||| BASE\n    .foo = 3,\n =======\n>>>>>>> RIGHT\n};\n";
-        let parse_err = ParsedMerge::parse(source, &Default::default())
-            .expect_err("shouldn't be able parse because of the missing middle marker");
+        let parsed = ParsedMerge::parse(source, &Default::default())
+            .expect("should ignore the malformed conflict");
 
-        assert_eq!(
-            parse_err,
-            "unexpected end of file before middle conflict marker"
-        );
+        let expected = ParsedMerge::new(vec![MergedChunk::Resolved {
+            offset: 0,
+            contents: source,
+        }]);
+
+        assert_eq!(parsed, expected);
     }
 
     #[test]
     fn parse_right_marker_not_at_line_start() {
         let source = "my_struct_t instance = {\n<<<<<<< LEFT\n    .foo = 3,\n    .bar = 2,\n||||||| BASE\n    .foo = 3,\n=======\n >>>>>>> LIAR RIGHT\n};\n";
-        let parse_err = ParsedMerge::parse(source, &Default::default())
-            .expect_err("shouldn't be able parse because of the missing right marker");
+        let parsed = ParsedMerge::parse(source, &Default::default())
+            .expect("should ignore the malformed conflict");
 
-        assert_eq!(
-            parse_err,
-            "unexpected end of file before right conflict marker"
-        );
+        let expected = ParsedMerge::new(vec![MergedChunk::Resolved {
+            offset: 0,
+            contents: source,
+        }]);
+
+        assert_eq!(parsed, expected);
     }
 
     #[test]
