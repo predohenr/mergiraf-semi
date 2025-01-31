@@ -79,9 +79,9 @@ impl<'a> ParsedMerge<'a> {
         let diff2conflict = Regex::new(&format!(
             r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
-            ([.|\r|\n]*? \r?\n)
+            ((?s:.)*? \r?\n)
             {middle_marker}            \r?\n
-            ([.|\r|\n]*? \r?\n)
+            ((?s:.)*? \r?\n)
             {right_marker} (?:\ (.*))? \r?\n
             "
         ))
@@ -90,11 +90,11 @@ impl<'a> ParsedMerge<'a> {
         let diff3conflict = Regex::new(&format!(
             r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
-            ([.|\r|\n]*? \r?\n)
+            ((?s:.)*? \r?\n)
             {base_marker}  (?:\ (.*))? \r?\n
-            ([.|\r|\n]*? \r?\n)
+            ((?s:.)*? \r?\n)
             {middle_marker}            \r?\n
-            ([.|\r|\n]*? \r?\n)
+            ((?s:.)*? \r?\n)
             {right_marker} (?:\ (.*))? \r?\n
             "
         ))
@@ -103,11 +103,11 @@ impl<'a> ParsedMerge<'a> {
         let diff3conflict_no_newline = Regex::new(&format!(
             r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
-            ([.|\r|\n]*?)              \r?\n  # the newlines before the markers are
+            ((?s:.)*?)                 \r?\n  # the newlines before the markers are
             {base_marker}  (?:\ (.*))? \r?\n  # no longer part of conflicts sides themselves
-            ([.|\r|\n]*?)              \r?\n
+            ((?s:.)*?)                 \r?\n
             {middle_marker}            \r?\n
-            ([.|\r|\n]*?)              \r?\n
+            ((?s:.)*?)                 \r?\n
             {right_marker} (?:\ (.*))?     $  # no newline at the end
             "
         ))
