@@ -117,6 +117,16 @@ impl<'a> ParsedMerge<'a> {
         while !remaining_source.is_empty() {
             let diff3_captures = diff3conflict.captures(remaining_source);
             let diff3_no_newline_captures = diff3conflict_no_newline.captures(remaining_source);
+
+            // the 3 regexes each match more things than the last in this order:
+            // 1) diff2            -- by ignoring the base marker and base rev text
+            // 2) diff3_no_newline -- by, well, ignoring the final newline
+            // 3) diff3            -- only matches a diff3 conflict ending with a newline
+            //
+            // so we run them in the opposite order:
+            // 1) if diff3 matches, take that
+            // 2) if diff3_no_newline matches, take that
+            // 3) if diff2 matches, then we know that this isn't a misrecognized diff3, and bail out
             let resolved_end = if let Some(occurrence) =
                 (diff3_captures.as_ref()).or(diff3_no_newline_captures.as_ref())
             {
@@ -129,6 +139,7 @@ impl<'a> ParsedMerge<'a> {
             } else {
                 remaining_source.len()
             };
+
             if resolved_end > 0 {
                 // SAFETY: `remaining_source` is derived from `source`
                 let offset = unsafe { remaining_source.as_ptr().offset_from(source.as_ptr()) }
@@ -139,6 +150,7 @@ impl<'a> ParsedMerge<'a> {
                     contents: &remaining_source[..resolved_end],
                 });
             }
+
             if let Some(captures) = (diff3_captures.as_ref()).or(diff3_no_newline_captures.as_ref())
             {
                 chunks.push(MergedChunk::Conflict {
@@ -328,6 +340,7 @@ impl<'a> ParsedMerge<'a> {
                     if add_after_lines {
                         result.push('\n');
                     }
+
                     if settings.diff3 {
                         result.push_str(&settings.base_marker_or_default());
                         result.push('\n');
@@ -336,8 +349,10 @@ impl<'a> ParsedMerge<'a> {
                             result.push('\n');
                         }
                     }
+
                     result.push_str(&settings.middle_marker());
                     result.push('\n');
+
                     result.push_str(right.unwrap_or_default());
                     if add_after_lines {
                         result.push('\n');
