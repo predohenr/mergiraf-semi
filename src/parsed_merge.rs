@@ -49,6 +49,7 @@ pub enum MergedChunk<'a> {
         base_name: Option<&'a str>,
         /// The name of the right revision (potentially empty)
         right_name: Option<&'a str>,
+        final_newline: bool,
     },
 }
 
@@ -148,6 +149,7 @@ impl<'a> ParsedMerge<'a> {
                     base: captures.get(4).map_or("", |m| m.as_str()),
                     right: captures.get(5).map_or("", |m| m.as_str()),
                     right_name: captures.get(6).map(|m| m.as_str()),
+                    final_newline: diff3_captures.is_some(),
                 });
 
                 remaining_source = &remaining_source[captures
@@ -304,21 +306,43 @@ impl<'a> ParsedMerge<'a> {
             match chunk {
                 MergedChunk::Resolved { contents, .. } => result.push_str(contents),
                 MergedChunk::Conflict {
-                    left, base, right, ..
+                    left,
+                    base,
+                    right,
+                    final_newline,
+                    ..
                 } => {
-                    result.push_str(&settings.left_marker_or_default());
-                    result.push('\n');
-                    result.push_str(left);
-                    if settings.diff3 {
-                        result.push_str(&settings.base_marker_or_default());
+                    if *final_newline {
+                        result.push_str(&settings.left_marker_or_default());
                         result.push('\n');
-                        result.push_str(base);
+                        result.push_str(left);
+                        if settings.diff3 {
+                            result.push_str(&settings.base_marker_or_default());
+                            result.push('\n');
+                            result.push_str(base);
+                        }
+                        result.push_str(&settings.middle_marker());
+                        result.push('\n');
+                        result.push_str(right);
+                        result.push_str(&settings.right_marker_or_default());
+                        result.push('\n');
+                    } else {
+                        result.push_str(&settings.left_marker_or_default());
+                        result.push('\n');
+                        result.push_str(left);
+                        result.push('\n');
+                        if settings.diff3 {
+                            result.push_str(&settings.base_marker_or_default());
+                            result.push('\n');
+                            result.push_str(base);
+                            result.push('\n');
+                        }
+                        result.push_str(&settings.middle_marker());
+                        result.push('\n');
+                        result.push_str(right);
+                        result.push('\n');
+                        result.push_str(&settings.right_marker_or_default());
                     }
-                    result.push_str(&settings.middle_marker());
-                    result.push('\n');
-                    result.push_str(right);
-                    result.push_str(&settings.right_marker_or_default());
-                    result.push('\n');
                 }
             }
         }
@@ -397,6 +421,7 @@ mod tests {
                 left_name: Some("left"),
                 base_name: Some("base"),
                 right_name: None,
+                final_newline: true,
             },
             MergedChunk::Resolved {
                 offset: 127,
@@ -500,6 +525,7 @@ mod tests {
                 left_name: Some("left"),
                 base_name: Some("base"),
                 right_name: None,
+                final_newline: true,
             },
             MergedChunk::Resolved {
                 offset: 103,
@@ -540,6 +566,7 @@ mod tests {
                 left_name: Some("left"),
                 base_name: Some("base"),
                 right_name: None,
+                final_newline: true,
             },
         ]);
 
@@ -576,6 +603,7 @@ mod tests {
                 left_name: Some("LEFT"),
                 base_name: Some("BASE"),
                 right_name: Some("RIGHT"),
+                final_newline: true,
             },
             MergedChunk::Resolved {
                 offset: 115,
@@ -617,6 +645,7 @@ mod tests {
                 left_name: Some("LEFT"),
                 base_name: Some("BASE"),
                 right_name: Some("RIGHT"),
+                final_newline: true,
             },
         ]);
 
@@ -709,6 +738,7 @@ mod tests {
                 "=======\n// hi\n>>>>>>> RIGHT\n<<<<<<< LEFT\nuse bytes;\n||||||| BASE\nuse io;\n",
             right: "use os;\n",
             right_name: Some("RIGHT"),
+            final_newline: true,
         }]);
 
         assert_ne!(
@@ -724,6 +754,7 @@ mod tests {
                 base: "",
                 right: "// hi\n",
                 right_name: Some("RIGHT"),
+                final_newline: true,
             },
             MergedChunk::Conflict {
                 left_name: Some("LEFT"),
@@ -732,6 +763,7 @@ mod tests {
                 base: "use io;\n",
                 right: "use os;\n",
                 right_name: Some("RIGHT"),
+                final_newline: true,
             },
         ]);
 
@@ -752,6 +784,7 @@ mod tests {
                 base: "where should we go?",
                 right: "turn right please!",
                 right_name: None,
+                final_newline: true,
             },
             MergedChunk::Resolved {
                 offset: 102,
@@ -816,6 +849,7 @@ mod tests {
                 right: "right line\n",
                 right_name: None,
                 base_name: None,
+                final_newline: true,
             },
         ]);
 
