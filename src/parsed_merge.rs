@@ -739,6 +739,30 @@ mod tests {
     }
 
     #[test]
+    fn parse_diff3_is_with_final_newline_when_possible() {
+        let source = "<<<<<<< left\nlet's go to the left!\n||||||| base\nwhere should we go?\n=======\nturn right please!\n>>>>>>>\n";
+
+        let parsed = ParsedMerge::parse(source, &Default::default()).expect("could not parse!");
+
+        let unwanted_wo_final_newline = ParsedMerge::new(vec![
+            MergedChunk::Conflict {
+                left_name: Some("left"),
+                left: "let's go to the left!",
+                base_name: Some("base"),
+                base: "where should we go?",
+                right: "turn right please!",
+                right_name: None,
+            },
+            MergedChunk::Resolved {
+                offset: 102,
+                contents: "\n",
+            },
+        ]);
+
+        assert_ne!(parsed, unwanted_wo_final_newline);
+    }
+
+    #[test]
     fn matching() {
         let ctx = ctx();
         let source = "struct MyType {\n    field: bool,\n<<<<<<< LEFT\n    foo: int,\n    bar: String,\n||||||| BASE\n    foo: String,\n=======\n>>>>>>> RIGHT\n};\n";
