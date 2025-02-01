@@ -115,15 +115,15 @@ impl<'a> ParsedMerge<'a> {
 
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
-            let diff3_captures = &diff3conflict.captures(remaining_source);
-            let diff3_no_newline_captures = &diff3conflict_no_newline.captures(remaining_source);
-            let resolved_end = if let Some(occurrence) = diff3_captures {
+            let diff3_captures = diff3conflict.captures(remaining_source);
+            let diff3_no_newline_captures = diff3conflict_no_newline.captures(remaining_source);
+            let resolved_end = if let Some(occurrence) =
+                (diff3_captures.as_ref()).or(diff3_no_newline_captures.as_ref())
+            {
                 occurrence
                     .get(0)
                     .expect("whole match is guaranteed to exist")
                     .start()
-            } else if let Some(occurence) = diff3_no_newline_captures {
-                occurence.get(0).unwrap().start()
             } else if diff2conflict.is_match(remaining_source) {
                 return Err(PARSED_MERGE_DIFF2_DETECTED.to_owned());
             } else {
@@ -139,7 +139,8 @@ impl<'a> ParsedMerge<'a> {
                     contents: &remaining_source[..resolved_end],
                 });
             }
-            if let Some(captures) = diff3_captures {
+            if let Some(captures) = (diff3_captures.as_ref()).or(diff3_no_newline_captures.as_ref())
+            {
                 chunks.push(MergedChunk::Conflict {
                     left_name: captures.get(1).map(|m| m.as_str()),
                     left: captures.get(2).map_or("", |m| m.as_str()),
@@ -153,21 +154,6 @@ impl<'a> ParsedMerge<'a> {
                     .get(0)
                     .expect("whole match is guaranteed to exist")
                     .end()..];
-            } else if let Some(captures) = diff3_no_newline_captures {
-                chunks.push(MergedChunk::Conflict {
-                    left_name: captures.get(1).map(|m| m.as_str()),
-                    left: captures.get(2).map_or("", |m| m.as_str()),
-                    base_name: captures.get(3).map(|m| m.as_str()),
-                    base: captures.get(4).map_or("", |m| m.as_str()),
-                    right: captures.get(5).map_or("", |m| m.as_str()),
-                    right_name: captures.get(6).map(|m| m.as_str()),
-                });
-
-                remaining_source = &remaining_source[captures
-                    .get(0)
-                    .expect("whole match is guaranteed to exist")
-                    .end()..];
-                assert!(remaining_source.is_empty());
             } else {
                 remaining_source = &remaining_source[resolved_end..];
             }
