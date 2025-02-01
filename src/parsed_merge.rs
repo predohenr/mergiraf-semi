@@ -835,6 +835,65 @@ mod tests {
     }
 
     #[test]
+    fn render_no_final_newline() {
+        // meanings of the used shortenings:
+        // - wo              - without final newline
+        // - w               - with final newline
+        // - expected_w_wo_w - expected from base_w, left_wo, right_w
+
+        let base_wo = "base";
+        let base_w = "base\n";
+
+        let left_wo = "left";
+        let left_w = "left\n";
+
+        let right_wo = "right";
+        let right_w = "right\n";
+
+        fn chunk(base: &str, left: &str, right: &str) -> String {
+            ParsedMerge::new(vec![MergedChunk::Conflict {
+                left,
+                base,
+                right,
+                left_name: None,
+                base_name: None,
+                right_name: None,
+                final_newline: false,
+            }])
+            .render(&Default::default())
+        }
+
+        let expected_wo_wo_wo =
+            "<<<<<<< LEFT\nleft\n||||||| BASE\nbase\n=======\nright\n>>>>>>> RIGHT";
+        let rendered = chunk(base_wo, left_wo, right_wo);
+        assert_eq!(rendered, expected_wo_wo_wo);
+
+        let expected_wo_w_wo =
+            "<<<<<<< LEFT\nleft\n\n||||||| BASE\nbase\n=======\nright\n>>>>>>> RIGHT";
+        let rendered = chunk(base_wo, left_w, right_wo);
+        assert_eq!(rendered, expected_wo_w_wo);
+
+        // wo_wo_w case should be symmetrical to wo_w_wo
+
+        let expected_wo_w_w =
+            "<<<<<<< LEFT\nleft\n\n||||||| BASE\nbase\n=======\nright\n\n>>>>>>> RIGHT";
+        let rendered = chunk(base_wo, left_w, right_w);
+        assert_eq!(rendered, expected_wo_w_w);
+
+        let expected_w_wo_wo =
+            "<<<<<<< LEFT\nleft\n||||||| BASE\nbase\n\n=======\nright\n>>>>>>> RIGHT";
+        let rendered = chunk(base_w, left_wo, right_wo);
+        assert_eq!(rendered, expected_w_wo_wo);
+
+        let expected_w_w_wo =
+            "<<<<<<< LEFT\nleft\n\n||||||| BASE\nbase\n\n=======\nright\n>>>>>>> RIGHT";
+        let rendered_w_w_wo = chunk(base_w, left_w, right_wo);
+        assert_eq!(rendered_w_w_wo, expected_w_w_wo);
+
+        // w_wo_w should be symmetrical to w_w_wo
+    }
+
+    #[test]
     fn add_revision_names_to_settings() {
         let source = "<<<<<<< my_left\nlet's go to the left!\n||||||| my_base\nwhere should we go?\n=======\nturn right please!\n>>>>>>> my_right\nrest of file\n";
         let parsed =
