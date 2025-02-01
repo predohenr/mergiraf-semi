@@ -312,36 +312,31 @@ impl<'a> ParsedMerge<'a> {
                     final_newline,
                     ..
                 } => {
+                    let newline_after_rev_lines = !final_newline;
+
+                    result.push_str(&settings.left_marker_or_default());
+                    result.push('\n');
+                    result.push_str(left);
+                    if newline_after_rev_lines {
+                        result.push('\n');
+                    }
+                    if settings.diff3 {
+                        result.push_str(&settings.base_marker_or_default());
+                        result.push('\n');
+                        result.push_str(base);
+                        if newline_after_rev_lines {
+                            result.push('\n');
+                        }
+                    }
+                    result.push_str(&settings.middle_marker());
+                    result.push('\n');
+                    result.push_str(right);
+                    if newline_after_rev_lines {
+                        result.push('\n');
+                    }
+                    result.push_str(&settings.right_marker_or_default());
                     if *final_newline {
-                        result.push_str(&settings.left_marker_or_default());
                         result.push('\n');
-                        result.push_str(left);
-                        if settings.diff3 {
-                            result.push_str(&settings.base_marker_or_default());
-                            result.push('\n');
-                            result.push_str(base);
-                        }
-                        result.push_str(&settings.middle_marker());
-                        result.push('\n');
-                        result.push_str(right);
-                        result.push_str(&settings.right_marker_or_default());
-                        result.push('\n');
-                    } else {
-                        result.push_str(&settings.left_marker_or_default());
-                        result.push('\n');
-                        result.push_str(left);
-                        result.push('\n');
-                        if settings.diff3 {
-                            result.push_str(&settings.base_marker_or_default());
-                            result.push('\n');
-                            result.push_str(base);
-                            result.push('\n');
-                        }
-                        result.push_str(&settings.middle_marker());
-                        result.push('\n');
-                        result.push_str(right);
-                        result.push('\n');
-                        result.push_str(&settings.right_marker_or_default());
                     }
                 }
             }
