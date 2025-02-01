@@ -784,6 +784,33 @@ mod tests {
     }
 
     #[test]
+    fn parse_diff3_then_diff3_wo_newline() {
+        let source = "<<<<<<< LEFT\n// a comment\n||||||| BASE\n=======\n// hi\n>>>>>>> RIGHT\n<<<<<<< LEFT\nuse bytes;\n||||||| BASE\nuse io;\n=======\nuse os;\n>>>>>>> RIGHT";
+        let parsed = ParsedMerge::parse(source, &Default::default()).expect("could not parse!");
+
+        let expected = ParsedMerge::new(vec![
+            MergedChunk::Conflict {
+                left_name: Some("LEFT"),
+                left: Some("// a comment\n"),
+                base_name: Some("BASE"),
+                base: None,
+                right: Some("// hi\n"),
+                right_name: Some("RIGHT"),
+            },
+            MergedChunk::Conflict {
+                left_name: Some("LEFT"),
+                left: Some("use bytes;"),
+                base_name: Some("BASE"),
+                base: Some("use io;"),
+                right: Some("use os;"),
+                right_name: Some("RIGHT"),
+            },
+        ]);
+
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
     fn parse_diff3_is_with_final_newline_when_possible() {
         let source = "<<<<<<< left\nlet's go to the left!\n||||||| base\nwhere should we go?\n=======\nturn right please!\n>>>>>>>\n";
 
