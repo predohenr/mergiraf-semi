@@ -79,9 +79,9 @@ impl<'a> ParsedMerge<'a> {
         let diff2conflict = Regex::new(&format!(
             r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
-            ((?s:.)*? \r?\n)?
+            ((?s:.)*? \r?\n)??
             {middle_marker}            \r?\n
-            ((?s:.)*? \r?\n)?
+            ((?s:.)*? \r?\n)??
             {right_marker} (?:\ (.*))? \r?\n
             "
         ))
@@ -90,11 +90,11 @@ impl<'a> ParsedMerge<'a> {
         let diff3conflict = Regex::new(&format!(
             r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
-            ((?s:.)*? \r?\n)?
+            ((?s:.)*? \r?\n)??
             {base_marker}  (?:\ (.*))? \r?\n
-            ((?s:.)*? \r?\n)?
+            ((?s:.)*? \r?\n)??
             {middle_marker}            \r?\n
-            ((?s:.)*? \r?\n)?
+            ((?s:.)*? \r?\n)??
             {right_marker} (?:\ (.*))? \r?\n
             "
         ))
@@ -103,12 +103,12 @@ impl<'a> ParsedMerge<'a> {
         let diff3conflict_no_newline = Regex::new(&format!(
             r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
-            (?: ( (?s:.)*? )           \r?\n)? # the newlines before the markers are
-            {base_marker}  (?:\ (.*))? \r?\n   # no longer part of conflicts sides themselves
-            (?: ( (?s:.)*? )           \r?\n)?
+            (?: ( (?s:.)*? )           \r?\n)?? # the newlines before the markers are
+            {base_marker}  (?:\ (.*))? \r?\n    # no longer part of conflicts sides themselves
+            (?: ( (?s:.)*? )           \r?\n)??
             {middle_marker}            \r?\n
-            (?: ( (?s:.)*? )           \r?\n)?
-            {right_marker} (?:\ (.*))?     $   # no newline at the end
+            (?: ( (?s:.)*? )           \r?\n)??
+            {right_marker} (?:\ (.*))?     $    # no newline at the end
             "
         ))
         .unwrap();
@@ -691,6 +691,49 @@ mod tests {
             offset: 0,
             contents: source,
         }]);
+
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn parse_diff3_then_diff3_is_lazy() {
+        let source = "<<<<<<< LEFT\n// a comment\n||||||| BASE\n=======\n// hi\n>>>>>>> RIGHT\n<<<<<<< LEFT\nuse bytes;\n||||||| BASE\nuse io;\n=======\nuse os;\n>>>>>>> RIGHT\n";
+
+        let parsed = ParsedMerge::parse(source, &Default::default()).expect("could not parse!");
+
+        let unwanted_non_lazy = ParsedMerge::new(vec![MergedChunk::Conflict {
+            left_name: Some("LEFT"),
+            left: "// a comment\n",
+            base_name: Some("BASE"),
+            base:
+                "=======\n// hi\n>>>>>>> RIGHT\n<<<<<<< LEFT\nuse bytes;\n||||||| BASE\nuse io;\n",
+            right: "use os;\n",
+            right_name: Some("RIGHT"),
+        }]);
+
+        assert_ne!(
+            parsed, unwanted_non_lazy,
+            "the regex is greedy -- it should've stopped after the first 'RIGHT'!"
+        );
+
+        let expected = ParsedMerge::new(vec![
+            MergedChunk::Conflict {
+                left_name: Some("LEFT"),
+                left: "// a comment\n",
+                base_name: Some("BASE"),
+                base: "",
+                right: "// hi\n",
+                right_name: Some("RIGHT"),
+            },
+            MergedChunk::Conflict {
+                left_name: Some("LEFT"),
+                left: "use bytes;\n",
+                base_name: Some("BASE"),
+                base: "use io;\n",
+                right: "use os;\n",
+                right_name: Some("RIGHT"),
+            },
+        ]);
 
         assert_eq!(parsed, expected);
     }
