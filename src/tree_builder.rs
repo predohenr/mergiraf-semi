@@ -469,9 +469,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             let all_successors = successors.get(&cursor);
             let candidate = *all_successors
                 .iter()
-                .filter(|(rev, _)| *rev == revision)
-                .map(|(_, node)| node)
-                .next()
+                .find_map(|(rev, node)| (*rev == revision).then_some(node))
                 .ok_or_else(|| {
                     format!("no candidate successor found for {cursor} at {revision}")
                 })?;
