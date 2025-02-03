@@ -227,7 +227,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     cursor = children_map.get(&predecessor);
                 }
                 2 => {
-                    let conflict = self.build_conflict(
+                    let conflict = self.build_maybe_conflict(
                         predecessor,
                         children_map,
                         base_children_map,
@@ -240,7 +240,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                                 self.commutative_or_line_based_local_fallback(node, visiting_state);
                             return line_based;
                         }
-                        Ok((next_cursor, conflict)) => {
+                        Ok((next_cursor, Some(conflict))) => {
                             if let PCSNode::Node { node: leader, .. } = node {
                                 if let Some(commutative_parent) = self
                                     .lang_profile
@@ -258,6 +258,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                             } else {
                                 children.push(conflict);
                             }
+                            cursor = next_cursor;
+                        }
+                        Ok((next_cursor, None)) => {
                             cursor = next_cursor;
                         }
                     }
@@ -389,14 +392,18 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
     /// Construct a conflict by following successors on all three revisions
     /// from the given predecessor.
-    fn build_conflict(
+    ///
+    /// It can also happen than the left and right sides agree.
+    /// - If both sides remove the node, we return no tree at all.
+    /// - If both sides introduce the same node, we return and exact tree consisting of that
+    fn build_maybe_conflict(
         &self,
         predecessor: PCSNode<'a>,
         merged_successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
         base_successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
         seen_nodes: &mut HashSet<PCSNode<'a>>,
         visiting_state: &mut VisitingState<'a>,
-    ) -> Result<(&'b SuccessorsCursor<'a>, MergedTree<'a>), String> {
+    ) -> Result<(&'b SuccessorsCursor<'a>, Option<MergedTree<'a>>), String> {
         let pad = visiting_state.indentation();
         debug!("{pad}{predecessor} build_conflict");
         let (end_left, list_left) = self.extract_conflict_side(
@@ -438,14 +445,33 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 fmt_set(end_left),
                 fmt_set(end_right)
             ))
+        } else if list_left.len() == list_right.len()
+            && core::iter::zip(&list_left, &list_right)
+                .all(|(tree_left, tree_right)| tree_left.isomorphic_to(tree_right))
+        {
+            // well that's not really a conflict
+
+            if let Some(node) = list_left.first() {
+                // take the node that's in both sides, and create an exact tree out of that
+                let exact_tree = MergedTree::new_exact(
+                    self.class_mapping
+                        .map_to_leader(RevNode::new(Revision::Left, node)),
+                    RevisionNESet::singleton(Revision::Left).with(Revision::Right),
+                    self.class_mapping,
+                );
+                Ok((end_base, Some(exact_tree)))
+            } else {
+                // both sides removed this node, so return nothing
+                Ok((end_base, None))
+            }
         } else {
             Ok((
                 end_base,
-                MergedTree::Conflict {
+                Some(MergedTree::Conflict {
                     base: list_base,
                     left: list_left,
                     right: list_right,
-                },
+                }),
             ))
         }
     }
