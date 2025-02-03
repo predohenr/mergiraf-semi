@@ -43,11 +43,11 @@ pub enum MergedChunk<'a> {
         base: &'a str,
         /// The right part of the conflict, including the last newline before the next marker.
         right: &'a str,
-        /// The name of the left revision (non-empty if present)
+        /// The name of the left revision (potentially empty)
         left_name: Option<&'a str>,
-        /// The name of the base revision (non-empty if present)
+        /// The name of the base revision (potentially empty)
         base_name: Option<&'a str>,
-        /// The name of the right revision (non-empty if present)
+        /// The name of the right revision (potentially empty)
         right_name: Option<&'a str>,
     },
 }
