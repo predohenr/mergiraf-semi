@@ -467,9 +467,10 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         let mut cursor = starting_node;
         loop {
             let all_successors = successors.get(&cursor);
-            let candidate = *all_successors
+            let candidate = all_successors
                 .iter()
-                .find_map(|(rev, node)| (*rev == revision).then_some(node))
+                .copied()
+                .find_map(|(rev, node)| (rev == revision).then_some(node))
                 .ok_or_else(|| {
                     format!("no candidate successor found for {cursor} at {revision}")
                 })?;
