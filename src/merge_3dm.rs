@@ -502,6 +502,9 @@ mod tests {
     fn insert_insert_not_really_a_conflict() {
         let ctx = ctx();
 
+        // both `left` and `right` add the `'s` to `&self`, so this would-be-conflict should be
+        // resolved during the construction of the tree. NB: The `<'s>` is added just so that
+        // `left` and `right` are not completely identical (which would've made the resolution trivial)
         let base = ctx.parse_rust("fn foo(&self) {}");
         let left = ctx.parse_rust("fn foo(&'s self) {}");
         let right = ctx.parse_rust("fn foo<'s>(&'s self) {}");
