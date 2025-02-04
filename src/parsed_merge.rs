@@ -36,12 +36,20 @@ pub enum MergedChunk<'a> {
         contents: &'a str,
     },
     /// A diff3-style conflict
+    ///
+    /// The diff3 format allows representing conflicts where some (or all) sides may have no final
+    /// newline. In that case, there will be no newline at the end of the conflict, i.e. after the
+    /// right marker -- instead, a newline will be added to each side to ensure that the markers
+    /// coming after them are still placed at the beginning of a line. But the newline that
+    /// might've been a part of a conflict side is preserved as well.
+    ///
+    /// We recognize this property, and preserve whatever newline was present in the original sides.
     Conflict {
-        /// The left part of the conflict, without the last newline before the next marker
+        /// The left part of the conflict, with the final newline preserved (if present)
         left: Option<&'a str>,
-        /// The base (or ancestor) part of the conflict, without the last newline before the next marker.
+        /// The base (or ancestor) part of the conflict, with the final newline preserved (if present)
         base: Option<&'a str>,
-        /// The right part of the conflict, without the last newline before the next marker.
+        /// The right part of the conflict, with the final newline preserved (if present)
         right: Option<&'a str>,
         /// The name of the left revision (potentially empty)
         left_name: Option<&'a str>,
