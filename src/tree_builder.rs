@@ -203,18 +203,19 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     let (_, current_child) = cursor
                         .iter()
                         .next()
+                        .copied()
                         .expect("cursor.len() == 1 but it is actually empty?!");
-                    if *current_child == PCSNode::RightMarker {
+                    if current_child == PCSNode::RightMarker {
                         break;
                     }
-                    if seen_nodes.contains(current_child) {
+                    if seen_nodes.contains(&current_child) {
                         // there is a loop of children: abort and fall back on line diffing
                         let line_diff =
                             self.commutative_or_line_based_local_fallback(node, visiting_state);
                         return line_diff;
                     }
 
-                    let subtree = self.build_subtree(*current_child, visiting_state);
+                    let subtree = self.build_subtree(current_child, visiting_state);
                     let Ok(child_result_tree) = subtree else {
                         // we failed to build the result tree for a child of this node, because of a nasty conflict.
                         // We fall back on line diffing
@@ -223,7 +224,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         return line_diff;
                     };
                     children.push(child_result_tree);
-                    predecessor = *current_child;
+                    predecessor = current_child;
                     seen_nodes.insert(predecessor);
                     cursor = children_map.get(&predecessor);
                 }
