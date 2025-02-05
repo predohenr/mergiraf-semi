@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use itertools::Itertools;
-use log::debug;
+use log::{debug, warn};
 
 use crate::{
     changeset::ChangeSet,
@@ -227,7 +227,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     cursor = children_map.get(&predecessor);
                 }
                 2 => {
-                    let conflict = self.build_maybe_conflict(
+                    let conflict = self.build_conflict(
                         predecessor,
                         children_map,
                         base_children_map,
@@ -240,7 +240,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                                 self.commutative_or_line_based_local_fallback(node, visiting_state);
                             return line_based;
                         }
-                        Ok((next_cursor, Some(conflict))) => {
+                        Ok((next_cursor, conflict)) => {
                             if let PCSNode::Node { node: leader, .. } = node {
                                 if let Some(commutative_parent) = self
                                     .lang_profile
@@ -258,9 +258,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                             } else {
                                 children.push(conflict);
                             }
-                            cursor = next_cursor;
-                        }
-                        Ok((next_cursor, None)) => {
                             cursor = next_cursor;
                         }
                     }
@@ -393,17 +390,16 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     /// Construct a conflict by following successors on all three revisions
     /// from the given predecessor.
     ///
-    /// It can also happen than the left and right sides agree.
-    /// - If both sides remove the node, we return no tree at all.
-    /// - If both sides introduce the same node, we return and exact tree consisting of that
-    fn build_maybe_conflict(
+    /// It can also happen than the left and right sides agree. If both sides introduce
+    /// the same node, we return an exact tree consisting of that.
+    fn build_conflict(
         &self,
         predecessor: PCSNode<'a>,
         merged_successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
         base_successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
         seen_nodes: &mut HashSet<PCSNode<'a>>,
         visiting_state: &mut VisitingState<'a>,
-    ) -> Result<(&'b SuccessorsCursor<'a>, Option<MergedTree<'a>>), String> {
+    ) -> Result<(&'b SuccessorsCursor<'a>, MergedTree<'a>), String> {
         let pad = visiting_state.indentation();
         debug!("{pad}{predecessor} build_conflict");
         let (end_left, list_left) = self.extract_conflict_side(
@@ -439,41 +435,47 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         let left_stripped = strip_revs(end_left);
         let right_stripped = strip_revs(end_right);
         if base_stripped != left_stripped || base_stripped != right_stripped {
-            Err(format!(
+            return Err(format!(
                 "ends don't match: {}, {}, {}",
                 fmt_set(end_base),
                 fmt_set(end_left),
                 fmt_set(end_right)
-            ))
-        } else if list_left.len() == list_right.len()
+            ));
+        }
+
+        if list_left.len() == list_right.len()
             && core::iter::zip(&list_left, &list_right)
                 .all(|(tree_left, tree_right)| tree_left.isomorphic_to(tree_right))
         {
             // well that's not really a conflict
 
+            debug_assert!(
+                list_left.len() <= 1,
+                "I don't really know what it means for these lists to have more than one element"
+            );
+
+            // take the node that's in both sides, and create an exact tree out of that
             if let Some(node) = list_left.first() {
-                // take the node that's in both sides, and create an exact tree out of that
                 let exact_tree = MergedTree::new_exact(
                     self.class_mapping
                         .map_to_leader(RevNode::new(Revision::Left, node)),
                     RevisionNESet::singleton(Revision::Left).with(Revision::Right),
                     self.class_mapping,
                 );
-                Ok((end_base, Some(exact_tree)))
+                return Ok((end_base, exact_tree));
             } else {
-                // both sides removed this node, so return nothing
-                Ok((end_base, None))
+                warn!("both sides removed the node, this shouldn't've been a conflict in the first place");
             }
-        } else {
-            Ok((
-                end_base,
-                Some(MergedTree::Conflict {
-                    base: list_base,
-                    left: list_left,
-                    right: list_right,
-                }),
-            ))
         }
+
+        Ok((
+            end_base,
+            MergedTree::Conflict {
+                base: list_base,
+                left: list_left,
+                right: list_right,
+            },
+        ))
     }
 
     /// Extract one side of a conflict by iteratively following the successor
