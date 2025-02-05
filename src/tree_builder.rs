@@ -240,7 +240,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                                 self.commutative_or_line_based_local_fallback(node, visiting_state);
                             return line_based;
                         }
-                        Ok((next_cursor, conflict)) => {
+                        Ok(conflict) => {
                             if let PCSNode::Node { node: leader, .. } = node {
                                 if let Some(commutative_parent) = self
                                     .lang_profile
@@ -258,7 +258,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                             } else {
                                 children.push(conflict);
                             }
-                            cursor = next_cursor;
+                            cursor = base_children_map.get(&predecessor);
                         }
                     }
                 }
@@ -396,7 +396,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         base_successors: &'b MultiMap<PCSNode<'a>, (Revision, PCSNode<'a>)>,
         seen_nodes: &mut HashSet<PCSNode<'a>>,
         visiting_state: &mut VisitingState<'a>,
-    ) -> Result<(&'b SuccessorsCursor<'a>, MergedTree<'a>), String> {
+    ) -> Result<MergedTree<'a>, String> {
         let pad = visiting_state.indentation();
         debug!("{pad}{predecessor} build_conflict");
         let (end_left, list_left) = self.extract_conflict_side(
@@ -439,14 +439,11 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 fmt_set(end_right)
             ))
         } else {
-            Ok((
-                end_base,
-                MergedTree::Conflict {
-                    base: list_base,
-                    left: list_left,
-                    right: list_right,
-                },
-            ))
+            Ok(MergedTree::Conflict {
+                base: list_base,
+                left: list_left,
+                right: list_right,
+            })
         }
     }
 
