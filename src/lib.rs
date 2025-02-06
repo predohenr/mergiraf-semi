@@ -440,7 +440,8 @@ pub fn resolve_merge_cascading<'a>(
 
             match resolve_merge(&parsed_merge, &settings, lang_profile, debug_dir) {
                 Ok(solve) if solve.conflict_count == 0 => {
-                    info!("Solved all conflicts.");
+                    let initial_conflicts = parsed_merge.conflict_count();
+                    info!("Solved all {initial_conflicts} conflict(s).");
                     return Ok(solve);
                 }
                 Ok(solve) => solves.push(solve),
@@ -469,11 +470,28 @@ pub fn resolve_merge_cascading<'a>(
         Ok(structured_merge) => solves.push(structured_merge),
         Err(err) => warn!("Full structured merge failed: {err}"),
     }
+
+    let line_based_conflicts = solves
+        .iter()
+        .find(|solve| solve.method == FROM_PARSED_ORIGINAL)
+        .map(|solve| solve.conflict_count);
+
     let best_solve = select_best_solve(solves)?;
 
-    match best_solve.conflict_count {
-        0 => info!("Solved all conflicts."),
-        n => info!("{n} conflict(s) remaining."),
+    match (best_solve.conflict_count, line_based_conflicts) {
+        (0, Some(initial_conflicts)) => {
+            info!("Solved all {initial_conflicts} conflict(s).");
+        }
+        (0, None) => {
+            info!("Solved all conflicts.");
+        }
+        (n, Some(initial_conflicts)) => {
+            #[rustfmt::skip]
+            info!("Solved {} conflict(s), {n} remaining.", initial_conflicts - n);
+        }
+        (n, None) => {
+            info!("{n} conflict(s) remaining.");
+        }
     }
     Ok(best_solve)
 }
