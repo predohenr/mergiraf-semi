@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+use either::Either;
 use itertools::Itertools;
 use log::debug;
 
@@ -598,9 +599,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     fn find_separators_with_whitespace<'s>(
         slice: &'s [&'a AstNode<'a>],
         trimmed_sep: &'s str,
-    ) -> Box<dyn Iterator<Item = &'a str> + 's> {
+    ) -> impl Iterator<Item = &'a str> + use<'a, 's> {
         if trimmed_sep.is_empty() {
-            Box::new(
+            Either::Left(
                 slice
                     .iter()
                     .skip(1)
@@ -608,7 +609,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     .filter(|s| !s.is_empty()),
             )
         } else {
-            Box::new(
+            Either::Right(
                 slice
                     .iter()
                     .filter(move |n| n.source.trim() == trimmed_sep)
