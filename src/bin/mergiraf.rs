@@ -411,7 +411,7 @@ mod test {
         let CliCommand::Solve { keep_backup, .. } =
             CliArgs::parse_from(["mergiraf", "solve", "foo.c"]).command
         else {
-            unreachable!("`mergiraf solve` should invoke the `Solve` submcommand")
+            unreachable!("`mergiraf solve` should invoke the `Solve` subcommand")
         };
         assert!(keep_backup);
 
@@ -420,7 +420,7 @@ mod test {
         let CliCommand::Solve { keep_backup, .. } =
             CliArgs::parse_from(["mergiraf", "solve", "--keep-backup", "foo.c"]).command
         else {
-            unreachable!("`mergiraf solve` should invoke the `Solve` submcommand")
+            unreachable!("`mergiraf solve` should invoke the `Solve` subcommand")
         };
         assert!(keep_backup);
 
@@ -428,7 +428,7 @@ mod test {
         let CliCommand::Solve { keep_backup, .. } =
             CliArgs::parse_from(["mergiraf", "solve", "--keep-backup=true", "foo.c"]).command
         else {
-            unreachable!("`mergiraf solve` should invoke the `Solve` submcommand")
+            unreachable!("`mergiraf solve` should invoke the `Solve` subcommand")
         };
         assert!(keep_backup);
 
@@ -436,7 +436,7 @@ mod test {
         let CliCommand::Solve { keep_backup, .. } =
             CliArgs::parse_from(["mergiraf", "solve", "--keep-backup=false", "foo.c"]).command
         else {
-            unreachable!("`mergiraf solve` should invoke the `Solve` submcommand")
+            unreachable!("`mergiraf solve` should invoke the `Solve` subcommand")
         };
         assert!(!keep_backup);
     }
