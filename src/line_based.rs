@@ -1,4 +1,4 @@
-use crate::{parse, MergeResult, TSParser};
+use crate::{parse, pcs::Revision, MergeResult, TSParser};
 use diffy_imara::{Algorithm, ConflictStyle, MergeOptions};
 use typed_arena::Arena;
 
@@ -55,13 +55,15 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
     let mut line_based_merge =
         line_based_merge(contents_base, contents_left, contents_right, Some(settings));
 
+    let mut parser = TSParser::new();
+    parser
+        .set_language(&lang_profile.language)
+        .unwrap_or_else(|_| panic!("Error loading {} grammar", lang_profile.name));
+
     if line_based_merge.conflict_count == 0 {
-        let mut parser = TSParser::new();
-        parser
-            .set_language(&lang_profile.language)
-            .unwrap_or_else(|_| panic!("Error loading {} grammar", lang_profile.name));
         let arena = Arena::new();
         let ref_arena = Arena::new();
+
         let tree_left = parse(
             &mut parser,
             &line_based_merge.contents,
@@ -74,6 +76,27 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
             Ok(ast) => lang_profile.has_signature_conflicts(ast.root()),
             Err(_) => true,
         };
+    } else {
+        let parsed_merge = ParsedMerge::parse(&line_based_merge.contents, settings)
+            .expect("diffy-imara returned a merge that we cannot parse the conflicts of");
+
+        let has_issues = [Revision::Base, Revision::Left, Revision::Right]
+            .into_iter()
+            .map(|rev| parsed_merge.reconstruct_revision(rev))
+            .all(|contents| {
+                // create a new arena for each tree, so that they can be dropped together
+                let arena = Arena::new();
+                let ref_arena = Arena::new();
+
+                let tree = parse(&mut parser, &contents, lang_profile, &arena, &ref_arena);
+
+                match tree {
+                    Ok(ast) => lang_profile.has_signature_conflicts(ast.root()),
+                    Err(_) => true,
+                }
+            });
+
+        line_based_merge.has_additional_issues = has_issues;
     }
     line_based_merge
 }
