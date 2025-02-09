@@ -39,7 +39,7 @@ pub fn line_based_merge(
         conflict_count: parsed_merge.conflict_count(),
         conflict_mass: parsed_merge.conflict_mass(),
         method: LINE_BASED_METHOD,
-        has_additional_issues: false,
+        has_additional_issues: true,
     }
 }
 
@@ -71,8 +71,8 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
         );
 
         if let Ok(ast) = tree_left {
-            if lang_profile.has_signature_conflicts(ast.root()) {
-                line_based_merge.has_additional_issues = true;
+            if !lang_profile.has_signature_conflicts(ast.root()) {
+                line_based_merge.has_additional_issues = false;
             }
         }
     }
