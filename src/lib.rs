@@ -242,13 +242,11 @@ pub fn cascading_merge(
 
     let (tx, rx) = oneshot::channel();
 
-    let line_based_merge_clone = line_based_merge.clone();
-
     thread::spawn(move || {
         let mut merges = Vec::new();
 
         // second attempt: to solve the conflicts from the line-based merge
-        if !line_based_merge_clone.has_additional_issues {
+        if !line_based_merge.has_additional_issues {
             let solved_merge = resolve_merge(&parsed_conflicts, &settings, lang_profile, debug_dir);
 
             match solved_merge {
@@ -266,7 +264,7 @@ pub fn cascading_merge(
             }
         }
 
-        if full_merge || line_based_merge_clone.has_additional_issues {
+        if full_merge || line_based_merge.has_additional_issues {
             // third attempt: full-blown structured merge
             let structured_merge = structured_merge(
                 contents_base,
