@@ -88,3 +88,65 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
 
     line_based_merge
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn some_reconstructed_revisions_do_not_parse() {
+        let contents_base = r#"import "github.com/go-redis/redis/v8"
+
+func foo(){}"#;
+
+        let contents_left = r#"import "github.com/redis/go-redis/v9"
+
+func foo(){}"#;
+
+        let contents_right = r#"import (
+	"fmt"
+	"net"
+	"net/url"
+
+	"github.com/redis/go-redis/v9"
+)
+
+// a comment to split hunks
+func foo(){}"#;
+
+        let contents_expected = r#"<<<<<<< LEFT
+import "github.com/redis/go-redis/v9"
+||||||| BASE
+import "github.com/go-redis/redis/v8"
+=======
+import (
+	"fmt"
+	"net"
+	"net/url"
+>>>>>>> RIGHT
+
+	"github.com/redis/go-redis/v9"
+)
+
+// a comment to split hunks
+func foo(){}"#;
+
+        let lang_profile =
+            LangProfile::detect_from_filename("foo.go").expect("no `lang_profile` for Go");
+
+        let merge = line_based_merge_with_duplicate_signature_detection(
+            contents_base,
+            contents_left,
+            contents_right,
+            &Default::default(),
+            lang_profile,
+        );
+
+        assert_eq!(&merge.contents, contents_expected);
+
+        assert!(
+            merge.has_additional_issues,
+            "left and base reconstructed revisions shouldn't parse"
+        );
+    }
+}
