@@ -228,7 +228,7 @@ pub fn cascading_merge(
 ) -> Vec<MergeResult> {
     // first attempt: try to merge as line-based
     let start = Instant::now();
-    let line_based_merge = line_based_merge_with_duplicate_signature_detection(
+    let (parsed_conflicts, line_based_merge) = line_based_merge_with_duplicate_signature_detection(
         contents_base,
         contents_left,
         contents_right,
@@ -249,9 +249,6 @@ pub fn cascading_merge(
 
         // second attempt: to solve the conflicts from the line-based merge
         if !line_based_merge_clone.has_additional_issues {
-            let parsed_conflicts = ParsedMerge::parse(&line_based_merge_clone.contents, &settings)
-                .expect("the diffy-imara rust library produced inconsistent conflict markers");
-
             let solved_merge = resolve_merge(&parsed_conflicts, &settings, lang_profile, debug_dir);
 
             match solved_merge {

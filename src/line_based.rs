@@ -56,7 +56,7 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
     contents_right: &str,
     settings: &DisplaySettings,
     lang_profile: &LangProfile,
-) -> MergeResult {
+) -> (ParsedMerge<'static>, MergeResult) {
     let parsed_merge =
         line_based_merge_parsed(contents_base, contents_left, contents_right, settings);
 
@@ -86,13 +86,14 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
             .any(|contents| revision_has_issues(&contents))
     };
 
-    MergeResult {
+    let merge_result = MergeResult {
         contents,
         conflict_count,
         conflict_mass: parsed_merge.conflict_mass(),
         method: LINE_BASED_METHOD,
         has_additional_issues,
-    }
+    };
+    (parsed_merge, merge_result)
 }
 
 #[cfg(test)]
@@ -139,7 +140,7 @@ func foo(){}"#;
 
         let lang_profile = LangProfile::go();
 
-        let merge = line_based_merge_with_duplicate_signature_detection(
+        let (_, merge) = line_based_merge_with_duplicate_signature_detection(
             contents_base,
             contents_left,
             contents_right,
