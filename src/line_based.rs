@@ -60,7 +60,7 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
         .set_language(&lang_profile.language)
         .unwrap_or_else(|_| panic!("Error loading {} grammar", lang_profile.name));
 
-    if line_based_merge.conflict_count == 0 {
+    let has_issues = if line_based_merge.conflict_count == 0 {
         let arena = Arena::new();
         let ref_arena = Arena::new();
 
@@ -72,17 +72,15 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
             &ref_arena,
         );
 
-        let has_issues = match tree_left {
+        match tree_left {
             Ok(ast) => lang_profile.has_signature_conflicts(ast.root()),
             Err(_) => true,
-        };
-
-        line_based_merge.has_additional_issues = has_issues;
+        }
     } else {
         let parsed_merge = ParsedMerge::parse(&line_based_merge.contents, settings)
             .expect("diffy-imara returned a merge that we cannot parse the conflicts of");
 
-        let has_issues = [Revision::Base, Revision::Left, Revision::Right]
+        [Revision::Base, Revision::Left, Revision::Right]
             .into_iter()
             .map(|rev| parsed_merge.reconstruct_revision(rev))
             .all(|contents| {
@@ -96,9 +94,10 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
                     Ok(ast) => lang_profile.has_signature_conflicts(ast.root()),
                     Err(_) => true,
                 }
-            });
+            })
+    };
 
-        line_based_merge.has_additional_issues = has_issues;
-    }
+    line_based_merge.has_additional_issues = has_issues;
+
     line_based_merge
 }
