@@ -60,22 +60,20 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
         .set_language(&lang_profile.language)
         .unwrap_or_else(|_| panic!("Error loading {} grammar", lang_profile.name));
 
-    let has_issues = if line_based_merge.conflict_count == 0 {
+    let mut revision_has_issues = |contents: &str| {
         let arena = Arena::new();
         let ref_arena = Arena::new();
 
-        let tree_left = parse(
-            &mut parser,
-            &line_based_merge.contents,
-            lang_profile,
-            &arena,
-            &ref_arena,
-        );
+        let tree = parse(&mut parser, contents, lang_profile, &arena, &ref_arena);
 
-        match tree_left {
+        match tree {
             Ok(ast) => lang_profile.has_signature_conflicts(ast.root()),
             Err(_) => true,
         }
+    };
+
+    let has_issues = if line_based_merge.conflict_count == 0 {
+        revision_has_issues(&line_based_merge.contents)
     } else {
         let parsed_merge = ParsedMerge::parse(&line_based_merge.contents, settings)
             .expect("diffy-imara returned a merge that we cannot parse the conflicts of");
@@ -83,18 +81,7 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
         [Revision::Base, Revision::Left, Revision::Right]
             .into_iter()
             .map(|rev| parsed_merge.reconstruct_revision(rev))
-            .all(|contents| {
-                // create a new arena for each tree, so that they can be dropped together
-                let arena = Arena::new();
-                let ref_arena = Arena::new();
-
-                let tree = parse(&mut parser, &contents, lang_profile, &arena, &ref_arena);
-
-                match tree {
-                    Ok(ast) => lang_profile.has_signature_conflicts(ast.root()),
-                    Err(_) => true,
-                }
-            })
+            .any(|contents| revision_has_issues(&contents))
     };
 
     line_based_merge.has_additional_issues = has_issues;
