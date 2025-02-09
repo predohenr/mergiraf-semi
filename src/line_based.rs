@@ -70,11 +70,10 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
             &ref_arena,
         );
 
-        if let Ok(ast) = tree_left {
-            if !lang_profile.has_signature_conflicts(ast.root()) {
-                line_based_merge.has_additional_issues = false;
-            }
-        }
+        line_based_merge.has_additional_issues = match tree_left {
+            Ok(ast) => lang_profile.has_signature_conflicts(ast.root()),
+            Err(_) => true,
+        };
     }
     line_based_merge
 }
