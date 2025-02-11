@@ -42,23 +42,29 @@ fn real_main() -> Result<i32, String> {
     let args = CliArgs::parse();
     stderrlog::new().module(module_path!()).init().unwrap();
 
-    match args.command {
+    let arena = Arena::new();
+    let ref_arena = Arena::new();
+
+    let language_determining_path = match &args.command {
+        Command::Parse { path } => path,
+    };
+
+    let lang_profile =
+        LangProfile::detect_from_filename(language_determining_path).ok_or_else(|| {
+            format!(
+                "Could not detect a supported language for {}",
+                language_determining_path.display()
+            )
+        })?;
+
+    let mut parser = TSParser::new();
+    parser
+        .set_language(&lang_profile.language)
+        .map_err(|err| format!("Error loading {} grammar: {}", lang_profile.name, err))?;
+
+    match &args.command {
         Command::Parse { path } => {
-            let arena = Arena::new();
-            let ref_arena = Arena::new();
-            let lang_profile = LangProfile::detect_from_filename(&path).ok_or_else(|| {
-                format!(
-                    "Could not detect a supported language for {}",
-                    path.display()
-                )
-            })?;
-
-            let mut parser = TSParser::new();
-            parser
-                .set_language(&lang_profile.language)
-                .map_err(|err| format!("Error loading {} grammar: {}", lang_profile.name, err))?;
-
-            let original_contents = fs::read_to_string(&path)
+            let original_contents = fs::read_to_string(path)
                 .map_err(|err| format!("Could not read {}: {err}", path.display()))?;
             let contents = normalize_to_lf(original_contents);
 
