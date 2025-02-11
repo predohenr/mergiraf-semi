@@ -1,4 +1,4 @@
-use std::{fs, process::exit};
+use std::{fs, path::PathBuf, process::exit};
 
 use clap::{Parser, Subcommand};
 use mergiraf::{
@@ -24,7 +24,7 @@ enum Command {
     /// Print the parsed tree for a file, for debugging purposes
     Parse {
         /// Path to the file to parse. Its type will be guessed from its extension.
-        path: String,
+        path: PathBuf,
     },
 }
 
@@ -46,16 +46,20 @@ fn real_main() -> Result<i32, String> {
         Command::Parse { path } => {
             let arena = Arena::new();
             let ref_arena = Arena::new();
-            let lang_profile = LangProfile::detect_from_filename(&path)
-                .ok_or_else(|| format!("Could not detect a supported language for {path}"))?;
+            let lang_profile = LangProfile::detect_from_filename(&path).ok_or_else(|| {
+                format!(
+                    "Could not detect a supported language for {}",
+                    path.display()
+                )
+            })?;
 
             let mut parser = TSParser::new();
             parser
                 .set_language(&lang_profile.language)
                 .map_err(|err| format!("Error loading {} grammar: {}", lang_profile.name, err))?;
 
-            let original_contents =
-                fs::read_to_string(&path).map_err(|err| format!("Could not read {path}: {err}"))?;
+            let original_contents = fs::read_to_string(&path)
+                .map_err(|err| format!("Could not read {}: {err}", path.display()))?;
             let contents = normalize_to_lf(original_contents);
 
             let ts_tree = parser.parse(&*contents, None).ok_or("Parsing failed")?;
