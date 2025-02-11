@@ -29,7 +29,9 @@ enum Command {
 }
 
 fn main() {
-    match real_main() {
+    stderrlog::new().module(module_path!()).init().unwrap();
+
+    match real_main(&CliArgs::parse()) {
         Ok(exit_code) => exit(exit_code),
         Err(error) => {
             eprintln!("mgf_dev: {error}");
@@ -38,10 +40,7 @@ fn main() {
     }
 }
 
-fn real_main() -> Result<i32, String> {
-    let args = CliArgs::parse();
-    stderrlog::new().module(module_path!()).init().unwrap();
-
+fn real_main(args: &CliArgs) -> Result<i32, String> {
     let arena = Arena::new();
     let ref_arena = Arena::new();
 
