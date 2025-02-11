@@ -775,8 +775,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         let ends_with_separator = [&base, &left, &right].into_iter().any(|rev| {
             rev.iter()
                 .map(|n| n.source.trim())
-                .filter(|s| *s != trimmed_right_delim)
-                .last()
+                .rfind(|s| *s != trimmed_right_delim)
                 .is_some_and(|s| s == trimmed_sep)
         });
 
