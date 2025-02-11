@@ -220,26 +220,14 @@ impl ChildrenGroup {
 mod tests {
     use super::*;
 
-    use crate::{
-        signature::{signature, PathStep::Field},
-        test_utils::ctx,
-    };
+    use crate::test_utils::ctx;
 
     #[test]
     fn has_signature_conflicts() {
         let ctx = ctx();
 
-        let lang_profile = LangProfile {
-            name: "JSON",
-            extensions: vec![".json"],
-            language: tree_sitter_json::LANGUAGE.into(),
-            atomic_nodes: vec![],
-            commutative_parents: vec![
-                // the order of keys is deemed irrelevant
-                CommutativeParent::new("object", "{", ", ", "}"),
-            ],
-            signatures: vec![signature("pair", vec![vec![Field("key")]])],
-        };
+        let lang_profile =
+            LangProfile::detect_from_filename("foo.json").expect("no `lang_profile` for JSON");
 
         let with_conflicts = ctx.parse_json("[{\"a\":1, \"b\":2, \"a\":3}]").root();
         let without_conflicts = ctx.parse_json("{\"a\": [4], \"b\": [4]}").root();
