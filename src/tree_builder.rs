@@ -1054,7 +1054,7 @@ fn fmt_set(s: &HashSet<(Revision, PCSNode<'_>)>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{class_mapping::ClassMapping, test_utils::ctx, tree_builder::TreeBuilder};
+    use crate::test_utils::ctx;
 
     use super::*;
 

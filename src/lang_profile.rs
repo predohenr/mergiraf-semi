@@ -218,8 +218,9 @@ impl ChildrenGroup {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     use crate::{
-        lang_profile::{CommutativeParent, LangProfile},
         signature::{signature, PathStep::Field},
         test_utils::ctx,
     };
