@@ -141,7 +141,7 @@ pub struct CommutativeParent {
 impl CommutativeParent {
     /// Short-hand function to declare a commutative parent without any delimiters.
     pub(crate) fn without_delimiters(root_type: &'static str, separator: &'static str) -> Self {
-        CommutativeParent {
+        Self {
             parent_type: root_type,
             separator,
             left_delim: None,
@@ -157,7 +157,7 @@ impl CommutativeParent {
         separator: &'static str,
         right_delim: &'static str,
     ) -> Self {
-        CommutativeParent {
+        Self {
             parent_type,
             separator,
             left_delim: Some(left_delim),
@@ -172,7 +172,7 @@ impl CommutativeParent {
         left_delim: &'static str,
         separator: &'static str,
     ) -> Self {
-        CommutativeParent {
+        Self {
             parent_type,
             separator,
             left_delim: Some(left_delim),
@@ -182,7 +182,7 @@ impl CommutativeParent {
     }
 
     /// Short-hand to restrict a commutative parent to some children groups
-    pub(crate) fn restricted_to_groups(mut self, groups: &[&[&'static str]]) -> CommutativeParent {
+    pub(crate) fn restricted_to_groups(mut self, groups: &[&[&'static str]]) -> Self {
         let children_groups = groups
             .iter()
             .map(|types| ChildrenGroup::new(types))
