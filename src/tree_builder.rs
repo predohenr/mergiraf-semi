@@ -251,6 +251,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     if left.len() == right.len()
                         && std::iter::zip(left, right).all(|(l, r)| l.isomorphic_to(r))
                     {
+                        // both sides of the "conflict" consist of nodes that are pairwise isomorphic.
+                        // This means that both sides actually agree in how they change the base.
+                        // Therefore, we resolve the conflict trivially by picking the left side (WLOG)
                         let not_really_a_conflict: Vec<_> = left
                             .iter()
                             .copied()
