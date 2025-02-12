@@ -450,8 +450,14 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         }
     }
 
-    /// Extract one side of a conflict by iteratively following the successor
-    /// from the given starting node.
+    /// Extract one side of a conflict by iteratively following `successors` from
+    /// the given `starting_node` until we either:
+    /// - find a node present in the other conflict side
+    /// - reach the last child of `starting_node`'s parent ([`PCSNode::RightMarker`])
+    ///
+    /// When either of those (end node) is found, return:
+    /// - the successors of end node
+    /// - the path from `starting_node` to end node
     fn extract_conflict_side(
         &self,
         starting_node: PCSNode<'a>,
