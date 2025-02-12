@@ -488,12 +488,10 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 let _representative = self.class_mapping.node_at_rev(node, revision)
                     .expect("extract_conflict_side: gathering a class leader which doesn't have a representative in the revision");
                 result.push(node.as_representative().node); // TODO should we not pick the representative in the revision instead?
-                if seen_nodes.contains(&candidate) {
+                if !seen_nodes.insert(candidate) {
                     return Err("PCS successor loop detected".to_string());
-                } else {
-                    seen_nodes.insert(candidate);
-                    cursor = candidate;
                 }
+                cursor = candidate;
             }
         }
     }
