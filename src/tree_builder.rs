@@ -227,40 +227,36 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     cursor = children_map.get(&predecessor);
                 }
                 2 => {
-                    let conflict = self.build_conflict(
+                    let Ok((next_cursor, conflict)) = self.build_conflict(
                         predecessor,
                         children_map,
                         base_children_map,
                         &mut seen_nodes,
                         visiting_state,
-                    );
-                    match conflict {
-                        Err(_) => {
-                            let line_based =
-                                self.commutative_or_line_based_local_fallback(node, visiting_state);
-                            return line_based;
+                    ) else {
+                        let line_based =
+                            self.commutative_or_line_based_local_fallback(node, visiting_state);
+                        return line_based;
+                    };
+
+                    if let PCSNode::Node { node: leader, .. } = node {
+                        if let Some(commutative_parent) = self
+                            .lang_profile
+                            .get_commutative_parent(leader.grammar_name())
+                        {
+                            let solved_conflict = self.resolve_commutative_conflict(
+                                conflict,
+                                commutative_parent,
+                                visiting_state,
+                            )?;
+                            children.extend(solved_conflict);
+                        } else {
+                            children.push(conflict);
                         }
-                        Ok((next_cursor, conflict)) => {
-                            if let PCSNode::Node { node: leader, .. } = node {
-                                if let Some(commutative_parent) = self
-                                    .lang_profile
-                                    .get_commutative_parent(leader.grammar_name())
-                                {
-                                    let solved_conflict = self.resolve_commutative_conflict(
-                                        conflict,
-                                        commutative_parent,
-                                        visiting_state,
-                                    )?;
-                                    children.extend(solved_conflict);
-                                } else {
-                                    children.push(conflict);
-                                }
-                            } else {
-                                children.push(conflict);
-                            }
-                            cursor = next_cursor;
-                        }
+                    } else {
+                        children.push(conflict);
                     }
+                    cursor = next_cursor;
                 }
                 _ => unreachable!("unexpected conflict size: more than two diverging sides!"),
             }
