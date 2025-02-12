@@ -30,7 +30,7 @@ pub fn report_bug(attempt_id_or_path: &str) -> Result<(), String> {
         .map_err(|err| format!("error while creating report archive: {err}"))?
     } else {
         // it could be a file with conflicts
-        let path = Path::new(&attempt_id_or_path);
+        let path = Path::new(attempt_id_or_path);
         if !path.is_file() {
             return Err("Invalid path or merge attempt id provided".to_owned());
         }
