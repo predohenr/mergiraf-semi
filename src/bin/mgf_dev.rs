@@ -1,11 +1,15 @@
-use std::{fs, path::PathBuf, process::exit};
+use std::{
+    borrow::Cow,
+    fs,
+    path::{Path, PathBuf},
+    process::exit,
+};
 
 use clap::{Parser, Subcommand};
 use mergiraf::{
     lang_profile::LangProfile,
     // XXX: move the uses to lib to avoid making these public?
     newline::normalize_to_lf,
-    tree::Ast,
 };
 use tree_sitter::Parser as TSParser;
 use typed_arena::Arena;
@@ -70,29 +74,29 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
         .set_language(&lang_profile.language)
         .map_err(|err| format!("Error loading {} grammar: {}", lang_profile.name, err))?;
 
+    let contents = |path: &Path| -> Result<Cow<str>, String> {
+        let original_contents = fs::read_to_string(path)
+            .map_err(|err| format!("Could not read {}: {err}", path.display()))?;
+        let contents = normalize_to_lf(original_contents);
+
+        Ok(contents)
+    };
+
     match &args.command {
         Command::Parse { path } => {
-            let original_contents = fs::read_to_string(path)
-                .map_err(|err| format!("Could not read {}: {err}", path.display()))?;
-            let contents = normalize_to_lf(original_contents);
+            let contents = contents(path)?;
 
-            let ts_tree = parser.parse(&*contents, None).ok_or("Parsing failed")?;
-            let tree = Ast::new(&ts_tree, &contents, lang_profile, &arena, &ref_arena)
+            let tree = mergiraf::parse(&mut parser, &contents, lang_profile, &arena, &ref_arena)
                 .map_err(|err| format!("File has parse errors: {err}"))?;
 
             print!("{}", tree.root().ascii_tree(lang_profile));
             Ok(0)
         }
         Command::Compare { first, second } => {
-            let original_contents_first = fs::read_to_string(first)
-                .map_err(|err| format!("Could not read {}: {err}", first.display()))?;
-            let contents_first = normalize_to_lf(original_contents_first);
+            let contents_first = contents(first)?;
 
-            let ts_tree_first = parser
-                .parse(&*contents_first, None)
-                .ok_or("Parsing failed")?;
-            let tree_first = Ast::new(
-                &ts_tree_first,
+            let tree_first = mergiraf::parse(
+                &mut parser,
                 &contents_first,
                 lang_profile,
                 &arena,
@@ -100,15 +104,10 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
             )
             .map_err(|err| format!("File has parse errors: {err}"))?;
 
-            let original_contents_second = fs::read_to_string(second)
-                .map_err(|err| format!("Could not read {}: {err}", first.display()))?;
-            let contents_second = normalize_to_lf(original_contents_second);
+            let contents_second = contents(second)?;
 
-            let ts_tree_second = parser
-                .parse(&*contents_second, None)
-                .ok_or("Parsing failed")?;
-            let tree_second = Ast::new(
-                &ts_tree_second,
+            let tree_second = mergiraf::parse(
+                &mut parser,
                 &contents_second,
                 lang_profile,
                 &arena,
