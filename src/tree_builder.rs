@@ -241,12 +241,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         return line_based;
                     };
 
-                    let MergedTree::Conflict {
-                        ref base,
-                        ref left,
-                        ref right,
-                    } = conflict
-                    else {
+                    let MergedTree::Conflict { base, left, right } = &conflict else {
                         unreachable!("`build_conflict` should return a conflict")
                     };
 
