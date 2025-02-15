@@ -251,18 +251,14 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         // both sides of the "conflict" consist of nodes that are pairwise isomorphic.
                         // This means that both sides actually agree in how they change the base.
                         // Therefore, we resolve the conflict trivially by picking the left side (WLOG)
-                        let not_really_a_conflict: Vec<_> = left
-                            .iter()
-                            .copied()
-                            .map(|l| {
-                                MergedTree::new_exact(
-                                    self.class_mapping
-                                        .map_to_leader(RevNode::new(Revision::Left, l)),
-                                    RevisionNESet::singleton(Revision::Left).with(Revision::Right),
-                                    self.class_mapping,
-                                )
-                            })
-                            .collect();
+                        let not_really_a_conflict = left.iter().copied().map(|l| {
+                            MergedTree::new_exact(
+                                self.class_mapping
+                                    .map_to_leader(RevNode::new(Revision::Left, l)),
+                                RevisionNESet::singleton(Revision::Left).with(Revision::Right),
+                                self.class_mapping,
+                            )
+                        });
 
                         children.extend(not_really_a_conflict);
                     } else {
