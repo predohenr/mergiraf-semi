@@ -20,6 +20,7 @@ struct CliArgs {
 }
 
 #[derive(Subcommand, Debug)]
+#[deny(missing_docs)]
 enum Command {
     /// Print the parsed tree for a file, for debugging purposes
     Parse {
