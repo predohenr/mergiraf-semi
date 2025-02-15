@@ -107,8 +107,8 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .collect();
         debug!("really deleted children: {}", deleted.iter().join(", "));
 
-        let parents_to_recompute: HashSet<Leader<'a>> = deleted_and_modified.iter()
-            .filter(|deleted| !merged_tree.contains(**deleted, self.class_mapping))
+        let parents_to_recompute: HashSet<Leader<'a>> = deleted_and_modified.into_iter()
+            .filter(|deleted| !merged_tree.contains(*deleted, self.class_mapping))
             .map(|deleted| {
                 let revnode = deleted.as_representative();
                 self.class_mapping.map_to_leader(
