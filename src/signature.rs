@@ -38,7 +38,7 @@ impl Display for Signature<'_, '_> {
 /// Only "quasi" because this equality doesn't have access to the class mapping
 /// so has to resort to hash equality in some sub-cases.
 #[derive(Debug, Clone, Copy, Eq)]
-enum AstNodeEquiv<'a, 'b: 'a> {
+enum AstNodeEquiv<'a, 'b> {
     Original(&'b AstNode<'b>),
     Merged(&'a MergedTree<'b>),
 }
