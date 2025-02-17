@@ -327,10 +327,14 @@ fn add_separators<'a>(
     separator: Option<&'a AstNode<'a>>,
     add_separator: AddSeparator,
 ) -> Vec<&'a AstNode<'a>> {
+    if elements.is_empty() {
+        return vec![];
+    }
+
     let mut first = true;
     let mut result = Vec::new();
     if let Some(separator) = separator {
-        if !elements.is_empty() && add_separator == AddSeparator::AtBeginning {
+        if add_separator == AddSeparator::AtBeginning {
             result.push(separator);
         }
     }
@@ -343,7 +347,7 @@ fn add_separators<'a>(
         result.push(element);
     }
     if let Some(separator) = separator {
-        if !elements.is_empty() && add_separator == AddSeparator::AtEnd {
+        if add_separator == AddSeparator::AtEnd {
             result.push(separator);
         }
     }
