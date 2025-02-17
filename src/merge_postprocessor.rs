@@ -340,15 +340,9 @@ fn add_separators<'a>(
     if add_separator == AddSeparator::AtBeginning {
         result.push(separator);
     }
-    let mut first = true;
-    for element in elements {
-        if first {
-            first = false;
-        } else {
-            result.push(separator);
-        }
-        result.push(element);
-    }
+    // The method is stuck in stabilization limbo, see its issue
+    #[allow(unstable_name_collisions)]
+    result.extend(elements.into_iter().intersperse(separator));
     if add_separator == AddSeparator::AtEnd {
         result.push(separator);
     }
