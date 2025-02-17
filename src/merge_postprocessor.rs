@@ -331,13 +331,13 @@ fn add_separators<'a>(
         return vec![];
     }
 
-    let mut first = true;
     let mut result = Vec::new();
     if let Some(separator) = separator {
         if add_separator == AddSeparator::AtBeginning {
             result.push(separator);
         }
     }
+    let mut first = true;
     for element in elements {
         if first {
             first = false;
