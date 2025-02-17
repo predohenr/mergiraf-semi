@@ -336,7 +336,7 @@ fn add_separators<'a>(
         return elements;
     };
 
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(elements.len() * 2); // 1 separator per element
     if add_separator == AddSeparator::AtBeginning {
         result.push(separator);
     }
