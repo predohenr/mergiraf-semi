@@ -131,7 +131,7 @@ impl<'a> ClassMapping<'a> {
     pub fn is_isomorphic_in_all_revisions(&self, leader: Leader<'a>) -> bool {
         // if we know that at least two isomorphisms exist in the cluster, then by transitivity there are three of them
         // and all revisions are isomorphic for this node
-        *self.exact_matchings.get(&leader).unwrap_or(&0) >= 2
+        self.exact_matchings.get(&leader).is_some_and(|n| *n >= 2)
     }
 
     /// Maps a node from some revision to its class representative
