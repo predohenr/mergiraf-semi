@@ -141,7 +141,6 @@ fn highlight_duplicate_signatures<'a>(
     // finally build the merged output
     let mut result = Vec::new();
     skip_next_separator = true;
-    let mut latest_element_is_separator = false;
     for (filtered_idx, (idx, is_separator, element)) in
         filtered_elements.iter().copied().enumerate().rev()
     {
@@ -156,7 +155,6 @@ fn highlight_duplicate_signatures<'a>(
                     result.push(element.clone());
                 }
                 skip_next_separator = false;
-                latest_element_is_separator = is_separator;
             }
             Some(signature) => {
                 let cluster = sig_to_indices
@@ -170,13 +168,6 @@ fn highlight_duplicate_signatures<'a>(
                     if Some(&idx) == cluster.iter().min() {
                         let conflict_add_separator = match add_separator {
                             AddSeparator::OnlyInside => AddSeparator::OnlyInside,
-                            AddSeparator::AtBeginning => {
-                                if latest_element_is_separator {
-                                    AddSeparator::AtBeginning
-                                } else {
-                                    AddSeparator::OnlyInside
-                                }
-                            }
                             AddSeparator::AtEnd => {
                                 if let Some((_, true, _)) = filtered_elements.get(filtered_idx - 1)
                                 {
@@ -203,11 +194,6 @@ fn highlight_duplicate_signatures<'a>(
                         if !happy_path {
                             match add_separator {
                                 AddSeparator::OnlyInside => {}
-                                AddSeparator::AtBeginning => {
-                                    if latest_element_is_separator {
-                                        result.pop();
-                                    }
-                                }
                                 AddSeparator::AtEnd => {
                                     if let Some((_, true, _)) =
                                         filtered_elements.get(filtered_idx - 1)
@@ -222,7 +208,6 @@ fn highlight_duplicate_signatures<'a>(
                         skip_next_separator = true;
                     }
                 }
-                latest_element_is_separator = false;
             }
         }
     }
