@@ -90,16 +90,13 @@ fn highlight_duplicate_signatures<'a>(
     let separator_example = find_separator(parent, trimmed_separator, class_mapping);
     let separator_node = separator_example.map(|revnode| revnode.node);
 
-    // determine whether the separator should be added at the beginning of a line or rather at the end
+    // determine whether the separator should be added at the end of a line
     // TODO this could probably be simplified now that we have line-based conflict printing
-    let start_regex = Regex::new("^[ \t]*\n").unwrap();
     let end_regex = Regex::new("\n[ \t]*$").unwrap();
     let add_separator = {
         if let Some(node) = separator_example {
             let full_source = node.node.source_with_surrounding_whitespace();
-            if start_regex.is_match(full_source) {
-                AddSeparator::AtBeginning
-            } else if end_regex.is_match(full_source) {
+            if end_regex.is_match(full_source) {
                 AddSeparator::AtEnd
             } else {
                 AddSeparator::OnlyInside
