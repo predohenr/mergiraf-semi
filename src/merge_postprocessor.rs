@@ -320,9 +320,7 @@ fn add_separators<'a>(
     };
 
     let mut result = Vec::with_capacity(elements.len() * 2); // 1 separator per element
-    if add_separator == AddSeparator::AtBeginning {
-        result.push(separator);
-    }
+
     // The method is stuck in stabilization limbo, see its issue
     #[allow(unstable_name_collisions)]
     result.extend(elements.into_iter().intersperse(separator));
