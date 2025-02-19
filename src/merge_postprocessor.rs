@@ -248,8 +248,9 @@ fn is_separator(element: &MergedTree, trimmed_separator: &'static str) -> bool {
 /// or only between each element
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 enum AddSeparator {
+    /// A,B,C
     OnlyInside,
-    AtBeginning,
+    /// A,B,C,
     AtEnd,
 }
 
