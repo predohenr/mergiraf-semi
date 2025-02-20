@@ -50,7 +50,7 @@ fn detect_extension(test_dir: &Path) -> String {
                 .into_string()
                 .expect("Unable to read filename in test directory")
                 .strip_prefix("Base.")
-                .map(|s| s.to_owned())
+                .map(String::from)
         })
         .expect("Could not find a Base.* file in the test directory")
 }

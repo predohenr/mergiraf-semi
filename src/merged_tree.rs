@@ -165,6 +165,7 @@ impl<'a> MergedTree<'a> {
                 class_mapping,
             ),
             (base, Some(left), Some(right)) => {
+                #[allow(clippy::redundant_closure_for_method_calls)] // for symmetry with next lines
                 let base_src = base.map_or(Cow::from(""), |base| base.unindented_source());
                 let left_src = left.unindented_source();
                 let right_src = right.unindented_source();
