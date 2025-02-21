@@ -62,22 +62,15 @@ pub fn three_way_merge<'a>(
     let cleaned_changeset = fix_pcs_inconsistencies(&changeset, debug_dir);
 
     // construct the merged tree!
-    let start: Instant = Instant::now();
-    let tree_builder = TreeBuilder::new(
-        &cleaned_changeset,
-        &base_changeset,
+    let merged_tree = build_tree(
+        base,
+        left,
+        right,
+        primary_matcher,
         &class_mapping,
-        primary_matcher.lang_profile,
+        &base_changeset,
+        &cleaned_changeset,
     );
-    let merged_tree = tree_builder.build_tree().unwrap_or_else(|_| {
-        let line_based = line_based_merge(base.source(), left.source(), right.source(), None);
-        MergedTree::LineBasedMerge {
-            node: class_mapping.map_to_leader(RevNode::new(Revision::Base, base.root())),
-            contents: line_based.contents,
-            conflict_mass: line_based.conflict_mass,
-        }
-    });
-    debug!("constructing the merged tree took {:?}", start.elapsed());
 
     // post-process to highlight signature conflicts
     let start: Instant = Instant::now();
@@ -284,6 +277,35 @@ fn fix_pcs_inconsistencies<'a>(
     }
 
     cleaned_changeset
+}
+
+fn build_tree<'a>(
+    base: &Ast<'a>,
+    left: &Ast<'a>,
+    right: &Ast<'a>,
+    primary_matcher: &TreeMatcher<'_>,
+    class_mapping: &ClassMapping<'a>,
+    base_changeset: &ChangeSet<'a>,
+    cleaned_changeset: &ChangeSet<'a>,
+) -> MergedTree<'a> {
+    let start: Instant = Instant::now();
+    let tree_builder = TreeBuilder::new(
+        cleaned_changeset,
+        base_changeset,
+        class_mapping,
+        primary_matcher.lang_profile,
+    );
+    let merged_tree = tree_builder.build_tree().unwrap_or_else(|_| {
+        let line_based = line_based_merge(base.source(), left.source(), right.source(), None);
+        MergedTree::LineBasedMerge {
+            node: class_mapping.map_to_leader(RevNode::new(Revision::Base, base.root())),
+            contents: line_based.contents,
+            conflict_mass: line_based.conflict_mass,
+        }
+    });
+    debug!("constructing the merged tree took {:?}", start.elapsed());
+
+    merged_tree
 }
 
 #[cfg(test)]
