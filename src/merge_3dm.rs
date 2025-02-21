@@ -23,6 +23,7 @@ use crate::{
 /// * converts the trees to [`ChangeSet`]s
 /// * cleans up the union of the changesets
 /// * converts back the union of changesets to a [`MergedTree`]
+/// * finds and removes duplicated signatures
 ///
 /// A good overview of this algorithm can be found in
 /// [Spork: Structured Merge for Java with Formatting Preservation](https://arxiv.org/abs/2202.05329)
