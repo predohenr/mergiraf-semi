@@ -55,25 +55,8 @@ pub fn three_way_merge<'a>(
     );
 
     // convert all the trees to PCS triples
-    let start: Instant = Instant::now();
-    debug!("generating PCS triples");
-    let mut changeset = ChangeSet::new();
-    changeset.add_tree(base, Revision::Base, &class_mapping);
-    changeset.add_tree(left, Revision::Left, &class_mapping);
-    changeset.add_tree(right, Revision::Right, &class_mapping);
-
-    if let Some(debug_dir) = debug_dir {
-        changeset.save(debug_dir.join("changeset.txt"));
-    }
-
-    // also generate a base changeset
-    let mut base_changeset = ChangeSet::new();
-    base_changeset.add_tree(base, Revision::Base, &class_mapping);
-
-    if let Some(debug_dir) = debug_dir {
-        base_changeset.save(debug_dir.join("base_changeset.txt"));
-    }
-    debug!("generating PCS triples took {:?}", start.elapsed());
+    let (changeset, base_changeset) =
+        generate_pcs_triples(base, left, right, &class_mapping, debug_dir);
 
     // try to fix all inconsistencies in the merged changeset
     let start: Instant = Instant::now();
@@ -262,6 +245,36 @@ fn create_class_mapping<'a>(
     );
     debug!("constructing the classmapping took {:?}", start.elapsed());
     class_mapping
+}
+
+fn generate_pcs_triples<'a>(
+    base: &'a Ast<'a>,
+    left: &'a Ast<'a>,
+    right: &'a Ast<'a>,
+    class_mapping: &ClassMapping<'a>,
+    debug_dir: Option<&Path>,
+) -> (ChangeSet<'a>, ChangeSet<'a>) {
+    let start: Instant = Instant::now();
+    debug!("generating PCS triples");
+    let mut changeset = ChangeSet::new();
+    changeset.add_tree(base, Revision::Base, class_mapping);
+    changeset.add_tree(left, Revision::Left, class_mapping);
+    changeset.add_tree(right, Revision::Right, class_mapping);
+
+    if let Some(debug_dir) = debug_dir {
+        changeset.save(debug_dir.join("changeset.txt"));
+    }
+
+    // also generate a base changeset
+    let mut base_changeset = ChangeSet::new();
+    base_changeset.add_tree(base, Revision::Base, class_mapping);
+
+    if let Some(debug_dir) = debug_dir {
+        base_changeset.save(debug_dir.join("base_changeset.txt"));
+    }
+    debug!("generating PCS triples took {:?}", start.elapsed());
+
+    (changeset, base_changeset)
 }
 
 #[cfg(test)]
