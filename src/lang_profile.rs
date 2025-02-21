@@ -49,7 +49,9 @@ impl LangProfile {
                 .extensions
                 .iter()
                 .copied()
-                .any(|ext| extension == OsStr::new(ext))
+                // NOTE: the comparison should be case-insensitive, see
+                // https://rust-lang.github.io/rust-clippy/master/index.html#case_sensitive_file_extension_comparisons
+                .any(|ext| extension.eq_ignore_ascii_case(OsStr::new(ext)))
         })
     }
 
