@@ -48,46 +48,11 @@ pub fn three_way_merge<'a>(
     );
 
     // create a classmapping
-    let start = Instant::now();
-    let mut class_mapping = ClassMapping::new();
-    class_mapping.add_matching(
-        &base_left_matching.exact,
-        Revision::Base,
-        Revision::Left,
-        true,
+    let class_mapping = create_class_mapping(
+        &base_left_matching,
+        &base_right_matching,
+        &left_right_matching,
     );
-    class_mapping.add_matching(
-        &base_right_matching.exact,
-        Revision::Base,
-        Revision::Right,
-        true,
-    );
-    class_mapping.add_matching(
-        &left_right_matching.exact,
-        Revision::Left,
-        Revision::Right,
-        true,
-    );
-
-    class_mapping.add_matching(
-        &base_left_matching.full,
-        Revision::Base,
-        Revision::Left,
-        false,
-    );
-    class_mapping.add_matching(
-        &base_right_matching.full,
-        Revision::Base,
-        Revision::Right,
-        false,
-    );
-    class_mapping.add_matching(
-        &left_right_matching.full,
-        Revision::Left,
-        Revision::Right,
-        false,
-    );
-    debug!("constructing the classmapping took {:?}", start.elapsed());
 
     // convert all the trees to PCS triples
     let start: Instant = Instant::now();
@@ -249,6 +214,54 @@ fn generate_matchings<'a>(
     }
 
     (base_left_matching, base_right_matching, left_right_matching)
+}
+
+fn create_class_mapping<'a>(
+    base_left_matching: &DetailedMatching<'a>,
+    base_right_matching: &DetailedMatching<'a>,
+    left_right_matching: &DetailedMatching<'a>,
+) -> ClassMapping<'a> {
+    let start = Instant::now();
+    let mut class_mapping = ClassMapping::new();
+    class_mapping.add_matching(
+        &base_left_matching.exact,
+        Revision::Base,
+        Revision::Left,
+        true,
+    );
+    class_mapping.add_matching(
+        &base_right_matching.exact,
+        Revision::Base,
+        Revision::Right,
+        true,
+    );
+    class_mapping.add_matching(
+        &left_right_matching.exact,
+        Revision::Left,
+        Revision::Right,
+        true,
+    );
+
+    class_mapping.add_matching(
+        &base_left_matching.full,
+        Revision::Base,
+        Revision::Left,
+        false,
+    );
+    class_mapping.add_matching(
+        &base_right_matching.full,
+        Revision::Base,
+        Revision::Right,
+        false,
+    );
+    class_mapping.add_matching(
+        &left_right_matching.full,
+        Revision::Left,
+        Revision::Right,
+        false,
+    );
+    debug!("constructing the classmapping took {:?}", start.elapsed());
+    class_mapping
 }
 
 #[cfg(test)]
