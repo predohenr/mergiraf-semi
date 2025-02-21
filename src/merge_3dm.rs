@@ -11,7 +11,7 @@ use crate::{
     pcs::Revision,
     tree::Ast,
     tree_builder::TreeBuilder,
-    tree_matcher::TreeMatcher,
+    tree_matcher::{DetailedMatching, TreeMatcher},
     visualizer::write_matching_to_dotty_file,
 };
 
@@ -37,71 +37,15 @@ pub fn three_way_merge<'a>(
     debug_dir: Option<&Path>,
 ) -> (MergedTree<'a>, ClassMapping<'a>) {
     // match all pairs of revisions
-    let start = Instant::now();
-    let (base_left_matching, base_right_matching) = thread::scope(|scope| {
-        let base_left = scope.spawn(|| {
-            debug!("matching base to left");
-            primary_matcher.match_trees(
-                base,
-                left,
-                initial_matchings.as_ref().map(|(left, _)| left),
-            )
-        });
-        let base_right = scope.spawn(|| {
-            debug!("matching base to right");
-            primary_matcher.match_trees(
-                base,
-                right,
-                initial_matchings.as_ref().map(|(_, right)| right),
-            )
-        });
-        (
-            base_left
-                .join()
-                .expect("error in thread matching base and left revisions"),
-            base_right
-                .join()
-                .expect("error in thread matching base and right revisions"),
-        )
-    });
-    debug!("matching left to right");
-    let composed_matching = base_left_matching
-        .full
-        .clone()
-        .into_reversed()
-        .compose(&base_right_matching.full);
-    let left_right_matching = auxiliary_matcher.match_trees(left, right, Some(&composed_matching));
-    debug!("matching all three pairs took {:?}", start.elapsed());
-
-    // save the matchings for debugging purposes
-    if let Some(debug_dir) = debug_dir {
-        thread::scope(|s| {
-            s.spawn(|| {
-                write_matching_to_dotty_file(
-                    debug_dir.join("base_left.dot"),
-                    base,
-                    left,
-                    &base_left_matching,
-                );
-            });
-            s.spawn(|| {
-                write_matching_to_dotty_file(
-                    debug_dir.join("base_right.dot"),
-                    base,
-                    right,
-                    &base_right_matching,
-                );
-            });
-            s.spawn(|| {
-                write_matching_to_dotty_file(
-                    debug_dir.join("left_right.dot"),
-                    left,
-                    right,
-                    &left_right_matching,
-                );
-            });
-        });
-    }
+    let (base_left_matching, base_right_matching, left_right_matching) = generate_matchings(
+        base,
+        left,
+        right,
+        initial_matchings,
+        primary_matcher,
+        auxiliary_matcher,
+        debug_dir,
+    );
 
     // create a classmapping
     let start = Instant::now();
@@ -223,6 +167,88 @@ pub fn three_way_merge<'a>(
     );
 
     (postprocessed_tree, class_mapping)
+}
+
+fn generate_matchings<'a>(
+    base: &'a Ast<'a>,
+    left: &'a Ast<'a>,
+    right: &'a Ast<'a>,
+    initial_matchings: Option<&(Matching<'a>, Matching<'a>)>,
+    primary_matcher: &TreeMatcher,
+    auxiliary_matcher: &TreeMatcher,
+    debug_dir: Option<&Path>,
+) -> (
+    DetailedMatching<'a>,
+    DetailedMatching<'a>,
+    DetailedMatching<'a>,
+) {
+    let start = Instant::now();
+    let (base_left_matching, base_right_matching) = thread::scope(|scope| {
+        let base_left = scope.spawn(|| {
+            debug!("matching base to left");
+            primary_matcher.match_trees(
+                base,
+                left,
+                initial_matchings.as_ref().map(|(left, _)| left),
+            )
+        });
+        let base_right = scope.spawn(|| {
+            debug!("matching base to right");
+            primary_matcher.match_trees(
+                base,
+                right,
+                initial_matchings.as_ref().map(|(_, right)| right),
+            )
+        });
+        (
+            base_left
+                .join()
+                .expect("error in thread matching base and left revisions"),
+            base_right
+                .join()
+                .expect("error in thread matching base and right revisions"),
+        )
+    });
+    debug!("matching left to right");
+    let composed_matching = base_left_matching
+        .full
+        .clone()
+        .into_reversed()
+        .compose(&base_right_matching.full);
+    let left_right_matching = auxiliary_matcher.match_trees(left, right, Some(&composed_matching));
+    debug!("matching all three pairs took {:?}", start.elapsed());
+
+    // save the matchings for debugging purposes
+    if let Some(debug_dir) = debug_dir {
+        thread::scope(|s| {
+            s.spawn(|| {
+                write_matching_to_dotty_file(
+                    debug_dir.join("base_left.dot"),
+                    base,
+                    left,
+                    &base_left_matching,
+                );
+            });
+            s.spawn(|| {
+                write_matching_to_dotty_file(
+                    debug_dir.join("base_right.dot"),
+                    base,
+                    right,
+                    &base_right_matching,
+                );
+            });
+            s.spawn(|| {
+                write_matching_to_dotty_file(
+                    debug_dir.join("left_right.dot"),
+                    left,
+                    right,
+                    &left_right_matching,
+                );
+            });
+        });
+    }
+
+    (base_left_matching, base_right_matching, left_right_matching)
 }
 
 #[cfg(test)]
