@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::Path};
+use std::{collections::HashSet, ffi::OsStr, path::Path};
 
 use itertools::Itertools;
 use tree_sitter::Language;
@@ -43,13 +43,13 @@ impl LangProfile {
     fn _detect_from_filename(filename: &Path) -> Option<&LangProfile> {
         // TODO make something more advanced like in difftastic
         // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
-        let extension = filename.extension()?.to_str()?;
+        let extension = filename.extension()?;
         SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
             lang_profile
                 .extensions
                 .iter()
                 .copied()
-                .any(|ext| extension == ext)
+                .any(|ext| extension == OsStr::new(ext))
         })
     }
 
