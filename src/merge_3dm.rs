@@ -59,33 +59,7 @@ pub fn three_way_merge<'a>(
         generate_pcs_triples(base, left, right, &class_mapping, debug_dir);
 
     // try to fix all inconsistencies in the merged changeset
-    let start: Instant = Instant::now();
-    let mut cleaned_changeset = ChangeSet::new();
-    debug!("number of triples: {}", changeset.len());
-    for pcs in changeset.iter() {
-        let mut conflict_found = false;
-        if pcs.revision == Revision::Base {
-            let mut conflicting_triples = changeset.inconsistent_triples(pcs);
-            let count = changeset.inconsistent_triples(pcs).count();
-            if count > 0 {
-                debug!("number of conflicting triples: {count}");
-            }
-            if let Some(triple) =
-                conflicting_triples.find(|triple| triple.revision != Revision::Base)
-            {
-                debug!("eliminating {pcs} by {triple}");
-                conflict_found = true;
-            }
-        }
-        if !conflict_found {
-            cleaned_changeset.add(*pcs);
-        }
-    }
-    debug!("cleaning up PCS triples took {:?}", start.elapsed());
-
-    if let Some(debug_dir) = debug_dir {
-        cleaned_changeset.save(debug_dir.join("cleaned.txt"));
-    }
+    let cleaned_changeset = fix_pcs_inconsistencies(&changeset, debug_dir);
 
     // construct the merged tree!
     let start: Instant = Instant::now();
@@ -275,6 +249,41 @@ fn generate_pcs_triples<'a>(
     debug!("generating PCS triples took {:?}", start.elapsed());
 
     (changeset, base_changeset)
+}
+
+fn fix_pcs_inconsistencies<'a>(
+    changeset: &ChangeSet<'a>,
+    debug_dir: Option<&Path>,
+) -> ChangeSet<'a> {
+    let start: Instant = Instant::now();
+    let mut cleaned_changeset = ChangeSet::new();
+    debug!("number of triples: {}", changeset.len());
+    for pcs in changeset.iter() {
+        let mut conflict_found = false;
+        if pcs.revision == Revision::Base {
+            let mut conflicting_triples = changeset.inconsistent_triples(pcs);
+            let count = changeset.inconsistent_triples(pcs).count();
+            if count > 0 {
+                debug!("number of conflicting triples: {count}");
+            }
+            if let Some(triple) =
+                conflicting_triples.find(|triple| triple.revision != Revision::Base)
+            {
+                debug!("eliminating {pcs} by {triple}");
+                conflict_found = true;
+            }
+        }
+        if !conflict_found {
+            cleaned_changeset.add(*pcs);
+        }
+    }
+    debug!("cleaning up PCS triples took {:?}", start.elapsed());
+
+    if let Some(debug_dir) = debug_dir {
+        cleaned_changeset.save(debug_dir.join("cleaned.txt"));
+    }
+
+    cleaned_changeset
 }
 
 #[cfg(test)]
