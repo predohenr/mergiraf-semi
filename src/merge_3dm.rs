@@ -298,7 +298,8 @@ fn build_tree<'a>(
         settings,
     );
     let merged_tree = tree_builder.build_tree().unwrap_or_else(|_| {
-        let line_based = line_based_merge(base.source(), left.source(), right.source(), None);
+        let line_based =
+            line_based_merge(base.source(), left.source(), right.source(), Some(settings));
         MergedTree::LineBasedMerge {
             node: class_mapping.map_to_leader(RevNode::new(Revision::Base, base.root())),
             contents: line_based.contents,
