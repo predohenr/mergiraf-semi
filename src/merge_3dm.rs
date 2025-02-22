@@ -687,4 +687,90 @@ mod tests {
         let pretty_printed = merged_tree.pretty_print(&class_mapping, &settings);
         assert_eq!(pretty_printed, "fn foo<'s>(&'s self) {}");
     }
+
+    #[test]
+    /// The following (admittedly very bizarre-looking) inputs guarantee a line-based fallback on a
+    /// node during merge. We then check whether the resulting line-based merge has the correct
+    /// conflict marker size
+    fn line_based_local_fallback_for_revnode_respects_conflict_marker_size() {
+        let ctx = ctx();
+
+        let base = "\
+fn foo() {
+    let start = Instant::now();
+    let start;
+    eprintln!();
+}";
+
+        let left = "\
+fn foo() {
+    let bar;
+    let baz = baz();
+}
+fn baz() {
+    let start;
+    eprintln!();
+}";
+
+        let right = "\
+fn foo() {
+    let bar;
+    let start;
+    eprintln!();
+}";
+
+        let expected = "\
+fn foo() {
+    let bar;
+    let baz = baz();
+}
+fn baz() {
+<<<<<<<<< LEFT
+||||||||| BASE
+    let start = Instant::now();
+=========
+    let bar;
+>>>>>>>>> RIGHT
+    let start;
+    eprintln!();
+}";
+
+        let base = ctx.parse_rust(base);
+        let left = ctx.parse_rust(left);
+        let right = ctx.parse_rust(right);
+
+        let (primary_matcher, auxiliary_matcher) = rust_matchers();
+
+        let settings = DisplaySettings {
+            conflict_marker_size: Some(9),
+            ..DisplaySettings::default_compact()
+        };
+
+        let (merged_tree, class_mapping) = three_way_merge(
+            &base,
+            &left,
+            &right,
+            None,
+            &primary_matcher,
+            &auxiliary_matcher,
+            &settings,
+            None,
+        );
+
+        /// Whether line-based fallback was performed on any node in this tree
+        fn contains_line_based_merge(tree: &MergedTree) -> bool {
+            match tree {
+                MergedTree::LineBasedMerge { .. } => true,
+                MergedTree::MixedTree { children, .. } => {
+                    children.iter().any(contains_line_based_merge)
+                }
+                _ => false,
+            }
+        }
+
+        assert!(contains_line_based_merge(&merged_tree));
+
+        let pretty_printed = merged_tree.pretty_print(&class_mapping, &settings);
+        assert_eq!(pretty_printed, expected);
+    }
 }
