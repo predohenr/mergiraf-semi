@@ -87,7 +87,7 @@ enum CliCommand {
     },
     /// Solve the conflicts in a merged file
     Solve {
-        /// Path to a file containing merge conflicts
+        /// Path to the file containing merge conflicts
         conflicts: PathBuf,
         /// Display compact conflicts, breaking down lines
         #[arg(short, long, default_missing_value = "true", num_args = 0..=1, require_equals = true)]
