@@ -43,11 +43,11 @@ struct CliArgs {
 enum CliCommand {
     /// Do a three-way merge
     Merge {
-        /// The path to the file containing the base revision
+        /// Path to the file containing the base revision
         base: PathBuf,
-        /// The path to the file containing the left revision
+        /// Path to the file containing the left revision
         left: PathBuf,
-        /// The path to the file containing the right revision
+        /// Path to the file containing the right revision
         right: PathBuf,
         /// Only attempt to merge the files by solving textual conflicts,
         /// without doing a full structured merge from the ground up.
