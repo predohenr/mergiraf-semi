@@ -2,12 +2,12 @@ public class Main {
     int calcNumber() {
         return 1 + 2 +
 <<<<<<< LEFT
-99
+ 99
 ||||||| BASE
-3
+ 3
 =======
-102
+ 102
 >>>>>>> RIGHT
-        ;
+;
     }
 }
