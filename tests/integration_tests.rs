@@ -49,6 +49,38 @@ fn run_test_from_dir(test_dir: &Path) {
         eprintln!("test failed: outputs differ for {}", test_dir.display());
         panic!();
     }
+
+    // only run the following part if the file exists
+    let fname_expected_compact = test_dir.join(format!("ExpectedCompact.{ext}"));
+    let Ok(contents_expected_compact) = fs::read_to_string(fname_expected_compact) else {
+        return;
+    };
+
+    let merge_result_compact = line_merge_and_structured_resolution(
+        contents_base,
+        contents_left,
+        contents_right,
+        fname_base,
+        DisplaySettings::default_compact(),
+        true,
+        None,
+        None,
+        Duration::from_millis(0),
+    );
+
+    let actual_compact = merge_result_compact.contents.trim();
+
+    let expected_compact = contents_expected_compact.trim();
+    if expected_compact != actual_compact {
+        let patch = create_patch(expected_compact, actual_compact);
+        let f = PatchFormatter::new().with_color();
+        print!("{}", f.fmt_patch(&patch));
+        eprintln!(
+            "test failed: outputs in compact representation differ for {}",
+            test_dir.display()
+        );
+        panic!();
+    }
 }
 
 /// End-to-end tests for the "mergiraf merge" command
