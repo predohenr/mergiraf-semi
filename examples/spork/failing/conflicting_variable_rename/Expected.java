@@ -7,7 +7,7 @@ public class Adder {
 =======
  r
 >>>>>>> RIGHT
-    ) {
+) {
         return lhs +
 <<<<<<< LEFT
  rhs
@@ -16,6 +16,6 @@ public class Adder {
 =======
  r
 >>>>>>> RIGHT
-        ;
+;
     }
 }
