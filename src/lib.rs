@@ -512,3 +512,19 @@ pub fn languages(gitattributes: bool) -> String {
     res
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn languages_gitattributes() {
+        let supported_langs = languages(true);
+        let expected = include_str!("../doc/src/supported_langs.txt");
+        assert_eq!(
+            supported_langs, expected,
+            "\
+You were probably adding a language to Mergiraf (thanks!), but forgot to update the documentation.
+Please update `doc/src/languages.md` and `doc/src/supported_langs.txt`"
+        );
+    }
+}
