@@ -45,7 +45,7 @@ pub(crate) mod tree_builder;
 pub(crate) mod tree_matcher;
 pub(crate) mod visualizer;
 
-use core::cmp::Ordering;
+use core::{cmp::Ordering, fmt::Write};
 use std::{
     fs,
     path::Path,
@@ -68,6 +68,7 @@ use parsed_merge::{ParsedMerge, PARSED_MERGE_DIFF2_DETECTED};
 use pcs::Revision;
 use settings::DisplaySettings;
 use structured::structured_merge;
+use supported_langs::SUPPORTED_LANGUAGES;
 use tree::{Ast, AstNode};
 use tree_sitter::Parser as TSParser;
 use typed_arena::Arena;
@@ -482,3 +483,32 @@ fn fxhasher() -> rustc_hash::FxHasher {
     use std::hash::BuildHasher;
     rustc_hash::FxBuildHasher.build_hasher()
 }
+
+/// The implementation of `mergiraf languages`.
+///
+/// Prints the list of supported languages,
+/// either in the format understood by `.gitattributes`,
+/// or in a more human-readable format.
+pub fn languages(gitattributes: bool) -> String {
+    let mut res = String::new();
+    for lang_profile in &*SUPPORTED_LANGUAGES {
+        if gitattributes {
+            for extension in &lang_profile.extensions {
+                let _ = writeln!(res, "*.{extension} merge=mergiraf");
+            }
+        } else {
+            let _ = writeln!(
+                res,
+                "{} ({})",
+                lang_profile.name,
+                lang_profile
+                    .extensions
+                    .iter()
+                    .map(|ext| format!("*.{ext}"))
+                    .join(", ")
+            );
+        }
+    }
+    res
+}
+
