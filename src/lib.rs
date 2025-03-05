@@ -527,10 +527,13 @@ mod test {
             .lines()
             .collect();
         assert_eq!(
-            supported_langs, expected,
+            supported_langs,
+            expected,
             "\
 You were probably adding a language to Mergiraf (thanks!), but forgot to update the documentation.
-Please update `doc/src/languages.md` and `doc/src/supported_langs.txt`"
+Please update `doc/src/languages.md` and `doc/src/supported_langs.txt`.
+The following extensions are missing from the documentation: {:?}",
+            supported_langs.difference(&expected)
         );
     }
 }
