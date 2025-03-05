@@ -516,10 +516,16 @@ pub fn languages(gitattributes: bool) -> String {
 mod test {
     use super::*;
 
+    use std::collections::HashSet;
+
     #[test]
     fn languages_gitattributes() {
         let supported_langs = languages(true);
-        let expected = include_str!("../doc/src/supported_langs.txt");
+        // put both into sets to ignore ordering
+        let supported_langs: HashSet<_> = supported_langs.lines().collect();
+        let expected: HashSet<_> = include_str!("../doc/src/supported_langs.txt")
+            .lines()
+            .collect();
         assert_eq!(
             supported_langs, expected,
             "\
