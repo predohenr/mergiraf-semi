@@ -3,6 +3,7 @@
 *.go merge=mergiraf
 *.js merge=mergiraf
 *.jsx merge=mergiraf
+*.mjs merge=mergiraf
 *.json merge=mergiraf
 *.yml merge=mergiraf
 *.yaml merge=mergiraf
@@ -25,6 +26,7 @@
 *.tsx merge=mergiraf
 *.py merge=mergiraf
 *.php merge=mergiraf
+*.phtml merge=mergiraf
 *.sol merge=mergiraf
 *.lua merge=mergiraf
 *.kt merge=mergiraf
