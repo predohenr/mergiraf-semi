@@ -204,7 +204,7 @@ impl CommutativeParent {
 /// A group of children of a commutative node which are allowed to commute together
 #[derive(Debug, Clone)]
 pub struct ChildrenGroup {
-    /// The types of nodes, as gramman names
+    /// The types of nodes, as grammar names
     pub node_types: HashSet<&'static str>,
 }
 
