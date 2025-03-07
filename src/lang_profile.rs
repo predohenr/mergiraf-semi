@@ -184,13 +184,14 @@ impl CommutativeParent {
     }
 
     /// Short-hand to restrict a commutative parent to some children groups
-    pub(crate) fn restricted_to_groups(mut self, groups: &[&[&'static str]]) -> Self {
-        let children_groups = groups
-            .iter()
-            .map(|types| ChildrenGroup::new(types))
-            .collect();
-        self.children_groups = children_groups;
-        self
+    pub(crate) fn restricted_to_groups(self, groups: &[&[&'static str]]) -> Self {
+        Self {
+            children_groups: groups
+                .iter()
+                .map(|types| ChildrenGroup::new(types))
+                .collect(),
+            ..self
+        }
     }
 
     /// Can children with the supplied types commute together?
