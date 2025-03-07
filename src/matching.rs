@@ -12,7 +12,7 @@ pub struct Matching<'tree> {
 
 impl<'tree> Matching<'tree> {
     /// Creates an empty matching.
-    pub fn new() -> Matching<'tree> {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -69,7 +69,7 @@ impl<'tree> Matching<'tree> {
     }
 
     /// Adds an entire other matching
-    pub fn add_matching(&mut self, other: &Matching<'tree>) {
+    pub fn add_matching(&mut self, other: &Self) {
         for (right, left) in other.iter_right_to_left() {
             self.add(left, right);
         }
@@ -81,7 +81,7 @@ impl<'tree> Matching<'tree> {
     }
 
     /// Reverse the direction of the matching
-    pub fn into_reversed(self) -> Matching<'tree> {
+    pub fn into_reversed(self) -> Self {
         Matching {
             left_to_right: self.right_to_left,
             right_to_left: self.left_to_right,
@@ -89,7 +89,7 @@ impl<'tree> Matching<'tree> {
     }
 
     // Compose two matchings together
-    pub fn compose(&self, other_matching: &Matching<'tree>) -> Matching<'tree> {
+    pub fn compose(&self, other_matching: &Self) -> Self {
         let mut left_to_right = FxHashMap::default();
         let mut right_to_left = FxHashMap::default();
         for (source, target) in &self.left_to_right {
@@ -98,7 +98,7 @@ impl<'tree> Matching<'tree> {
                 right_to_left.insert(final_target, *source);
             }
         }
-        Matching {
+        Self {
             left_to_right,
             right_to_left,
         }
@@ -106,8 +106,8 @@ impl<'tree> Matching<'tree> {
 
     // Assuming that the matches in this mapping are only between isomorphic nodes,
     // recursively match the descendants of all matched nodes
-    pub fn add_submatches(&self) -> Matching<'tree> {
-        let mut result = Matching::new();
+    pub fn add_submatches(&self) -> Self {
+        let mut result = Self::new();
         for (right_match, left_match) in self.iter_right_to_left() {
             for (left_descendant, right_descendant) in left_match.dfs().zip(right_match.dfs()) {
                 result.add(left_descendant, right_descendant);

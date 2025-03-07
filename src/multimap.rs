@@ -17,8 +17,8 @@ where
     V: Eq + PartialEq + Hash,
 {
     /// Creates an empty multimap
-    pub fn new() -> MultiMap<K, V> {
-        MultiMap {
+    pub fn new() -> Self {
+        Self {
             map: FxHashMap::default(),
             empty: FxHashSet::default(),
         }

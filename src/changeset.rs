@@ -20,7 +20,7 @@ pub struct ChangeSet<'a> {
 
 impl<'a> ChangeSet<'a> {
     /// Constructs an empty instance
-    pub fn new() -> ChangeSet<'a> {
+    pub fn new() -> Self {
         Self::default()
     }
 
