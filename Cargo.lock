@@ -525,6 +525,7 @@ dependencies = [
  "tree-sitter-dart",
  "tree-sitter-devicetree",
  "tree-sitter-go",
+ "tree-sitter-hcl",
  "tree-sitter-html",
  "tree-sitter-java",
  "tree-sitter-javascript",
@@ -986,6 +987,15 @@ checksum = "b13d476345220dbe600147dd444165c5791bf85ef53e28acbedd46112ee18431"
 dependencies = [
  "cc",
  "tree-sitter-language",
+]
+
+[[package]]
+name = "tree-sitter-hcl"
+version = "0.0.1"
+source = "git+https://github.com/maunzCache/tree-sitter-hcl.git?branch=feat%2Fsupport-tree-sitter-0.24#d4bf1412467d0704794b8db392ea1e38117dbf23"
+dependencies = [
+ "cc",
+ "tree-sitter",
 ]
 
 [[package]]
