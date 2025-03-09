@@ -346,7 +346,7 @@ impl<'a> AstNode<'a> {
     /// - we could ignore differences in separators (to ignore
     ///   optional separators at the end of a list).
     /// - we could accept duplicate elements (for instance,
-    ///   duplicate Java imports one one side but not on the other)
+    ///   duplicate Java imports on one side but not on the other)
     pub fn commutatively_isomorphic_to(
         &'a self,
         t2: &'a AstNode<'a>,
