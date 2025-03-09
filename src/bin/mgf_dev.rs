@@ -188,7 +188,7 @@ mod tests {
     }
 
     #[test]
-    fn test_disabled_commutative_isomorphism() {
+    fn disabled_commutative_isomorphism() {
         assert_eq!(
             real_main(&CliArgs::parse_from([
                 "mgf_dev",
@@ -201,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn test_enabled_commutative_isomorphism() {
+    fn enabled_commutative_isomorphism() {
         assert_eq!(
             real_main(&CliArgs::parse_from([
                 "mgf_dev",
