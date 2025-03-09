@@ -353,8 +353,10 @@ impl<'a> AstNode<'a> {
         lang_profile: &LangProfile,
     ) -> bool {
         if self.grammar_name != t2.grammar_name {
-            false
-        } else if self.hash == t2.hash && self.children.is_empty() {
+            return false;
+        }
+
+        if self.hash == t2.hash && self.children.is_empty() {
             // two isomorphic leaves
             t2.children.is_empty() && self.source == t2.source
         } else if !self.children.is_empty()
