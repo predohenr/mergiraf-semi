@@ -14,7 +14,10 @@ use rustc_hash::FxHashMap;
 use tree_sitter::{Tree, TreeCursor};
 use typed_arena::Arena;
 
-use crate::lang_profile::{CommutativeParent, LangProfile};
+use crate::{
+    lang_profile::{CommutativeParent, LangProfile},
+    multimap::MultiMap,
+};
 
 /// A syntax tree.
 ///
@@ -321,7 +324,8 @@ impl<'a> AstNode<'a> {
             .expect("There must be at least one ancestor of any node: the node itself")
     }
 
-    /// Whether this node is isomorphic to another
+    /// Whether this node is isomorphic to another.
+    /// This doesn't take commutativity into account.
     pub fn isomorphic_to(&'a self, t2: &'a AstNode<'a>) -> bool {
         let mut zipped = self.dfs().zip(t2.dfs());
         self.hash == t2.hash
@@ -330,6 +334,68 @@ impl<'a> AstNode<'a> {
                     && n1.children.len() == n2.children.len()
                     && (!n1.children.is_empty() || n1.source == n2.source)
             })
+    }
+
+    /// Checks whether a node is isomorphic to another,
+    /// taking commutativity into account. This can be
+    /// very expensive in the worst cases, so this is not
+    /// meant to be used as part of the merging process, but
+    /// only as a helper to evaluate merging during development.
+    ///
+    /// Possible improvements:
+    /// - we could ignore differences in separators (to ignore
+    ///   optional separators at the end of a list).
+    /// - we could accept duplicate elements (for instance,
+    ///   duplicate Java imports one one side but not on the other)
+    pub fn commutatively_isomorphic_to(
+        &'a self,
+        t2: &'a AstNode<'a>,
+        lang_profile: &LangProfile,
+    ) -> bool {
+        if self.grammar_name != t2.grammar_name {
+            false
+        } else if self.hash == t2.hash && self.children.is_empty() {
+            // two isomorphic leaves
+            t2.children.is_empty() && self.source == t2.source
+        } else if !self.children.is_empty()
+            && self
+                .children
+                .iter()
+                .zip(t2.children.iter())
+                .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
+        {
+            // regular nodes whose children are one-to-one isomorphic, in the same order
+            true
+        } else {
+            // commutative nodes whose children are one-to-one isomorphic, but not in the same order
+            lang_profile
+                .get_commutative_parent(self.grammar_name)
+                .is_some()
+                && {
+                    // Sort children by type
+                    let children_by_type: MultiMap<&str, &'a AstNode<'a>> = self
+                        .children
+                        .iter()
+                        .map(|child| (child.grammar_name, *child))
+                        .collect();
+                    let other_children_by_type: MultiMap<&str, &'a AstNode<'a>> = t2
+                        .children
+                        .iter()
+                        .map(|child| (child.grammar_name, *child))
+                        .collect();
+                    // for each type of children, match them all together.
+                    children_by_type.len() == other_children_by_type.len()
+                        && (children_by_type.iter().all(|(grammar_type, children)| {
+                            let other_children = other_children_by_type.get(grammar_type);
+                            children.len() == other_children.len()
+                                && children.iter().all(|child| {
+                                    other_children.iter().any(|other_child| {
+                                        child.commutatively_isomorphic_to(other_child, lang_profile)
+                                    })
+                                })
+                        }))
+                }
+        }
     }
 
     /// Get the parent of this node, if any
@@ -1206,5 +1272,25 @@ mod tests {
 ";
 
         assert_eq!(ascii_tree, expected);
+    }
+
+    #[test]
+    fn commutative_isomorphism() {
+        let ctx = ctx();
+        let lang_profile = LangProfile::detect_from_filename("test.json")
+            .expect("could not load JSON language profile");
+        let obj_1 = ctx.parse_json("{\"foo\": 3, \"bar\": 4}").root();
+        let obj_2 = ctx.parse_json("{\"bar\": 4, \"foo\": 3}").root();
+        let obj_3 = ctx.parse_json("{\"bar\": 3, \"foo\": 4}").root();
+        let obj_4 = ctx.parse_json("{\n  \"foo\": 3,\n  \"bar\": 4\n}").root();
+        let array_1 = ctx.parse_json("[ 1, 2 ]").root();
+        let array_2 = ctx.parse_json("[ 2, 1 ]").root();
+
+        assert!(obj_1.commutatively_isomorphic_to(obj_2, lang_profile));
+        assert!(!obj_1.commutatively_isomorphic_to(obj_3, lang_profile));
+        assert!(!obj_2.commutatively_isomorphic_to(obj_3, lang_profile));
+        assert!(obj_1.commutatively_isomorphic_to(obj_4, lang_profile));
+        assert!(!obj_1.commutatively_isomorphic_to(array_1, lang_profile));
+        assert!(!array_1.commutatively_isomorphic_to(array_2, lang_profile));
     }
 }
