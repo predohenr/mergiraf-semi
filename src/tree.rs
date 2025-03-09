@@ -360,9 +360,7 @@ impl<'a> AstNode<'a> {
             // two isomorphic leaves
             t2.children.is_empty() && self.source == t2.source
         } else if !self.children.is_empty()
-            && self
-                .children
-                .iter()
+            && (self.children.iter())
                 .zip(t2.children.iter())
                 .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
         {
