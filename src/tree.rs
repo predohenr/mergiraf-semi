@@ -360,6 +360,7 @@ impl<'a> AstNode<'a> {
             // two isomorphic leaves
             t2.children.is_empty() && self.source == t2.source
         } else if !self.children.is_empty()
+            && self.children.len() == t2.children.len()
             && (self.children.iter())
                 .zip(t2.children.iter())
                 .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
@@ -1292,5 +1293,13 @@ mod tests {
         assert!(obj_1.commutatively_isomorphic_to(obj_4, lang_profile));
         assert!(!obj_1.commutatively_isomorphic_to(array_1, lang_profile));
         assert!(!array_1.commutatively_isomorphic_to(array_2, lang_profile));
+
+        let lang_profile_java = LangProfile::detect_from_filename("test.java")
+            .expect("could not load Java language profile");
+
+        let method1 = ctx.parse_java("public final void main();").root();
+        let method2 = ctx.parse_java("public final static void main();").root();
+
+        assert!(!method1.commutatively_isomorphic_to(method2, lang_profile_java));
     }
 }
