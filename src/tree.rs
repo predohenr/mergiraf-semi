@@ -4,6 +4,7 @@ use std::{
     cmp::{max, min},
     fmt::Display,
     hash::{Hash, Hasher},
+    iter::zip,
     ops::Range,
 };
 
@@ -364,8 +365,7 @@ impl<'a> AstNode<'a> {
         let parents_with_pairwise_isomorphic_children = || {
             !self.children.is_empty()
                 && self.children.len() == other.children.len()
-                && (self.children.iter())
-                    .zip(other.children.iter())
+                && zip(&self.children, &other.children)
                     .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
         };
 
