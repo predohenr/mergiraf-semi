@@ -356,47 +356,66 @@ impl<'a> AstNode<'a> {
             return false;
         }
 
-        if self.hash == t2.hash && self.children.is_empty() {
-            // two isomorphic leaves
-            t2.children.is_empty() && self.source == t2.source
-        } else if !self.children.is_empty()
-            && self.children.len() == t2.children.len()
-            && (self.children.iter())
-                .zip(t2.children.iter())
-                .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
-        {
-            // regular nodes whose children are one-to-one isomorphic, in the same order
-            true
-        } else {
-            // commutative nodes whose children are one-to-one isomorphic, but not in the same order
-            lang_profile
-                .get_commutative_parent(self.grammar_name)
-                .is_some()
-                && {
-                    // Sort children by type
-                    let children_by_type: MultiMap<&str, &'a AstNode<'a>> = self
-                        .children
-                        .iter()
-                        .map(|child| (child.grammar_name, *child))
-                        .collect();
-                    let other_children_by_type: MultiMap<&str, &'a AstNode<'a>> = t2
-                        .children
-                        .iter()
-                        .map(|child| (child.grammar_name, *child))
-                        .collect();
-                    // for each type of children, match them all together.
-                    children_by_type.len() == other_children_by_type.len()
-                        && (children_by_type.iter().all(|(grammar_type, children)| {
-                            let other_children = other_children_by_type.get(grammar_type);
-                            children.len() == other_children.len()
-                                && children.iter().all(|child| {
-                                    other_children.iter().any(|other_child| {
-                                        child.commutatively_isomorphic_to(other_child, lang_profile)
-                                    })
-                                })
-                        }))
-                }
+        // two isomorphic leaves
+        fn isomorphic_leaves(t1: &AstNode, t2: &AstNode) -> bool {
+            (t1.children.is_empty() && t2.children.is_empty())
+                && t1.hash == t2.hash
+                && t1.source == t2.source
         }
+
+        // regular nodes whose children are one-to-one isomorphic, in the same order
+        fn parents_with_pairwise_isomorphic_children<'a>(
+            t1: &'a AstNode<'a>,
+            t2: &'a AstNode<'a>,
+            lang_profile: &LangProfile,
+        ) -> bool {
+            !t1.children.is_empty()
+                && t1.children.len() == t2.children.len()
+                && (t1.children.iter())
+                    .zip(t2.children.iter())
+                    .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
+        }
+
+        // commutative nodes whose children are one-to-one isomorphic, but not in the same order
+        fn commutative_parents_with_unordered_isomorphic_children<'a>(
+            t1: &'a AstNode<'a>,
+            t2: &'a AstNode<'a>,
+            lang_profile: &LangProfile,
+        ) -> bool {
+            if lang_profile
+                .get_commutative_parent(t1.grammar_name)
+                .is_none()
+            {
+                return false;
+            }
+
+            // Sort children by type
+            let children_by_type: MultiMap<&str, &'a AstNode<'a>> = t1
+                .children
+                .iter()
+                .map(|child| (child.grammar_name, *child))
+                .collect();
+            let other_children_by_type: MultiMap<&str, &'a AstNode<'a>> = t2
+                .children
+                .iter()
+                .map(|child| (child.grammar_name, *child))
+                .collect();
+            // for each type of children, match them all together.
+            children_by_type.len() == other_children_by_type.len()
+                && (children_by_type.iter().all(|(grammar_type, children)| {
+                    let other_children = other_children_by_type.get(grammar_type);
+                    children.len() == other_children.len()
+                        && children.iter().all(|child| {
+                            other_children.iter().any(|other_child| {
+                                child.commutatively_isomorphic_to(other_child, lang_profile)
+                            })
+                        })
+                }))
+        }
+
+        isomorphic_leaves(self, t2)
+            || parents_with_pairwise_isomorphic_children(self, t2, lang_profile)
+            || commutative_parents_with_unordered_isomorphic_children(self, t2, lang_profile)
     }
 
     /// Get the parent of this node, if any
