@@ -354,48 +354,40 @@ impl<'a> AstNode<'a> {
         }
 
         // two isomorphic leaves
-        fn isomorphic_leaves(t1: &AstNode, t2: &AstNode) -> bool {
-            (t1.children.is_empty() && t2.children.is_empty())
-                && t1.hash == t2.hash
-                && t1.source == t2.source
-        }
+        let isomorphic_leaves = || {
+            (self.children.is_empty() && t2.children.is_empty())
+                && self.hash == t2.hash
+                && self.source == t2.source
+        };
 
         // regular nodes whose children are one-to-one isomorphic, in the same order
-        fn parents_with_pairwise_isomorphic_children<'a>(
-            t1: &'a AstNode<'a>,
-            t2: &'a AstNode<'a>,
-            lang_profile: &LangProfile,
-        ) -> bool {
-            !t1.children.is_empty()
-                && t1.children.len() == t2.children.len()
-                && (t1.children.iter())
+        let parents_with_pairwise_isomorphic_children = || {
+            !self.children.is_empty()
+                && self.children.len() == t2.children.len()
+                && (self.children.iter())
                     .zip(t2.children.iter())
                     .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
-        }
+        };
 
         // commutative nodes whose children are one-to-one isomorphic, but not in the same order
-        fn commutative_parents_with_unordered_isomorphic_children<'a>(
-            t1: &'a AstNode<'a>,
-            t2: &'a AstNode<'a>,
-            lang_profile: &LangProfile,
-        ) -> bool {
+        let commutative_parents_with_unordered_isomorphic_children = || {
             if lang_profile
-                .get_commutative_parent(t1.grammar_name)
+                .get_commutative_parent(self.grammar_name)
                 .is_none()
             {
                 return false;
             }
-            t1.children.len() == t2.children.len()
-                && t1.children.iter().all(|child| {
+            self.children.len() == t2.children.len()
+                && self.children.iter().all(|child| {
                     t2.children.iter().any(|other_child| {
                         child.commutatively_isomorphic_to(other_child, lang_profile)
                     })
                 })
-        }
+        };
 
-        isomorphic_leaves(self, t2)
-            || parents_with_pairwise_isomorphic_children(self, t2, lang_profile)
-            || commutative_parents_with_unordered_isomorphic_children(self, t2, lang_profile)
+        isomorphic_leaves()
+            || parents_with_pairwise_isomorphic_children()
+            || commutative_parents_with_unordered_isomorphic_children()
     }
 
     /// Get the parent of this node, if any
