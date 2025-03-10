@@ -14,10 +14,7 @@ use rustc_hash::FxHashMap;
 use tree_sitter::{Tree, TreeCursor};
 use typed_arena::Arena;
 
-use crate::{
-    lang_profile::{CommutativeParent, LangProfile},
-    multimap::MultiMap,
-};
+use crate::lang_profile::{CommutativeParent, LangProfile};
 
 /// A syntax tree.
 ///
@@ -388,29 +385,12 @@ impl<'a> AstNode<'a> {
             {
                 return false;
             }
-
-            // Sort children by type
-            let children_by_type: MultiMap<&str, &'a AstNode<'a>> = t1
-                .children
-                .iter()
-                .map(|child| (child.grammar_name, *child))
-                .collect();
-            let other_children_by_type: MultiMap<&str, &'a AstNode<'a>> = t2
-                .children
-                .iter()
-                .map(|child| (child.grammar_name, *child))
-                .collect();
-            // for each type of children, match them all together.
-            children_by_type.len() == other_children_by_type.len()
-                && (children_by_type.iter().all(|(grammar_type, children)| {
-                    let other_children = other_children_by_type.get(grammar_type);
-                    children.len() == other_children.len()
-                        && children.iter().all(|child| {
-                            other_children.iter().any(|other_child| {
-                                child.commutatively_isomorphic_to(other_child, lang_profile)
-                            })
-                        })
-                }))
+            t1.children.len() == t2.children.len()
+                && t1.children.iter().all(|child| {
+                    t2.children.iter().any(|other_child| {
+                        child.commutatively_isomorphic_to(other_child, lang_profile)
+                    })
+                })
         }
 
         isomorphic_leaves(self, t2)
