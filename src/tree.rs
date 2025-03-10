@@ -346,26 +346,26 @@ impl<'a> AstNode<'a> {
     ///   duplicate Java imports on one side but not on the other)
     pub fn commutatively_isomorphic_to(
         &'a self,
-        t2: &'a AstNode<'a>,
+        other: &'a AstNode<'a>,
         lang_profile: &LangProfile,
     ) -> bool {
-        if self.grammar_name != t2.grammar_name {
+        if self.grammar_name != other.grammar_name {
             return false;
         }
 
         // two isomorphic leaves
         let isomorphic_leaves = || {
-            (self.children.is_empty() && t2.children.is_empty())
-                && self.hash == t2.hash
-                && self.source == t2.source
+            (self.children.is_empty() && other.children.is_empty())
+                && self.hash == other.hash
+                && self.source == other.source
         };
 
         // regular nodes whose children are one-to-one isomorphic, in the same order
         let parents_with_pairwise_isomorphic_children = || {
             !self.children.is_empty()
-                && self.children.len() == t2.children.len()
+                && self.children.len() == other.children.len()
                 && (self.children.iter())
-                    .zip(t2.children.iter())
+                    .zip(other.children.iter())
                     .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
         };
 
@@ -377,9 +377,9 @@ impl<'a> AstNode<'a> {
             {
                 return false;
             }
-            self.children.len() == t2.children.len()
+            self.children.len() == other.children.len()
                 && self.children.iter().all(|child| {
-                    t2.children.iter().any(|other_child| {
+                    other.children.iter().any(|other_child| {
                         child.commutatively_isomorphic_to(other_child, lang_profile)
                     })
                 })
