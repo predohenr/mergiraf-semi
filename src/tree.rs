@@ -1300,6 +1300,9 @@ mod tests {
         let method1 = ctx.parse_java("public final void main();").root();
         let method2 = ctx.parse_java("public final static void main();").root();
 
+        // `public`, `final` and `static` are all commutative children of (function) `modifiers`,
+        // but the second tree doesn't have `static`. A naive `zip` would only check the first two
+        // children, see that they're equal, and incorrectly decide that the parents are equal as well
         assert!(!method1.commutatively_isomorphic_to(method2, lang_profile_java));
     }
 }
