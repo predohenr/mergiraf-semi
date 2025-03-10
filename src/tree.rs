@@ -1276,8 +1276,7 @@ mod tests {
     #[test]
     fn commutative_isomorphism() {
         let ctx = ctx();
-        let lang_profile = LangProfile::detect_from_filename("test.json")
-            .expect("could not load JSON language profile");
+        let lang_profile = LangProfile::json();
         let obj_1 = ctx.parse_json("{\"foo\": 3, \"bar\": 4}").root();
         let obj_2 = ctx.parse_json("{\"bar\": 4, \"foo\": 3}").root();
         let obj_3 = ctx.parse_json("{\"bar\": 3, \"foo\": 4}").root();
@@ -1292,8 +1291,7 @@ mod tests {
         assert!(!obj_1.commutatively_isomorphic_to(array_1, lang_profile));
         assert!(!array_1.commutatively_isomorphic_to(array_2, lang_profile));
 
-        let lang_profile_java = LangProfile::detect_from_filename("test.java")
-            .expect("could not load Java language profile");
+        let lang_profile_java = LangProfile::java();
 
         let method1 = ctx.parse_java("public final void main();").root();
         let method2 = ctx.parse_java("public final static void main();").root();
