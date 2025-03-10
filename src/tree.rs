@@ -322,9 +322,9 @@ impl<'a> AstNode<'a> {
     }
 
     /// Whether this node is isomorphic to another
-    pub fn isomorphic_to(&'a self, t2: &'a Self) -> bool {
-        let mut zipped = self.dfs().zip(t2.dfs());
-        self.hash == t2.hash
+    pub fn isomorphic_to(&'a self, other: &'a Self) -> bool {
+        let mut zipped = self.dfs().zip(other.dfs());
+        self.hash == other.hash
             && zipped.all(|(n1, n2)| {
                 n1.grammar_name == n2.grammar_name
                     && n1.children.len() == n2.children.len()

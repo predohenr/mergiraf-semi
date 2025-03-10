@@ -89,11 +89,11 @@ impl<'tree> Matching<'tree> {
     }
 
     // Compose two matchings together
-    pub fn compose(&self, other_matching: &Self) -> Self {
+    pub fn compose(&self, other: &Self) -> Self {
         let mut left_to_right = FxHashMap::default();
         let mut right_to_left = FxHashMap::default();
         for (source, target) in &self.left_to_right {
-            if let Some(final_target) = other_matching.get_from_left(target) {
+            if let Some(final_target) = other.get_from_left(target) {
                 left_to_right.insert(*source, final_target);
                 right_to_left.insert(final_target, *source);
             }
