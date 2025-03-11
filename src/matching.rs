@@ -131,7 +131,7 @@ impl<'tree> Matching<'tree> {
         let right_descendants: FxHashSet<&AstNode<'_>> = right.dfs().collect();
         let mapped = left
             .dfs()
-            .flat_map(|left_descendant| self.get_from_left(left_descendant).into_iter())
+            .flat_map(|left_descendant| self.get_from_left(left_descendant))
             .filter(|mapped| right_descendants.contains(*mapped))
             .map(AstNode::own_weight)
             .sum::<usize>();
