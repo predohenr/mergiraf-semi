@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Range};
+use std::{collections::HashMap, ops::Range, sync::OnceLock};
 
 use regex::Regex;
 
@@ -11,6 +11,10 @@ use crate::{
 
 pub(crate) const PARSED_MERGE_DIFF2_DETECTED: &str =
     "Mergiraf cannot solve conflicts displayed in the diff2 style";
+
+static RE_DIFF2_CONFLICT: OnceLock<Regex> = OnceLock::new();
+static RE_DIFF3_CONFLICT: OnceLock<Regex> = OnceLock::new();
+static RE_DIFF3_CONFLICT_NO_NEWLINE: OnceLock<Regex> = OnceLock::new();
 
 /// A file which potentially contains merge conflicts, parsed as such.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -84,19 +88,22 @@ impl<'a> ParsedMerge<'a> {
         let middle_marker = "=".repeat(marker_size);
         let right_marker = ">".repeat(marker_size);
 
-        let diff2conflict = Regex::new(&format!(
-            r"(?mx)
+        let diff2conflict = RE_DIFF2_CONFLICT.get_or_init(|| {
+            Regex::new(&format!(
+                r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
             ((?s:.)*? \r?\n)??
             {middle_marker}            \r?\n
             ((?s:.)*? \r?\n)??
             {right_marker} (?:\ (.*))? \r?\n
             "
-        ))
-        .unwrap();
+            ))
+            .unwrap()
+        });
 
-        let diff3conflict = Regex::new(&format!(
-            r"(?mx)
+        let diff3conflict = RE_DIFF3_CONFLICT.get_or_init(|| {
+            Regex::new(&format!(
+                r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
             ((?s:.)*? \r?\n)??
             {base_marker}  (?:\ (.*))? \r?\n
@@ -105,11 +112,13 @@ impl<'a> ParsedMerge<'a> {
             ((?s:.)*? \r?\n)??
             {right_marker} (?:\ (.*))? \r?\n
             "
-        ))
-        .unwrap();
+            ))
+            .unwrap()
+        });
 
-        let diff3conflict_no_newline = Regex::new(&format!(
-            r"(?mx)
+        let diff3conflict_no_newline = RE_DIFF3_CONFLICT_NO_NEWLINE.get_or_init(|| {
+            Regex::new(&format!(
+                r"(?mx)
             ^{left_marker} (?:\ (.*))? \r?\n
             (?: ( (?s:.)*? )           \r?\n)?? # the newlines before the markers are
             {base_marker}  (?:\ (.*))? \r?\n    # no longer part of conflicts sides themselves
@@ -118,8 +127,9 @@ impl<'a> ParsedMerge<'a> {
             (?: ( (?s:.)*? )           \r?\n)??
             {right_marker} (?:\ (.*))?     $    # no newline at the end
             "
-        ))
-        .unwrap();
+            ))
+            .unwrap()
+        });
 
         let mut remaining_source = source;
         while !remaining_source.is_empty() {
@@ -723,9 +733,8 @@ my_struct_t instance = {
         assert_eq!(parse_err, PARSED_MERGE_DIFF2_DETECTED);
     }
 
-    #[test]
-    fn parse_non_standard_conflict_marker_size() {
-        let parsed_expected = ParsedMerge::new(vec![
+    fn parse_non_standard_conflict_marker_size_expected() -> ParsedMerge<'static> {
+        ParsedMerge::new(vec![
             MergedChunk::Resolved {
                 offset: 0,
                 contents: "resolved line\n",
@@ -738,7 +747,12 @@ my_struct_t instance = {
                 base_name: Some("BASE"),
                 right_name: Some("RIGHT"),
             },
-        ]);
+        ])
+    }
+
+    #[test]
+    fn parse_small_conflict_marker_size() {
+        let parsed_expected = parse_non_standard_conflict_marker_size_expected();
 
         let conflict_with_4 = "\
 resolved line
@@ -759,6 +773,11 @@ right line
         )
         .expect("could not parse a conflict with `conflict_marker_size=4`");
         assert_eq!(parsed_with_4, parsed_expected);
+    }
+
+    #[test]
+    fn parse_large_conflict_marker_size() {
+        let parsed_expected = parse_non_standard_conflict_marker_size_expected();
 
         let conflict_with_9 = "\
 resolved line
