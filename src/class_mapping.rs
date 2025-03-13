@@ -29,7 +29,7 @@ impl Eq for Leader<'_> {}
 
 impl<'a> RevNode<'a> {
     pub fn new(rev: Revision, node: &'a AstNode<'a>) -> Self {
-        RevNode { rev, node }
+        Self { rev, node }
     }
 
     /// Whether the subtree rooted at this node contains another node (up to class mapping).
