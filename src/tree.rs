@@ -347,7 +347,7 @@ impl<'a> AstNode<'a> {
     ///   duplicate Java imports on one side but not on the other)
     pub fn commutatively_isomorphic_to(
         &'a self,
-        other: &'a AstNode<'a>,
+        other: &'a Self,
         lang_profile: &LangProfile,
     ) -> bool {
         if self.grammar_name != other.grammar_name {
