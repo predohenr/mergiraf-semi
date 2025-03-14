@@ -149,7 +149,7 @@ fn solve_command(#[case] conflict_style: &str) {
     assert_eq!(merge_result.contents, expected_result);
 }
 
-#[rstest]
+#[test]
 fn timeout_support() {
     let test_dir = Path::new("examples/java/working/move_and_modify_conflict");
     let ext = "java";
@@ -241,7 +241,7 @@ fn integration(#[files("examples/*/working/*")] path: PathBuf) {
 }
 
 // use this test to debug a specific test case by changing the path in it.
-#[rstest]
+#[test]
 fn debug_test() {
     run_test_from_dir(Path::new("examples/go/working/remove_and_add_imports"));
 }
