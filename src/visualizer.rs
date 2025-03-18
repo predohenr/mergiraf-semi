@@ -139,10 +139,11 @@ fn add_node<W: Write>(
     attrs.push(("shape", shape));
 
     let is_exact_match = exactly_matched.contains(&node.id);
+    let is_full_match = matched.contains(&node.id);
     if is_exact_match {
         attrs.push(("style", "filled"));
         attrs.push(("fillcolor", COLOR_EXACTLY_MATCHED_NODE));
-    } else if !matched.contains(&node.id) {
+    } else if !is_full_match {
         attrs.push(("style", "filled"));
         attrs.push(("fillcolor", COLOR_NON_FULLY_MATCHED_NODE));
     }
