@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::fs::OpenOptions;
-use std::io::{self, Write};
+use std::io::{self, BufWriter, Write};
 use std::path::Path;
 
 use itertools::Itertools;
@@ -33,11 +33,13 @@ pub fn matching_to_graph<'a>(
     right: &Ast<'a>,
     mapping: &DetailedMatching<'a>,
 ) -> io::Result<()> {
-    let mut writer = OpenOptions::new()
+    let file = OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
         .open(path)?;
+
+    let mut writer = BufWriter::new(file);
 
     writeln!(writer, "graph matching {{")?;
     let left_prefix = "l";
@@ -75,6 +77,9 @@ pub fn matching_to_graph<'a>(
         }
     }
     writeln!(writer, "}}")?;
+
+    writer.flush()?;
+
     Ok(())
 }
 
