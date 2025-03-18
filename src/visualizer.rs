@@ -135,11 +135,7 @@ fn add_node<W: Write>(
     );
     attrs.push(("label", &label_with_range));
 
-    let shape = if node.children.is_empty() {
-        "box"
-    } else {
-        "oval"
-    };
+    let shape = if node.is_leaf() { "box" } else { "oval" };
     attrs.push(("shape", shape));
 
     let is_exact_match = exactly_matched.contains(&node.id);
