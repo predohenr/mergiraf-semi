@@ -132,12 +132,12 @@ fn add_node<W: Write>(
         "{}:{}_{}",
         label, node.byte_range.start, node.byte_range.end
     );
+    attrs.push(("label", &label_with_range));
     let shape = if node.children.is_empty() {
         "box"
     } else {
         "oval"
     };
-    attrs.push(("label", &label_with_range));
     attrs.push(("shape", shape));
     let is_exact_match = exactly_matched.contains(&node.id);
     if is_exact_match {
