@@ -1,8 +1,7 @@
-use std::fs::OpenOptions;
-use std::io;
-use std::io::Write;
+use std::collections::HashSet;
+use std::fs::{File, OpenOptions};
+use std::io::{self, Write};
 use std::path::Path;
-use std::{collections::HashSet, fs::File};
 
 use itertools::Itertools;
 use log::error;
