@@ -122,6 +122,7 @@ fn add_node<W: Write>(
     visited.insert(node.id);
     let nodeid = format!("{}{}", prefix, node.id);
     let mut attrs: Vec<(&str, &str)> = Vec::new();
+
     let label = if node.children.is_empty() {
         node.source
     } else {
@@ -133,12 +134,14 @@ fn add_node<W: Write>(
         label, node.byte_range.start, node.byte_range.end
     );
     attrs.push(("label", &label_with_range));
+
     let shape = if node.children.is_empty() {
         "box"
     } else {
         "oval"
     };
     attrs.push(("shape", shape));
+
     let is_exact_match = exactly_matched.contains(&node.id);
     if is_exact_match {
         attrs.push(("style", "filled"));
@@ -147,17 +150,20 @@ fn add_node<W: Write>(
         attrs.push(("style", "filled"));
         attrs.push(("fillcolor", COLOR_NON_FULLY_MATCHED_NODE));
     }
+
     writeln!(
         writer,
         "    {nodeid}[{}]",
         attrs.iter().map(|(k, v)| format!("{k}=\"{v}\"")).join(",")
     )?;
+
     if !is_exact_match {
         for child in &node.children {
             let child_id = add_node(child, writer, prefix, matched, exactly_matched, visited)?;
             writeln!(writer, "    {nodeid} -- {child_id}")?;
         }
     }
+
     Ok(nodeid)
 }
 
