@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::io::{self, Write};
 use std::path::Path;
 
@@ -79,8 +79,8 @@ pub fn matching_to_graph<'a>(
 }
 
 /// Renders a tree as a dotty graph
-pub fn tree_to_graph(
-    writer: &mut File,
+pub fn tree_to_graph<W: Write>(
+    writer: &mut W,
     node: &Ast<'_>,
     prefix: &str,
     matched: &HashSet<usize>,
@@ -100,9 +100,9 @@ pub fn tree_to_graph(
     Ok(visited)
 }
 
-fn add_node(
+fn add_node<W: Write>(
     node: &AstNode<'_>,
-    writer: &mut File,
+    writer: &mut W,
     prefix: &str,
     matched: &HashSet<usize>,
     exactly_matched: &HashSet<usize>,
