@@ -1,3 +1,5 @@
+#![allow(dead_code, reason = "the functions do get used in integration tests")]
+
 use core::str;
 use std::fs::{self, read_dir};
 use std::path::{Path, PathBuf};
