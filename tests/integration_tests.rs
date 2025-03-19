@@ -26,7 +26,7 @@ fn run_test_from_dir(test_dir: &Path) {
         .expect("Unable to read right file")
         .leak();
     let fname_expected = test_dir.join(format!("Expected.{ext}"));
-    let contents_expected = fs::read_to_string(fname_expected).expect("Unable to read right file");
+    let contents_expected = fs::read_to_string(fname_expected).expect("Unable to read expected file");
 
     let merge_result = line_merge_and_structured_resolution(
         contents_base,
