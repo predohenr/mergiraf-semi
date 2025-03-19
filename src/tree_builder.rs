@@ -1123,10 +1123,12 @@ mod tests {
             class_mapping.map_to_leader(RevNode::new(Revision::Base, tree.root())),
             &class_mapping
         ));
-        assert!(result_tree.contains(
-            class_mapping
-                .map_to_leader(RevNode::new(Revision::Base, tree.root().child(0).unwrap())),
-            &class_mapping
-        ));
+        assert!(
+            result_tree.contains(
+                class_mapping
+                    .map_to_leader(RevNode::new(Revision::Base, tree.root().child(0).unwrap())),
+                &class_mapping
+            )
+        );
     }
 }

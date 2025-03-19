@@ -5,7 +5,7 @@ use itertools::Itertools;
 use crate::{
     class_mapping::{ClassMapping, RevNode},
     multimap::MultiMap,
-    pcs::{PCSNode, Revision, PCS},
+    pcs::{PCS, PCSNode, Revision},
     tree::{Ast, AstNode},
 };
 
