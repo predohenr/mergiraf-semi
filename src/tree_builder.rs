@@ -583,7 +583,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         trimmed_sep: &'c str,
         trimmed_left_delim: &'c str,
         trimmed_right_delim: &'c str,
-    ) -> impl Iterator<Item = Leader<'a>> + use<'a, 'c> {
+    ) -> impl Iterator<Item = Leader<'a>> {
         slice
             .iter()
             .filter(move |n| {
@@ -600,7 +600,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     fn find_separators_with_whitespace<'s>(
         slice: &'s [&'a AstNode<'a>],
         trimmed_sep: &'s str,
-    ) -> impl Iterator<Item = &'a str> + use<'a, 's> {
+    ) -> impl Iterator<Item = &'a str> {
         if trimmed_sep.is_empty() {
             Either::Left(
                 slice
