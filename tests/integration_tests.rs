@@ -10,6 +10,43 @@ use rstest::rstest;
 mod common;
 use common::detect_extension;
 
+fn compare_against_merge(
+    test_dir: &Path,
+    fname_base: &'static Path,
+    contents_base: &'static str,
+    contents_left: &'static str,
+    contents_right: &'static str,
+    contents_expected: &str,
+    compact: bool,
+) {
+    let settings = DisplaySettings {
+        compact: Some(compact),
+        ..Default::default()
+    };
+
+    let merge_result = line_merge_and_structured_resolution(
+        contents_base,
+        contents_left,
+        contents_right,
+        fname_base,
+        settings,
+        true,
+        None,
+        None,
+        Duration::from_millis(0),
+    );
+
+    let expected = contents_expected.trim();
+    let actual = merge_result.contents.trim();
+    if expected != actual {
+        let patch = create_patch(expected, actual);
+        let f = PatchFormatter::new().with_color();
+        print!("{}", f.fmt_patch(&patch));
+        eprintln!("test failed: outputs differ for {}", test_dir.display());
+        panic!();
+    }
+}
+
 fn run_test_from_dir(test_dir: &Path) {
     let ext = detect_extension(test_dir);
     #[expect(unstable_name_collisions)]
@@ -31,27 +68,15 @@ fn run_test_from_dir(test_dir: &Path) {
         let contents_expected =
             fs::read_to_string(fname_expected).expect("Unable to read expected file");
 
-        let merge_result = line_merge_and_structured_resolution(
+        compare_against_merge(
+            test_dir,
+            fname_base,
             contents_base,
             contents_left,
             contents_right,
-            fname_base,
-            DisplaySettings::default(),
-            true,
-            None,
-            None,
-            Duration::from_millis(0),
+            &contents_expected,
+            false,
         );
-
-        let expected = contents_expected.trim();
-        let actual = merge_result.contents.trim();
-        if expected != actual {
-            let patch = create_patch(expected, actual);
-            let f = PatchFormatter::new().with_color();
-            print!("{}", f.fmt_patch(&patch));
-            eprintln!("test failed: outputs differ for {}", test_dir.display());
-            panic!();
-        }
     }
 
     {
@@ -61,31 +86,15 @@ fn run_test_from_dir(test_dir: &Path) {
             return;
         };
 
-        let merge_result_compact = line_merge_and_structured_resolution(
+        compare_against_merge(
+            test_dir,
+            fname_base,
             contents_base,
             contents_left,
             contents_right,
-            fname_base,
-            DisplaySettings::default_compact(),
+            &contents_expected_compact,
             true,
-            None,
-            None,
-            Duration::from_millis(0),
         );
-
-        let actual_compact = merge_result_compact.contents.trim();
-
-        let expected_compact = contents_expected_compact.trim();
-        if expected_compact != actual_compact {
-            let patch = create_patch(expected_compact, actual_compact);
-            let f = PatchFormatter::new().with_color();
-            print!("{}", f.fmt_patch(&patch));
-            eprintln!(
-                "test failed: outputs in compact representation differ for {}",
-                test_dir.display()
-            );
-            panic!();
-        }
     }
 }
 
