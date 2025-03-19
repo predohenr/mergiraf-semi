@@ -173,13 +173,7 @@ In the following example, the left side reformats a function declaration and the
 <div class="rev">Left</div>
 
 ```rust
-fn plan_route(
-    start: &Location,
-    end: &Location,
-    settings: &RouteSettings,
-) -> Route {
-    todo!();
-}
+{{#include ../../examples/rust/working/reformat/Left.rs}}
 ```
 
 </div>
@@ -187,9 +181,7 @@ fn plan_route(
 <div class="rev">Base</div>
 
 ```rust
-fn plan_route(start: &Location, end: &Location, settings: &RouteSettings) -> Route {
-    todo!();
-}
+{{#include ../../examples/rust/working/reformat/Base.rs}}
 ```
 
 </div>
@@ -197,9 +189,7 @@ fn plan_route(start: &Location, end: &Location, settings: &RouteSettings) -> Rou
 <div class="rev">Right</div>
 
 ```rust
-fn plan_route(start: &Location, end: &Location, settings: Option<&RouteSettings>) -> Route {
-    todo!();
-}
+{{#include ../../examples/rust/working/reformat/Right.rs}}
 ```
 
 </div>
@@ -207,13 +197,7 @@ fn plan_route(start: &Location, end: &Location, settings: Option<&RouteSettings>
 
 In this case, Mergiraf produces the following merge:
 ```rust
-fn plan_route(
-    start: &Location,
-    end: &Location,
-    settings: Option<&RouteSettings>,
-) -> Route {
-    todo!();
-}
+{{#include ../../examples/rust/working/reformat/Expected.rs}}
 ```
 
 <div class="warning">
