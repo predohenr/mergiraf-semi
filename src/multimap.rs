@@ -18,10 +18,7 @@ where
 {
     /// Creates an empty multimap
     pub fn new() -> Self {
-        Self {
-            map: FxHashMap::default(),
-            empty: FxHashSet::default(),
-        }
+        Self::default()
     }
 
     /// Gets the set of values associated to the key (which might be empty)
@@ -83,7 +80,10 @@ where
     V: Eq + PartialEq + Hash,
 {
     fn default() -> Self {
-        Self::new()
+        Self {
+            map: FxHashMap::default(),
+            empty: FxHashSet::default(),
+        }
     }
 }
 
