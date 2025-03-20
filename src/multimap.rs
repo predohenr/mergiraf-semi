@@ -35,7 +35,7 @@ where
 
     /// Adds a mapping from a key to a value.
     /// Returns whether the mapping was already added or if it already existed.
-    pub fn add(&mut self, key: K, value: V) -> bool {
+    pub fn insert(&mut self, key: K, value: V) -> bool {
         let set = self.map.entry(key).or_default();
         set.insert(value)
     }
@@ -98,7 +98,7 @@ where
     {
         let mut result = Self::new();
         for (k, v) in iter {
-            result.add(k, v);
+            result.insert(k, v);
         }
         result
     }
@@ -116,11 +116,11 @@ mod tests {
         let mut multimap = MultiMap::new();
 
         assert!(multimap.get(&23).is_empty());
-        assert!(multimap.add(23, 45));
+        assert!(multimap.insert(23, 45));
         assert_eq!(multimap.get(&23).iter().copied().collect_vec(), vec![45]);
-        assert!(!multimap.add(23, 45));
+        assert!(!multimap.insert(23, 45));
         assert_eq!(multimap.get(&23).iter().copied().collect_vec(), vec![45]);
-        assert!(multimap.add(23, 67));
+        assert!(multimap.insert(23, 67));
 
         let expected_slice = [45, 67];
         let expected_set = expected_slice.iter().collect::<HashSet<&i32>>();
