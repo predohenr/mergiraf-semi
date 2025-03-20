@@ -74,11 +74,7 @@ where
     }
 }
 
-impl<K, V> Default for MultiMap<K, V>
-where
-    K: Eq + PartialEq + Hash,
-    V: Eq + PartialEq + Hash,
-{
+impl<K, V> Default for MultiMap<K, V> {
     fn default() -> Self {
         Self {
             map: FxHashMap::default(),
