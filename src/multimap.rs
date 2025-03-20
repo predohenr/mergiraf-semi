@@ -11,30 +11,10 @@ pub struct MultiMap<K, V> {
     empty: FxHashSet<V>, // stays empty over the entire life of the struct (for convenience in the get method)
 }
 
-impl<K, V> MultiMap<K, V>
-where
-    K: Eq + PartialEq + Hash,
-    V: Eq + PartialEq + Hash,
-{
+impl<K, V> MultiMap<K, V> {
     /// Creates an empty multimap
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// Gets the set of values associated to the key (which might be empty)
-    pub fn get<Q>(&self, key: &Q) -> &FxHashSet<V>
-    where
-        K: std::borrow::Borrow<Q>,
-        Q: Eq + Hash,
-    {
-        self.map.get(key).unwrap_or(&self.empty)
-    }
-
-    /// Adds a mapping from a key to a value.
-    /// Returns whether the mapping was already added or if it already existed.
-    pub fn insert(&mut self, key: K, value: V) -> bool {
-        let set = self.map.entry(key).or_default();
-        set.insert(value)
     }
 
     /// The keys that are present
@@ -63,6 +43,28 @@ where
     /// Iterates over all values stored in this container
     pub fn iter_values(&self) -> impl Iterator<Item = &V> {
         self.map.values().flatten()
+    }
+}
+
+impl<K, V> MultiMap<K, V>
+where
+    K: Eq + PartialEq + Hash,
+    V: Eq + PartialEq + Hash,
+{
+    /// Gets the set of values associated to the key (which might be empty)
+    pub fn get<Q>(&self, key: &Q) -> &FxHashSet<V>
+    where
+        K: std::borrow::Borrow<Q>,
+        Q: Eq + Hash,
+    {
+        self.map.get(key).unwrap_or(&self.empty)
+    }
+
+    /// Adds a mapping from a key to a value.
+    /// Returns whether the mapping was already added or if it already existed.
+    pub fn insert(&mut self, key: K, value: V) -> bool {
+        let set = self.map.entry(key).or_default();
+        set.insert(value)
     }
 
     pub fn contains_key<Q>(&self, k: &Q) -> bool
