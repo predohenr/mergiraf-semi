@@ -104,7 +104,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use itertools::Itertools;
     use std::collections::HashSet;
 
     use super::*;
@@ -115,25 +114,17 @@ mod tests {
 
         assert!(multimap.get(&23).is_empty());
         assert!(multimap.insert(23, 45));
-        assert_eq!(multimap.get(&23).iter().copied().collect_vec(), vec![45]);
+        assert_eq!(multimap.get(&23), &FxHashSet::from_iter([45]));
         assert!(!multimap.insert(23, 45));
-        assert_eq!(multimap.get(&23).iter().copied().collect_vec(), vec![45]);
+        assert_eq!(multimap.get(&23), &FxHashSet::from_iter([45]));
         assert!(multimap.insert(23, 67));
-
-        let expected_slice = [45, 67];
-        let expected_set = expected_slice.iter().collect::<HashSet<&i32>>();
-        assert_eq!(
-            multimap.get(&23).iter().collect::<HashSet<&i32>>(),
-            expected_set
-        );
+        assert_eq!(multimap.get(&23), &FxHashSet::from_iter([45, 67]));
 
         let full_set = multimap
             .iter_pairs()
             .map(|(x, y)| (*x, *y))
             .collect::<HashSet<(i32, i32)>>();
-        let expected_full_set = vec![(23, 45), (23, 67)]
-            .into_iter()
-            .collect::<HashSet<(i32, i32)>>();
+        let expected_full_set = HashSet::from([(23, 45), (23, 67)]);
         assert_eq!(full_set, expected_full_set);
     }
 }
