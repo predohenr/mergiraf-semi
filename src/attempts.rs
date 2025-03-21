@@ -8,7 +8,6 @@ use std::{
 };
 
 use etcetera::{AppStrategy, AppStrategyArgs, choose_app_strategy};
-use itertools::Itertools;
 use log::warn;
 use rand::distr::{Alphanumeric, SampleString};
 
@@ -199,15 +198,18 @@ impl AttemptsCache {
     /// Removes older attempts so that the cache doesn't grow too much
     fn prune(&self) -> Result<(), String> {
         let dir_listing = fs::read_dir(&self.base_dir).map_err(|err| err.to_string())?;
-        let subdirs: Vec<_> = dir_listing
-            .flatten()
-            .filter_map(|f| {
-                let metadata = f.metadata().ok()?;
-                let mtime = metadata.modified().ok()?;
-                Some((f, mtime))
-            })
-            .sorted_by(|(_, mtime_a), (_, mtime_b)| Ord::cmp(&mtime_a, &mtime_b))
-            .collect();
+        let subdirs = {
+            let mut subdirs: Vec<_> = dir_listing
+                .flatten()
+                .filter_map(|f| {
+                    let metadata = f.metadata().ok()?;
+                    let mtime = metadata.modified().ok()?;
+                    Some((f, mtime))
+                })
+                .collect();
+            subdirs.sort_by(|(_, mtime_a), (_, mtime_b)| Ord::cmp(&mtime_a, &mtime_b));
+            subdirs
+        };
         if subdirs.len() > self.max_size {
             for (f, _) in &subdirs[self.max_size..] {
                 if let Err(err) = fs::remove_dir_all(f.path()) {
