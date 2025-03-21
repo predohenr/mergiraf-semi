@@ -12,7 +12,7 @@ use crate::{parsed_merge::ParsedMerge, settings::DisplaySettings};
 /// don't necessarily need to match line boundaries, and the precise
 /// layout of the resulting text is not known yet as it depends on
 /// the output settings.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct MergedText<'a> {
     sections: Vec<MergeSection<'a>>,
 }
@@ -33,9 +33,7 @@ enum MergeSection<'a> {
 impl<'a> MergedText<'a> {
     /// Creates an empty merged text
     pub(crate) fn new() -> Self {
-        MergedText {
-            sections: Vec::new(),
-        }
+        Self::default()
     }
 
     /// Appends merged text at the end
