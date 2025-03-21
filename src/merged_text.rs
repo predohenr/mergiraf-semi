@@ -175,7 +175,7 @@ impl<'a> MergedText<'a> {
                 MergeSection::Merged(contents) => {
                     if gathering_conflict {
                         if let Some(newline_idx) = contents.find('\n') {
-                            let to_append = &contents[..(newline_idx + 1)];
+                            let (to_append, rest) = contents.split_at(newline_idx + 1);
                             left_buffer.push_str(to_append);
                             base_buffer.push_str(to_append);
                             right_buffer.push_str(to_append);
@@ -186,7 +186,7 @@ impl<'a> MergedText<'a> {
                                 settings,
                                 &mut output,
                             );
-                            output.push_str(&contents[(newline_idx + 1)..]);
+                            output.push_str(rest);
                             gathering_conflict = false;
                         } else {
                             left_buffer.push_str(contents);
