@@ -190,6 +190,16 @@ impl<'a> MergedText<'a> {
                             );
                             output.push_str(&contents[(newline_idx + 1)..]);
                             gathering_conflict = false;
+                        } else if contents.trim().is_empty() {
+                            if !base_buffer.trim().is_empty() {
+                                base_buffer.push_str(contents);
+                            }
+                            if !left_buffer.trim().is_empty() {
+                                left_buffer.push_str(contents);
+                            }
+                            if !right_buffer.trim().is_empty() {
+                                right_buffer.push_str(contents);
+                            }
                         } else {
                             base_buffer.push_str(contents);
                             left_buffer.push_str(contents);
