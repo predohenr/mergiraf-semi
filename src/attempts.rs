@@ -207,7 +207,7 @@ impl AttemptsCache {
                     Some((f, mtime))
                 })
                 .collect();
-            subdirs.sort_by(|(_, mtime_a), (_, mtime_b)| Ord::cmp(&mtime_a, &mtime_b));
+            subdirs.sort_by_key(|&(_, mtime)| mtime);
             subdirs
         };
         if subdirs.len() > self.max_size {
