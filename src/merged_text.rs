@@ -191,8 +191,8 @@ impl<'a> MergedText<'a> {
                             output.push_str(&contents[(newline_idx + 1)..]);
                             gathering_conflict = false;
                         } else {
-                            left_buffer.push_str(contents);
                             base_buffer.push_str(contents);
+                            left_buffer.push_str(contents);
                             right_buffer.push_str(contents);
                         }
                     } else {
