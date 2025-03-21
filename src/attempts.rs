@@ -330,8 +330,7 @@ mod tests {
         let remaining_files = fs::read_dir(attempts_dir)
             .expect("could not read the attempts directory")
             .flatten()
-            .collect_vec()
-            .len();
+            .count();
         assert_eq!(remaining_files, 2);
     }
 }
