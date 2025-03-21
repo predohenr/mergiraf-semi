@@ -202,19 +202,11 @@ impl AttemptsCache {
         let subdirs: Vec<_> = dir_listing
             .flatten()
             .filter_map(|f| {
-                if let Ok(metadata) = f.metadata() {
-                    if metadata.is_dir() {
-                        return Some((f, metadata));
-                    }
-                }
-                None
+                let metadata = f.metadata().ok()?;
+                let mtime = metadata.modified().ok()?;
+                Some((f, mtime))
             })
-            .sorted_by(|(_, metadata_a), (_, metadata_b)| {
-                Ord::cmp(
-                    &metadata_b.modified().unwrap(),
-                    &metadata_a.modified().unwrap(),
-                )
-            })
+            .sorted_by(|(_, mtime_a), (_, mtime_b)| Ord::cmp(&mtime_a, &mtime_b))
             .collect();
         if subdirs.len() > self.max_size {
             for (f, _) in &subdirs[self.max_size..] {
