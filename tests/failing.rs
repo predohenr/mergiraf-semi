@@ -20,6 +20,23 @@ enum FailingTestResult {
     FailsIncorrectly,
 }
 
+/// for failing tests, we store two "expected outputs"
+/// - `ExpectedCurrently.{ext}` -- the output we see currently
+/// - `ExpectedIdeally.{ext}` -- the output we hope to the output we'd like the see eventually, when the test no longer fails
+///
+/// later, output can change in 3 ways:
+/// - becomes identical to `expected_ideally`
+///   - great! the test no longer fails, so we can move it to `working` (well, almost -- see below)
+/// - comes closer to `expected_ideally` (e.g. if we had multiple bugs, and fixed one of them)
+///   - good! can update `ExpectedCurrently.{ext}`
+/// - becomes even worse than before
+///   - this could be seen as a regression, and a reason to ditch a PR, for example
+///
+/// The logic is complicated by the fact that, for some tests, we store not only the normal
+/// expected output, but also the one in `--compact` mode. In those tests, getting one of the
+/// outputs correct is not enough -- instead, we need to get both in order to move the test to
+/// `working`. Note that this is no hard-and-fast rule -- we could have theoretically split those tests
+/// in compact and non-compact versions -- but that would mean duplicating `{Base,Left,Right}.{ext}`, which is not ideal
 #[rstest]
 fn integration_failing(#[files("examples/*/failing/*")] test_dir: PathBuf) {
     let ext = detect_extension(&test_dir);
