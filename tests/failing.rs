@@ -71,29 +71,115 @@ fn integration_failing(#[files("examples/*/failing/*")] test_dir: PathBuf) {
         FailingTestResult::FailsIncorrectly
     };
 
-    match result {
-        FailingTestResult::FailsCorrectly => {
-            // test failed in the expected manner
+    // only run the following part if the file exists
+    let fname_expected_compact_currently = test_dir.join(format!("ExpectedCompactCurrently.{ext}"));
+    let Ok(contents_expected_compact_currently) =
+        fs::read_to_string(&fname_expected_compact_currently)
+    else {
+        match result {
+            FailingTestResult::FailsCorrectly => {
+                // test failed in the expected manner
+            }
+            FailingTestResult::NowCorrect => {
+                // if you find yourself seeing this message:
+                // 1. move the test to `working` subdirectory
+                // 2. rename `ExpectedIdeally.<extension>` to `Expected.<extension>`
+                // 3. delete `ExpectedCurrently.<extension>`
+                panic!(
+                    "test for {} failed to fail -- it works now!",
+                    test_dir.display()
+                );
+            }
+            FailingTestResult::FailsIncorrectly => {
+                let patch = create_patch(expected_currently, actual);
+                let f = PatchFormatter::new().with_color();
+                print!("{}", f.fmt_patch(&patch));
+                eprintln!(
+                    "\
+non-compact test for {} failed, but output differs from what we currently expect
+please examine the new output and update ExpectedCurrently.{ext} if it looks okay",
+                    test_dir.display(),
+                );
+                panic!();
+            }
         }
-        FailingTestResult::NowCorrect => {
-            // if you find yourself seeing this message:
-            // 1. move the test to `working` subdirectory
-            // 2. rename `ExpectedIdeally.<extension>` to `Expected.<extension>`
-            // 3. delete `ExpectedCurrently.<extension>`
+        return;
+    };
+    let fname_expected_compact_ideally = test_dir.join(format!("ExpectedCompactIdeally.{ext}"));
+    let contents_expected_compact_ideally = fs::read_to_string(fname_expected_compact_ideally)
+        .expect("could not read expected-compact-ideally file");
+
+    let merge_result = line_merge_and_structured_resolution(
+        contents_base,
+        contents_left,
+        contents_right,
+        fname_base,
+        DisplaySettings::default_compact(),
+        true,
+        None,
+        None,
+        Duration::from_millis(0),
+    );
+
+    let actual_compact = merge_result.contents.trim();
+
+    let expected_compact_currently = contents_expected_compact_currently.trim();
+    let expected_compact_ideally = contents_expected_compact_ideally.trim();
+
+    let result_compact = if expected_compact_currently == expected_compact_ideally {
+        FailingTestResult::NowCorrect
+    } else if actual_compact == expected_compact_currently {
+        FailingTestResult::FailsCorrectly
+    } else if actual_compact == expected_compact_ideally {
+        FailingTestResult::NowCorrect
+    } else {
+        FailingTestResult::FailsIncorrectly
+    };
+
+    match (result, result_compact) {
+        (FailingTestResult::FailsCorrectly, FailingTestResult::FailsCorrectly) => {
+            // both tests failed in the expected manner
+        }
+        (FailingTestResult::FailsCorrectly, FailingTestResult::NowCorrect)
+        | (FailingTestResult::NowCorrect, FailingTestResult::FailsCorrectly) => {
+            // one of the tests is still failing, so the whole test does so as well
+        }
+        (FailingTestResult::NowCorrect, FailingTestResult::NowCorrect) => {
             panic!(
-                "test for {} failed to fail -- it works now!",
-                test_dir.display()
-            );
+                "both compact and non-compact cases are now correct!
+the test can now be moved to under `working` as follows:
+1. rename `ExpectedIdeally.{ext}` to `Expected.{ext}`
+2. rename `ExpectedCompactIdeally.{ext}` to `ExpectedCompact.{ext}`
+3. delete `ExpectedCurrently.{ext}` and `ExpectedCompactCurrently.{ext}`
+"
+            )
         }
-        FailingTestResult::FailsIncorrectly => {
-            let patch = create_patch(expected_currently, actual);
-            let f = PatchFormatter::new().with_color();
-            print!("{}", f.fmt_patch(&patch));
-            eprintln!(
-                "test for {} failed, but output differs from what we currently expect",
-                test_dir.display(),
-            );
-            panic!();
+        (FailingTestResult::FailsIncorrectly, _) | (_, FailingTestResult::FailsIncorrectly) => {
+            // at least one of compact and non-compact failed in a new way
+
+            if let FailingTestResult::FailsIncorrectly = result {
+                let patch = create_patch(expected_currently, actual);
+                let f = PatchFormatter::new().with_color();
+                println!(
+                    "the non-compact test fails, but in a new way
+please examine the new output and update ExpectedCurrently.{ext} if it looks okay:
+{}",
+                    f.fmt_patch(&patch)
+                );
+            }
+
+            if let FailingTestResult::FailsIncorrectly = result_compact {
+                let patch = create_patch(expected_compact_currently, actual_compact);
+                let f = PatchFormatter::new().with_color();
+                println!(
+                    "the compact test fails, but in a new way
+please examine the new output and update ExpectedCompactCurrently.{ext} if it looks okay:
+{}",
+                    f.fmt_patch(&patch)
+                );
+            }
+
+            panic!()
         }
     }
 }
