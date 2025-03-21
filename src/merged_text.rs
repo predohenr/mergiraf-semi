@@ -386,8 +386,7 @@ class Cls {
     private
 >>>>>>> RIGHT
  void method() {}
-}
-";
+}";
         assert_eq!(
             merged_text.render(&DisplaySettings::default_compact()),
             expected_compact
@@ -402,8 +401,7 @@ class Cls {
 =======
     private void method() {}
 >>>>>>> RIGHT
-}
-";
+}";
         assert_eq!(
             merged_text.render(&DisplaySettings::default()),
             expected_full_line
