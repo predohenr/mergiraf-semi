@@ -210,8 +210,8 @@ impl AttemptsCache {
             subdirs.sort_by_key(|&(_, mtime)| mtime);
             subdirs
         };
-        if subdirs.len() > self.max_size {
-            for (f, _) in &subdirs[self.max_size..] {
+        if let Some(old_subdirs) = subdirs.get(self.max_size..) {
+            for (f, _) in old_subdirs {
                 if let Err(err) = fs::remove_dir_all(f.path()) {
                     warn!("Could not delete cached attempt {:?}: {err}", f.file_name());
                 }
