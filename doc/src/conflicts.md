@@ -47,10 +47,7 @@ Another example:
 <div class="rev">Left</div>
 
 ```java
-class Bird {
-    String species;
-    int weight;
-}
+{{#include ../../examples/java/working/class_fields/Left.java}}
 ```
 
 </div>
@@ -58,9 +55,7 @@ class Bird {
 <div class="rev">Base</div>
 
 ```java
-class Bird {
-    String species;
-}
+{{#include ../../examples/java/working/class_fields/Base.java}}
 ```
 
 </div>
@@ -68,10 +63,7 @@ class Bird {
 <div class="rev">Right</div>
 
 ```java
-class Bird {
-    String species;
-    double wingspan;
-}
+{{#include ../../examples/java/working/class_fields/Right.java}}
 ```
 
 </div>
@@ -79,11 +71,7 @@ class Bird {
 
 The left and right sides add different attributes to the same Java class. The order of declaration of those attributes does not matter, so the conflict can be resolved to:
 ```java
-class Bird {
-    String species;
-    int weight;
-    double wingspan;
-}
+{{#include ../../examples/java/working/class_fields/Expected.java}}
 ```
 
 In contrast to this, conflicting additions of instructions in a block, or conflicting additions of arguments to a function declaration are not automatically resolved as above, given that the order in which they are inserted matters.
