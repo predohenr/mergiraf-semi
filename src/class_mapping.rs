@@ -226,8 +226,7 @@ impl<'a> ClassMapping<'a> {
         leader.as_representative().node.field_name.or_else(|| {
             self.internal_representatives(leader)
                 .iter()
-                .filter_map(|(_, node)| node.node.field_name)
-                .next()
+                .find_map(|(_, node)| node.node.field_name)
         })
     }
 }
