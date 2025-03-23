@@ -80,10 +80,7 @@ In contrast to this, conflicting additions of instructions in a block, or confli
 <div class="rev">Left</div>
 
 ```java
-while (true) {
-    mowTheLawn();
-    rechargeBatteries();
-}
+{{#include ../../examples/java/working/statements/Left.java}}
 ```
 
 </div>
@@ -91,9 +88,7 @@ while (true) {
 <div class="rev">Base</div>
 
 ```java
-while (true) {
-    mowTheLawn();
-}
+{{#include ../../examples/java/working/statements/Base.java}}
 ```
 
 </div>
@@ -101,10 +96,7 @@ while (true) {
 <div class="rev">Right</div>
 
 ```java
-while (true) {
-    mowTheLawn();
-    returnToHomeBase();
-}
+{{#include ../../examples/java/working/statements/Right.java}}
 ```
 
 </div>
