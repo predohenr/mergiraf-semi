@@ -191,6 +191,10 @@ impl<'a> MergedText<'a> {
                             output.push_str(&contents[(newline_idx + 1)..]);
                             gathering_conflict = false;
                         } else if contents.trim().is_empty() {
+                            // the content being added is just whitespace (but no newlines,
+                            // checked above), so something that separates an element from the next.
+                            // therefore, we only want to add it a side, if the latter actually
+                            // has an element in it (and not just indentation/nothing at all)
                             if !base_buffer.trim().is_empty() {
                                 base_buffer.push_str(contents);
                             }
