@@ -104,9 +104,9 @@ impl<'a> MergedText<'a> {
                     .into(),
                 };
                 newline_found = newline_found
-                    || left.unwrap_or_default().contains('\n')
-                    || right.unwrap_or_default().contains('\n')
-                    || base.unwrap_or_default().contains('\n');
+                    || left.is_some_and(|s| s.contains('\n'))
+                    || right.is_some_and(|s| s.contains('\n'))
+                    || base.is_some_and(|s| s.contains('\n'));
                 result
             }
         });
