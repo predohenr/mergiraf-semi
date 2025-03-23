@@ -120,6 +120,10 @@ impl<'a> MergedText<'a> {
         reindent_first: bool,
         reindent_last: bool,
     ) -> String {
+        if indentation.is_empty() {
+            return String::from(content);
+        }
+
         let reindented = content
             .split('\n')
             .enumerate()
