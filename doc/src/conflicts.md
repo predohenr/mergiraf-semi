@@ -214,19 +214,7 @@ In this case, the changes on the latter branch are replayed at the new location.
 <div class="rev">Left</div>
 
 ```rust
-impl Lawnmower {
-    fn find_home_station(&self) -> Option<&Station> {
-        self.neighbouring_stations()
-            .iter()
-            .find(|station| self.is_suitable_home(station))
-    }
-
-    fn is_suitable_home(&self, station: &Station) -> bool {
-        station.id == self.home_station_id
-            && !station.occupied
-            && station.color == StationColor::Red
-    }
-}
+{{#include ../../examples/rust/working/move_to_method/Left.rs}}
 ```
 
 </div>
@@ -234,15 +222,7 @@ impl Lawnmower {
 <div class="rev">Base</div>
 
 ```rust
-impl Lawnmower {
-    fn find_home_station(&self) -> Option<&Station> {
-        self.neighbouring_stations().iter().find(|station| {
-            station.id == "home"
-                && !station.occupied
-                && station.color == StationColor::Red
-        })
-    }
-}
+{{#include ../../examples/rust/working/move_to_method/Base.rs}}
 ```
 
 </div>
@@ -250,15 +230,7 @@ impl Lawnmower {
 <div class="rev">Right</div>
 
 ```rust
-impl Lawnmower {
-    fn find_home_station(&self) -> Option<&Station> {
-        self.neighbouring_stations().iter().find(|station| {
-            station.id == "home"
-                && !station.occupied
-                && station.color == StationColor::Blue
-        })
-    }
-}
+{{#include ../../examples/rust/working/move_to_method/Right.rs}}
 ```
 
 </div>
@@ -270,19 +242,7 @@ In such a case, Mergiraf is able to replay the changes of the right branch onto 
 which gives the following result:
 
 ```rust
-impl Lawnmower {
-    fn find_home_station(&self) -> Option<&Station> {
-        self.neighbouring_stations()
-            .iter()
-            .find(|station| self.is_suitable_home(station))
-    }
-
-    fn is_suitable_home(&self, station: &Station) -> bool {
-        station.id == self.home_station_id
-            && !station.occupied
-            && station.color == StationColor::Blue
-    }
-}
+{{#include ../../examples/rust/working/move_to_method/Expected.rs}}
 ```
 
 <div class="warning">
