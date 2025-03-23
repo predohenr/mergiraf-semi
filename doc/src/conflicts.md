@@ -241,13 +241,7 @@ There is however one notable exception. Consider the following situation:
 <div class="rev">Left</div>
 
 ```json
-{
-    "new_letter": "left value",
-    "alpha": "α",
-    "beta": "β",
-    "gamma": "γ",
-    "delta": "δ"
-}
+{{#include ../../examples/json/working/for_docs/Left.json}}
 ```
 
 </div>
@@ -255,12 +249,7 @@ There is however one notable exception. Consider the following situation:
 <div class="rev">Base</div>
 
 ```json
-{
-    "alpha": "α",
-    "beta": "β",
-    "gamma": "γ",
-    "delta": "δ"
-}
+{{#include ../../examples/json/working/for_docs/Base.json}}
 ```
 
 </div>
@@ -268,13 +257,7 @@ There is however one notable exception. Consider the following situation:
 <div class="rev">Right</div>
 
 ```json
-{
-    "alpha": "α",
-    "beta": "β",
-    "gamma": "γ",
-    "delta": "δ",
-    "new_letter": "right value",
-}
+{{#include ../../examples/json/working/for_docs/Right.json}}
 ```
 
 </div>
@@ -296,18 +279,7 @@ Git's line-based merging algorithm happily merges those revisions into:
 This is a problem, as the `"new_letter"` key appears twice. In such a situation, Mergiraf outputs a conflict:
 
 ```json
-{
-<<<<<<< Left
-    "new_letter": "left value",
-||||||| Base
-=======
-    "new_letter": "right value",
->>>>>>> Right
-    "alpha": "α",
-    "beta": "β",
-    "gamma": "γ",
-    "delta": "δ"
-}
+{{#include ../../examples/json/working/for_docs/Expected.json}}
 ```
 
 This works by defining so-called "signatures" for certain children of commutative parents. A signature defines how to build a key for a syntactic element, child of a commutative parent.
