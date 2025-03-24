@@ -373,7 +373,8 @@ mod tests {
             sections: vec![
                 merged("class Cls {\n    "),
                 conflict("", "public", "private"),
-                merged(" void method() {}\n}"),
+                merged(" "),
+                merged("void method() {}\n}"),
             ],
         };
 
