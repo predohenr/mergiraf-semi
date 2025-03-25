@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{ArgAction, Args, Parser, Subcommand};
 use log::warn;
 use mergiraf::{
     DISABLING_ENV_VAR,
@@ -38,6 +38,21 @@ struct CliArgs {
     command: CliCommand,
 }
 
+/// `mergiraf merge` and `mergiraf solve` share a lot of flags which other subcommands don't.
+/// to avoid duplication between [`CliCommand::Merge`] and [`CliCommand::Solve`], we define all
+/// those flags here, and `flatten` them in the above subcommands
+#[deny(missing_docs)]
+#[derive(Debug, Args)]
+struct MergeOrSolveArgs {
+    /// Display compact conflicts, breaking down lines
+    #[arg(short, long, default_missing_value = "true", num_args = 0..=1, require_equals = true)]
+    compact: Option<bool>,
+    /// Length of conflict markers
+    #[arg(short = 'l', long)]
+    // the choice of 'l' is inherited from Git's merge driver interface
+    conflict_marker_size: Option<usize>,
+}
+
 #[derive(Subcommand, Debug)]
 enum CliCommand {
     /// Do a three-way merge
@@ -52,13 +67,8 @@ enum CliCommand {
         /// without doing a full structured merge from the ground up.
         #[arg(long)]
         fast: bool,
-        /// Display compact conflicts, breaking down lines
-        #[arg(short, long, default_missing_value = "true", num_args = 0..=1, require_equals = true)]
-        compact: Option<bool>,
-        /// Length of conflict markers
-        #[arg(short = 'l', long)]
-        // the choice of 'l' is inherited from Git's merge driver interface
-        conflict_marker_size: Option<usize>,
+        #[command(flatten)]
+        merge_or_solve: MergeOrSolveArgs,
         /// Behave as a git merge driver: overwrite the left revision
         #[arg(short, long)]
         git: bool,
@@ -89,13 +99,8 @@ enum CliCommand {
     Solve {
         /// Path to the file containing merge conflicts
         conflicts: PathBuf,
-        /// Display compact conflicts, breaking down lines
-        #[arg(short, long, default_missing_value = "true", num_args = 0..=1, require_equals = true)]
-        compact: Option<bool>,
-        /// Length of conflict markers
-        #[arg(short = 'l', long)]
-        // the choice of 'l' is inherited from Git's merge driver interface
-        conflict_marker_size: Option<usize>,
+        #[command(flatten)]
+        merge_or_solve: MergeOrSolveArgs,
         /// Keep file untouched and show the results of resolution on standard output instead
         #[arg(short, long)]
         keep: bool,
@@ -159,8 +164,11 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             base_name,
             left_name,
             right_name,
-            compact,
-            conflict_marker_size,
+            merge_or_solve:
+                MergeOrSolveArgs {
+                    compact,
+                    conflict_marker_size,
+                },
             timeout,
         } => {
             let old_git_detected = base_name.as_deref().is_some_and(|n| n == "%S");
@@ -266,8 +274,11 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
         }
         CliCommand::Solve {
             conflicts: fname_conflicts,
-            compact,
-            conflict_marker_size,
+            merge_or_solve:
+                MergeOrSolveArgs {
+                    compact,
+                    conflict_marker_size,
+                },
             keep,
             keep_backup,
         } => {
@@ -400,9 +411,11 @@ mod test {
 
         // `true` when passed without value
         // (and doesn't try to parse `foo.c` as value because of `require_equals`)
-        let CliCommand::Merge { compact, .. } =
-            CliArgs::parse_from(["mergiraf", "merge", "--compact", "foo.c", "bar.c", "baz.c"])
-                .command
+        let CliCommand::Merge {
+            merge_or_solve: MergeOrSolveArgs { compact, .. },
+            ..
+        } = CliArgs::parse_from(["mergiraf", "merge", "--compact", "foo.c", "bar.c", "baz.c"])
+            .command
         else {
             unreachable!("`mergiraf merge` should invoke the `Merge` subcommand")
         };
@@ -412,8 +425,10 @@ mod test {
 
         // `true` when passed without value
         // (and doesn't try to parse `foo.c` as value because of `require_equals`)
-        let CliCommand::Solve { compact, .. } =
-            CliArgs::parse_from(["mergiraf", "solve", "--compact", "foo.c"]).command
+        let CliCommand::Solve {
+            merge_or_solve: MergeOrSolveArgs { compact, .. },
+            ..
+        } = CliArgs::parse_from(["mergiraf", "solve", "--compact", "foo.c"]).command
         else {
             unreachable!("`mergiraf solve` should invoke the `Solve` subcommand")
         };
