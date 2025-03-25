@@ -27,10 +27,6 @@ use mergiraf::{
 #[command(propagate_version = true)]
 #[deny(missing_docs)]
 struct CliArgs {
-    /// Write debug files to a particular directory to analyze
-    /// the internal aspects of the merge
-    #[arg(short, long = "debug", global = true)]
-    debug_dir: Option<PathBuf>,
     /// Verbosity
     #[arg(short, long, global = true)]
     verbose: bool,
@@ -44,6 +40,10 @@ struct CliArgs {
 #[deny(missing_docs)]
 #[derive(Debug, Args)]
 struct MergeOrSolveArgs {
+    /// Write debug files to a particular directory to analyze
+    /// the internal aspects of the merge
+    #[arg(short, long = "debug", global = true)]
+    debug_dir: Option<PathBuf>,
     /// Display compact conflicts, breaking down lines
     #[arg(short, long, default_missing_value = "true", num_args = 0..=1, require_equals = true)]
     compact: Option<bool>,
@@ -166,6 +166,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             right_name,
             merge_or_solve:
                 MergeOrSolveArgs {
+                    debug_dir,
                     compact,
                     conflict_marker_size,
                 },
@@ -189,7 +190,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let right_name = right_name.map(|s| &*s.leak());
 
             #[expect(unstable_name_collisions)]
-            let debug_dir = args.debug_dir.map(|s| &*s.leak());
+            let debug_dir = debug_dir.map(|s| &*s.leak());
 
             let settings: DisplaySettings<'static> = DisplaySettings {
                 compact,
@@ -276,6 +277,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             conflicts: fname_conflicts,
             merge_or_solve:
                 MergeOrSolveArgs {
+                    debug_dir,
                     compact,
                     conflict_marker_size,
                 },
@@ -300,7 +302,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 &conflict_contents,
                 &fname_conflicts,
                 settings,
-                args.debug_dir.as_deref(),
+                debug_dir.as_deref(),
                 &working_dir,
             );
             match postprocessed {
