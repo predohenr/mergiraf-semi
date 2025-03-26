@@ -786,6 +786,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 .chain(Self::find_separators_with_whitespace(base, trimmed_sep))
                 // remove the indentation at the end of separators
                 // (it will be added back when pretty-printing, possibly at a different level)
+                .next()
                 .map(|separator| {
                     let newline = separator.rfind('\n');
                     match newline {
@@ -793,7 +794,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         Some(index) => &separator[..(index + 1)],
                     }
                 })
-                .next()
                 .unwrap_or(commutative_parent.separator),
         };
 
