@@ -787,14 +787,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 // remove the indentation at the end of separators
                 // (it will be added back when pretty-printing, possibly at a different level)
                 .next()
-                .map(|separator| {
+                .map_or(commutative_parent.separator, |separator| {
                     let newline = separator.rfind('\n');
                     match newline {
                         None => separator,
                         Some(index) => &separator[..(index + 1)],
                     }
-                })
-                .unwrap_or(commutative_parent.separator),
+                }),
         };
 
         // add delimiters and separators in the merged list
