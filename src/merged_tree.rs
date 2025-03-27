@@ -535,23 +535,20 @@ impl<'a> MergedTree<'a> {
     }
 
     fn trailing_whitespace(node: Leader<'a>, class_mapping: &ClassMapping<'a>) -> Option<&'a str> {
-        let nodes = [Revision::Left, Revision::Right, Revision::Base]
-            .map(|rev| class_mapping.node_at_rev(node, rev));
+        let trailing_whitespaces = [Revision::Left, Revision::Right, Revision::Base].map(|rev| {
+            class_mapping
+                .node_at_rev(node, rev)
+                .and_then(AstNode::trailing_whitespace)
+        });
 
-        if let [Some(left), Some(right), Some(base)] = nodes {
-            let base_trailing = base.trailing_whitespace();
-            let left_trailing = left.trailing_whitespace();
-            let right_trailing = right.trailing_whitespace();
-            if base_trailing == left_trailing {
-                right_trailing
+        if let [Some(l_trailing), Some(r_trailing), Some(b_trailing)] = trailing_whitespaces {
+            if b_trailing == l_trailing {
+                Some(r_trailing)
             } else {
-                left_trailing
+                Some(l_trailing)
             }
         } else {
-            nodes
-                .into_iter()
-                .find_map(identity)
-                .and_then(AstNode::trailing_whitespace)
+            trailing_whitespaces.into_iter().find_map(identity)
         }
     }
 
