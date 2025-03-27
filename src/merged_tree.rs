@@ -456,17 +456,14 @@ impl<'a> MergedTree<'a> {
                     _ => representatives
                         .iter()
                         .find_map(|repr| {
+                            let preceding_whitespace = repr.node.preceding_whitespace()?;
                             let indentation_shift = repr.node.indentation_shift().unwrap_or("");
                             let ancestor_newlines =
                                 format!("\n{}", repr.node.ancestor_indentation().unwrap_or(""));
                             let new_newlines = format!("\n{indentation}");
-                            if let Some(preceding_whitespace) = repr.node.preceding_whitespace() {
-                                let new_whitespace =
-                                    preceding_whitespace.replace(&ancestor_newlines, &new_newlines);
-                                Some((Cow::from(new_whitespace), Cow::from(indentation_shift)))
-                            } else {
-                                None
-                            }
+                            let new_whitespace =
+                                preceding_whitespace.replace(&ancestor_newlines, &new_newlines);
+                            Some((Cow::from(new_whitespace), Cow::from(indentation_shift)))
                         })
                         .unwrap_or((Cow::from(""), Cow::from(""))),
                 };
