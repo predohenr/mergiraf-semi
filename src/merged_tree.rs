@@ -423,9 +423,9 @@ impl<'a> MergedTree<'a> {
         };
         match previous_sibling {
             Some(&PreviousSibling::RealNode(previous_node)) => {
-                let revisions = class_mapping.revision_set(previous_node);
-                let common_revisions =
-                    revisions.intersection(class_mapping.revision_set(rev_node).set());
+                let previous_revisions = class_mapping.revision_set(previous_node);
+                let revisions = class_mapping.revision_set(rev_node);
+                let common_revisions = previous_revisions.intersection(revisions.set());
                 let whitespaces = [Revision::Left, Revision::Right, Revision::Base].map(|rev| {
                     if common_revisions.contains(rev) {
                         Self::whitespace_at_rev(
