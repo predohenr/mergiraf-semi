@@ -1,3 +1,4 @@
+use core::convert::identity;
 use std::{
     borrow::Cow,
     collections::HashSet,
@@ -440,32 +441,32 @@ impl<'a> MergedTree<'a> {
                     }
                 });
 
-                let (preceding_whitespace, indentation_shift) = match whitespaces {
-                    [
-                        Some(whitespace_left),
-                        Some(whitespace_right),
-                        Some(whitespace_base),
-                    ] => {
-                        if whitespace_base == whitespace_left {
-                            whitespace_right
-                        } else {
-                            whitespace_left
-                        }
+                let (preceding_whitespace, indentation_shift) = if let [
+                    Some(whitespace_left),
+                    Some(whitespace_right),
+                    Some(whitespace_base),
+                ] = whitespaces
+                {
+                    if whitespace_base == whitespace_left {
+                        whitespace_right
+                    } else {
+                        whitespace_left
                     }
-                    [Some(w), _, _] | [_, Some(w), _] | [_, _, Some(w)] => w,
-                    _ => representatives
-                        .iter()
-                        .find_map(|repr| {
-                            let preceding_whitespace = repr.node.preceding_whitespace()?;
-                            let indentation_shift = repr.node.indentation_shift().unwrap_or("");
-                            let ancestor_newlines =
-                                format!("\n{}", repr.node.ancestor_indentation().unwrap_or(""));
-                            let new_newlines = format!("\n{indentation}");
-                            let new_whitespace =
-                                preceding_whitespace.replace(&ancestor_newlines, &new_newlines);
-                            Some((Cow::from(new_whitespace), Cow::from(indentation_shift)))
+                } else {
+                    (whitespaces.into_iter().find_map(identity))
+                        .or_else(|| {
+                            representatives.iter().find_map(|repr| {
+                                let preceding_whitespace = repr.node.preceding_whitespace()?;
+                                let indentation_shift = repr.node.indentation_shift().unwrap_or("");
+                                let ancestor_newlines =
+                                    format!("\n{}", repr.node.ancestor_indentation().unwrap_or(""));
+                                let new_newlines = format!("\n{indentation}");
+                                let new_whitespace =
+                                    preceding_whitespace.replace(&ancestor_newlines, &new_newlines);
+                                Some((Cow::from(new_whitespace), Cow::from(indentation_shift)))
+                            })
                         })
-                        .unwrap_or((Cow::from(""), Cow::from(""))),
+                        .unwrap_or((Cow::from(""), Cow::from("")))
                 };
 
                 output.push_merged(preceding_whitespace);
