@@ -463,10 +463,10 @@ impl<'a> MergedTree<'a> {
                                 let new_newlines = format!("\n{indentation}");
                                 let new_whitespace =
                                     preceding_whitespace.replace(&ancestor_newlines, &new_newlines);
-                                Some((Cow::from(new_whitespace), Cow::from(indentation_shift)))
+                                Some((Cow::from(new_whitespace), indentation_shift))
                             })
                         })
-                        .unwrap_or((Cow::from(""), Cow::from("")))
+                        .unwrap_or((Cow::from(""), ""))
                 };
 
                 output.push_merged(preceding_whitespace);
@@ -500,7 +500,7 @@ impl<'a> MergedTree<'a> {
         current_node: Leader<'a>,
         indentation: &str,
         class_mapping: &ClassMapping<'a>,
-    ) -> Option<(Cow<'a, str>, Cow<'a, str>)> {
+    ) -> Option<(Cow<'a, str>, &'a str)> {
         let previous_node_at_rev = class_mapping.node_at_rev(previous_node, rev)?;
         let current_node_at_rev = class_mapping.node_at_rev(current_node, rev)?;
 
@@ -526,11 +526,11 @@ impl<'a> MergedTree<'a> {
                     &format!("\n{ancestor_indentation}"),
                     &format!("\n{indentation}"),
                 )),
-                Cow::from(indentation_shift),
+                indentation_shift,
             ))
         } else {
             let indentation = Self::extract_indentation_shift("", source);
-            Some((Cow::from(source), Cow::from(indentation)))
+            Some((Cow::from(source), indentation))
         }
     }
 
