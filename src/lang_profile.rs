@@ -31,6 +31,13 @@ pub struct LangProfile {
 }
 
 impl LangProfile {
+    /// Load a profile by language name.
+    pub fn find_by_name(name: &str) -> Option<&'static Self> {
+        SUPPORTED_LANGUAGES
+            .iter()
+            .find(|lang_profile| lang_profile.name == name)
+    }
+
     /// Detects the language of a file based on its filename
     pub fn detect_from_filename<P>(filename: &P) -> Option<&'static Self>
     where
