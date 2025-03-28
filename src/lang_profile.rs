@@ -36,11 +36,11 @@ impl LangProfile {
     /// Load a profile by language name.
     pub fn find_by_name(name: &str) -> Option<&'static Self> {
         SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
-            lang_profile.name == name
+            lang_profile.name.eq_ignore_ascii_case(name)
                 || lang_profile
                     .alternate_names
                     .iter()
-                    .any(|aname| *aname == name)
+                    .any(|aname| aname.eq_ignore_ascii_case(name))
         })
     }
 
