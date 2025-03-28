@@ -81,56 +81,6 @@ pub fn line_merge_and_structured_resolution(
     }
 }
 
-enum LineBasedAndBestAre {
-    TheSame(MergeResult),
-    NotTheSame {
-        line_based: MergeResult,
-        best: MergeResult,
-    },
-}
-
-/// Takes a non-empty vector of merge results
-/// Returns both the line-based and the best one
-/// These may happen to coincide, so returns either one or two merges
-fn select_best_merge(mut merges: Vec<MergeResult>) -> LineBasedAndBestAre {
-    merges.sort_by_key(|merge| merge.conflict_mass);
-    debug!("~~~ Merge statistics ~~~");
-    for merge in &merges {
-        debug!(
-            "{}: {} conflict(s), {} mass, has_additional_issues: {}",
-            merge.method, merge.conflict_count, merge.conflict_mass, merge.has_additional_issues
-        );
-    }
-
-    let best_pos = merges
-        .iter()
-        .position(|merge| !merge.has_additional_issues)
-        .unwrap_or_default();
-    let line_based_pos = merges
-        .iter()
-        .position(|merge| merge.method == LINE_BASED_METHOD)
-        .expect("No line-based merge available");
-
-    match best_pos.cmp(&line_based_pos) {
-        Ordering::Equal => {
-            let best = merges.swap_remove(best_pos);
-            LineBasedAndBestAre::TheSame(best)
-        }
-        // in the following 2 cases, we remove the merge that comes later in the list first
-        // in order to avoid messing up the other one's index
-        Ordering::Less => {
-            let line_based = merges.swap_remove(line_based_pos);
-            let best = merges.swap_remove(best_pos);
-            LineBasedAndBestAre::NotTheSame { line_based, best }
-        }
-        Ordering::Greater => {
-            let best = merges.swap_remove(best_pos);
-            let line_based = merges.swap_remove(line_based_pos);
-            LineBasedAndBestAre::NotTheSame { line_based, best }
-        }
-    }
-}
-
 /// Attempts various merging methods in turn, and stops early when
 /// any of them finds a conflict-free merge without any additional issues.
 #[allow(clippy::too_many_arguments)]
@@ -223,4 +173,54 @@ pub fn cascading_merge(
 
     merges.push(line_based_merge);
     merges
+}
+
+enum LineBasedAndBestAre {
+    TheSame(MergeResult),
+    NotTheSame {
+        line_based: MergeResult,
+        best: MergeResult,
+    },
+}
+
+/// Takes a non-empty vector of merge results
+/// Returns both the line-based and the best one
+/// These may happen to coincide, so returns either one or two merges
+fn select_best_merge(mut merges: Vec<MergeResult>) -> LineBasedAndBestAre {
+    merges.sort_by_key(|merge| merge.conflict_mass);
+    debug!("~~~ Merge statistics ~~~");
+    for merge in &merges {
+        debug!(
+            "{}: {} conflict(s), {} mass, has_additional_issues: {}",
+            merge.method, merge.conflict_count, merge.conflict_mass, merge.has_additional_issues
+        );
+    }
+
+    let best_pos = merges
+        .iter()
+        .position(|merge| !merge.has_additional_issues)
+        .unwrap_or_default();
+    let line_based_pos = merges
+        .iter()
+        .position(|merge| merge.method == LINE_BASED_METHOD)
+        .expect("No line-based merge available");
+
+    match best_pos.cmp(&line_based_pos) {
+        Ordering::Equal => {
+            let best = merges.swap_remove(best_pos);
+            LineBasedAndBestAre::TheSame(best)
+        }
+        // in the following 2 cases, we remove the merge that comes later in the list first
+        // in order to avoid messing up the other one's index
+        Ordering::Less => {
+            let line_based = merges.swap_remove(line_based_pos);
+            let best = merges.swap_remove(best_pos);
+            LineBasedAndBestAre::NotTheSame { line_based, best }
+        }
+        Ordering::Greater => {
+            let best = merges.swap_remove(best_pos);
+            let line_based = merges.swap_remove(line_based_pos);
+            LineBasedAndBestAre::NotTheSame { line_based, best }
+        }
+    }
 }

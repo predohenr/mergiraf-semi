@@ -10,69 +10,6 @@ use crate::{
 
 const FROM_PARSED_ORIGINAL: &str = "from_parsed_original";
 
-/// Takes a vector of merge results produced by [`resolve_merge_cascading`] and picks the best one
-fn select_best_solve(mut solves: Vec<MergeResult>) -> Result<MergeResult, String> {
-    if solves.is_empty() {
-        return Err("Could not generate any solution".to_string());
-    }
-
-    solves.sort_by_key(|solve| solve.conflict_mass);
-    debug!("~~~ Solve statistics ~~~");
-    for solve in &solves {
-        debug!(
-            "{}: {} conflict(s), {} mass, has_additional_issues: {}",
-            solve.method, solve.conflict_count, solve.conflict_mass, solve.has_additional_issues
-        );
-    }
-
-    let best_solve = solves
-        .into_iter()
-        .find_or_first(|solve| !solve.has_additional_issues)
-        .expect("checked for non-emptiness above");
-
-    if best_solve.method == FROM_PARSED_ORIGINAL {
-        // the best solve we've got is the line-based one
-        Err("Could not generate any solution".to_string())
-    } else {
-        Ok(best_solve)
-    }
-}
-
-/// Extracts the original revisions of the file from Git and performs a fully structured merge (see
-/// [`structured_merge`])
-///
-/// Returns either a merge or nothing if couldn't extract the revisions.
-fn structured_merge_from_git_revisions(
-    fname_base: &Path,
-    settings: &DisplaySettings,
-    debug_dir: Option<&Path>,
-    working_dir: &Path,
-    lang_profile: &LangProfile,
-) -> Result<MergeResult, String> {
-    let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
-    let revision_left = extract_revision(working_dir, fname_base, Revision::Left);
-    let revision_right = extract_revision(working_dir, fname_base, Revision::Right);
-
-    // we only attempt a full structured merge if we could extract revisions from Git
-    match (revision_base, revision_left, revision_right) {
-        (Ok(contents_base), Ok(contents_left), Ok(contents_right)) => structured_merge(
-            &contents_base,
-            &contents_left,
-            &contents_right,
-            None,
-            settings,
-            lang_profile,
-            debug_dir,
-        ),
-        (rev_base, _, _) => {
-            if let Err(b) = rev_base {
-                println!("{b}");
-            }
-            Err("Could not retrieve conflict sides from Git.".to_owned())
-        }
-    }
-}
-
 /// Cascading merge resolution starting from a user-supplied file with merge conflicts
 pub fn resolve_merge_cascading<'a>(
     merge_contents: &'a str,
@@ -145,6 +82,69 @@ pub fn resolve_merge_cascading<'a>(
         n => info!("{n} conflict(s) remaining."),
     }
     Ok(best_solve)
+}
+
+/// Extracts the original revisions of the file from Git and performs a fully structured merge (see
+/// [`structured_merge`])
+///
+/// Returns either a merge or nothing if couldn't extract the revisions.
+fn structured_merge_from_git_revisions(
+    fname_base: &Path,
+    settings: &DisplaySettings,
+    debug_dir: Option<&Path>,
+    working_dir: &Path,
+    lang_profile: &LangProfile,
+) -> Result<MergeResult, String> {
+    let revision_base = extract_revision(working_dir, fname_base, Revision::Base);
+    let revision_left = extract_revision(working_dir, fname_base, Revision::Left);
+    let revision_right = extract_revision(working_dir, fname_base, Revision::Right);
+
+    // we only attempt a full structured merge if we could extract revisions from Git
+    match (revision_base, revision_left, revision_right) {
+        (Ok(contents_base), Ok(contents_left), Ok(contents_right)) => structured_merge(
+            &contents_base,
+            &contents_left,
+            &contents_right,
+            None,
+            settings,
+            lang_profile,
+            debug_dir,
+        ),
+        (rev_base, _, _) => {
+            if let Err(b) = rev_base {
+                println!("{b}");
+            }
+            Err("Could not retrieve conflict sides from Git.".to_owned())
+        }
+    }
+}
+
+/// Takes a vector of merge results produced by [`resolve_merge_cascading`] and picks the best one
+fn select_best_solve(mut solves: Vec<MergeResult>) -> Result<MergeResult, String> {
+    if solves.is_empty() {
+        return Err("Could not generate any solution".to_string());
+    }
+
+    solves.sort_by_key(|solve| solve.conflict_mass);
+    debug!("~~~ Solve statistics ~~~");
+    for solve in &solves {
+        debug!(
+            "{}: {} conflict(s), {} mass, has_additional_issues: {}",
+            solve.method, solve.conflict_count, solve.conflict_mass, solve.has_additional_issues
+        );
+    }
+
+    let best_solve = solves
+        .into_iter()
+        .find_or_first(|solve| !solve.has_additional_issues)
+        .expect("checked for non-emptiness above");
+
+    if best_solve.method == FROM_PARSED_ORIGINAL {
+        // the best solve we've got is the line-based one
+        Err("Could not generate any solution".to_string())
+    } else {
+        Ok(best_solve)
+    }
 }
 
 fn extract_revision(working_dir: &Path, path: &Path, revision: Revision) -> Result<String, String> {
