@@ -32,7 +32,7 @@ pub struct LangProfile {
 
 impl LangProfile {
     /// Detects the language of a file based on its filename
-    pub fn detect_from_filename<P>(filename: &P) -> Option<&Self>
+    pub fn detect_from_filename<P>(filename: &P) -> Option<&'static Self>
     where
         P: AsRef<Path> + ?Sized,
     {
@@ -40,7 +40,7 @@ impl LangProfile {
         Self::_detect_from_filename(filename)
     }
 
-    fn _detect_from_filename(filename: &Path) -> Option<&Self> {
+    fn _detect_from_filename(filename: &Path) -> Option<&'static Self> {
         // TODO make something more advanced like in difftastic
         // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
         let extension = filename.extension()?;
