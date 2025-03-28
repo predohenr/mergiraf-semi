@@ -18,6 +18,8 @@ use crate::{
 pub struct LangProfile {
     /// a name that identifies the language
     pub name: &'static str,
+    /// alternate names for the language
+    pub alternate_names: &'static [&'static str],
     /// the file extensions of files in this language
     pub extensions: Vec<&'static str>,
     /// `tree_sitter` parser
@@ -33,9 +35,13 @@ pub struct LangProfile {
 impl LangProfile {
     /// Load a profile by language name.
     pub fn find_by_name(name: &str) -> Option<&'static Self> {
-        SUPPORTED_LANGUAGES
-            .iter()
-            .find(|lang_profile| lang_profile.name == name)
+        SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
+            lang_profile.name == name
+                || lang_profile
+                    .alternate_names
+                    .iter()
+                    .any(|aname| *aname == name)
+        })
     }
 
     /// Detects the language of a file based on its filename
