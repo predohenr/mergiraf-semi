@@ -33,14 +33,26 @@ pub fn line_merge_and_structured_resolution(
     attempts_cache: Option<&AttemptsCache>,
     debug_dir: Option<&'static Path>,
     timeout: Duration,
+    language: Option<&str>,
 ) -> MergeResult {
-    let Some(lang_profile) = LangProfile::detect_from_filename(fname_base) else {
-        // can't do anything fancier anyway
-        debug!(
-            "Could not find a supported language for {}. Falling back to a line-based merge.",
-            fname_base.display()
-        );
-        return line_based_merge(contents_base, contents_left, contents_right, &settings);
+    let lang_profile = if let Some(lang_name) = language {
+        let Some(lang_profile) = LangProfile::find_by_name(lang_name) else {
+            warn!(
+                "Specified language '{lang_name}' could not be found. Falling back to a line-based merge."
+            );
+            return line_based_merge(contents_base, contents_left, contents_right, &settings);
+        };
+        lang_profile
+    } else {
+        let Some(lang_profile) = LangProfile::detect_from_filename(fname_base) else {
+            // can't do anything fancier anyway
+            debug!(
+                "Could not find a supported language for {}. Falling back to a line-based merge.",
+                fname_base.display()
+            );
+            return line_based_merge(contents_base, contents_left, contents_right, &settings);
+        };
+        lang_profile
     };
 
     let merges = cascading_merge(

@@ -19,15 +19,21 @@ pub fn resolve_merge_cascading<'a>(
     mut settings: DisplaySettings<'a>,
     debug_dir: Option<&Path>,
     working_dir: &Path,
+    language: Option<&str>,
 ) -> Result<MergeResult, String> {
     let mut solves = Vec::with_capacity(3);
 
-    let lang_profile = LangProfile::detect_from_filename(fname_base).ok_or_else(|| {
-        format!(
-            "Could not find a supported language for {}",
-            fname_base.display()
-        )
-    })?;
+    let lang_profile = if let Some(lang_name) = language {
+        LangProfile::find_by_name(lang_name)
+            .ok_or_else(|| format!("Specified language '{lang_name}' could not be found."))?
+    } else {
+        LangProfile::detect_from_filename(fname_base).ok_or_else(|| {
+            format!(
+                "Could not find a supported language for {}",
+                fname_base.display()
+            )
+        })?
+    };
 
     match ParsedMerge::parse(merge_contents, &settings) {
         Err(err) => {

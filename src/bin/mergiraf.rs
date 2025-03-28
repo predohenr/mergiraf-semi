@@ -51,6 +51,9 @@ struct MergeOrSolveArgs {
     #[arg(short = 'l', long)]
     // the choice of 'l' is inherited from Git's merge driver interface
     conflict_marker_size: Option<usize>,
+    /// Override automatic language detection.
+    #[arg(short = 'L', long)]
+    language: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -175,6 +178,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     debug_dir,
                     compact,
                     conflict_marker_size,
+                    language,
                 },
             timeout,
         } => {
@@ -256,6 +260,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 attempts_cache.as_ref(),
                 debug_dir,
                 Duration::from_millis(timeout.unwrap_or(if fast { 5000 } else { 10000 })),
+                language.as_deref(),
             );
             if let Some(fname_out) = output {
                 write_string_to_file(&fname_out, &merge_result.contents)?;
@@ -286,6 +291,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                     debug_dir,
                     compact,
                     conflict_marker_size,
+                    language,
                 },
             keep,
             mut stdout,
@@ -335,6 +341,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 settings,
                 debug_dir.as_deref(),
                 &working_dir,
+                language.as_deref(),
             );
             match postprocessed {
                 Ok(merged) => {
