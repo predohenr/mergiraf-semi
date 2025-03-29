@@ -509,7 +509,7 @@ pub fn languages(gitattributes: bool) -> String {
                     .extensions
                     .iter()
                     .map(|ext| format!("*.{ext}"))
-                    .join(", ")
+                    .format(", ")
             );
         }
     }

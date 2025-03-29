@@ -623,7 +623,7 @@ impl<'a> MergedTree<'a> {
                 let children_printed = children
                     .iter()
                     .map(|c| c.debug_print(indentation + 2))
-                    .join("\n");
+                    .format("\n");
                 format!("Mixed({node}\n{children_printed}{result})")
             }
             Self::Conflict { .. } => "Conflict()".to_string(),

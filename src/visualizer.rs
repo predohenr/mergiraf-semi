@@ -160,7 +160,10 @@ fn add_node<W: Write>(
     writeln!(
         writer,
         "    {nodeid}[{}]",
-        attrs.iter().map(|(k, v)| format!("{k}=\"{v}\"")).join(",")
+        attrs
+            .iter()
+            .map(|(k, v)| format!("{k}=\"{v}\""))
+            .format(",")
     )?;
 
     if !is_exact_match {

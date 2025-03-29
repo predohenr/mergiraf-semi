@@ -27,9 +27,9 @@ impl Display for Signature<'_, '_> {
                             AstNodeEquiv::Original(ast_node) => ast_node.source.to_owned(),
                             AstNodeEquiv::Merged(tree) => tree.to_string(),
                         })
-                        .join(", ")
+                        .format(", ")
                 ))
-                .join(", ")
+                .format(", ")
         )
     }
 }

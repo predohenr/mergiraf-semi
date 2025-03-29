@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 
 use either::Either;
 use itertools::Itertools;
@@ -318,7 +319,10 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             debug!(
                 "{pad}{node} Error while gathering successors, some non-base successors were not visited:"
             );
-            debug!("{pad}{}", non_base_nodes.difference(&seen_nodes).join(", "));
+            debug!(
+                "{pad}{}",
+                non_base_nodes.difference(&seen_nodes).format(", ")
+            );
             return self.commutative_or_line_based_local_fallback(node, visiting_state);
         }
 
@@ -1039,8 +1043,8 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     }
 }
 
-fn fmt_set<S>(s: &HashSet<(Revision, PCSNode<'_>), S>) -> String {
-    s.iter().map(|(r, n)| format!("({r},{n})")).join(", ")
+fn fmt_set<S>(s: &HashSet<(Revision, PCSNode<'_>), S>) -> impl Display {
+    s.iter().map(|(r, n)| format!("({r},{n})")).format(", ")
 }
 
 #[cfg(test)]
