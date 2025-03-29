@@ -142,7 +142,7 @@ pub fn line_merge_and_structured_resolution(
                 // give the opportunity to the user to review Mergiraf's work
                 if let Some(cache) = attempts_cache {
                     match cache.new_attempt(
-                        Path::new(fname_base),
+                        fname_base,
                         contents_base,
                         contents_left,
                         contents_right,
