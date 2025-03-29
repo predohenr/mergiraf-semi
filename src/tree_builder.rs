@@ -274,6 +274,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         // reason: the following two `if`s should really be `&&`-ed,
                         // but https://github.com/rust-lang/rust/issues/53667
                         // until then, collapsing one but not the other looks misleading
+                        // TODO(if-let-chains): use them here
                         #[allow(clippy::collapsible_if)]
                         if let PCSNode::Node { node: leader, .. } = node {
                             if let Some(commutative_parent) = self
@@ -565,6 +566,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .lang_profile
             .get_commutative_parent(node.grammar_name())
         {
+            // TODO(if-let-chains): if let Some() && if let Ok() {...}
             let commutative_merge =
                 self.commutatively_merge_children(node, commutative_parent, visiting_state);
             if let Ok(successful_merge) = commutative_merge {
