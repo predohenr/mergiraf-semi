@@ -311,7 +311,7 @@ impl SignatureDefinition {
         Signature(
             self.paths
                 .iter()
-                .map(|path| path.extract(node, class_mapping).into_iter().collect_vec())
+                .map(|path| path.extract(node, class_mapping))
                 .collect(),
         )
     }
