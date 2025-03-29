@@ -1,3 +1,5 @@
+//! Implementation of `mergiraf merge`
+
 use std::{
     cmp::Ordering,
     path::Path,

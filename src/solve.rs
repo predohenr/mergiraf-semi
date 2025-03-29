@@ -1,3 +1,5 @@
+//! Implementation of `mergiraf solve`
+
 use std::{fs, path::Path};
 
 use itertools::Itertools;
