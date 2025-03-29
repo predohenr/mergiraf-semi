@@ -1,5 +1,6 @@
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
+use std::iter::zip;
 
 use itertools::Itertools;
 
@@ -137,13 +138,10 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                     MergedTree::MixedTree { node, children, .. } => {
                         node.grammar_name() == a.grammar_name
                             && children.len() == a.children.len()
-                            && children
-                                .iter()
-                                .zip(a.children.iter())
-                                .all(|(child, ast_node)| {
-                                    Self::Merged(child)
-                                        .isomorphic(&Self::Original(ast_node), class_mapping)
-                                })
+                            && zip(children, &a.children).all(|(child, ast_node)| {
+                                Self::Merged(child)
+                                    .isomorphic(&Self::Original(ast_node), class_mapping)
+                            })
                     }
                     MergedTree::Conflict { .. } => false,
                     MergedTree::LineBasedMerge { node, contents, .. } => {
@@ -198,13 +196,9 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                 ) => {
                     node_a.grammar_name() == node_b.grammar_name()
                         && children_a.len() == children_b.len()
-                        && children_a
-                            .iter()
-                            .zip(children_b.iter())
-                            .all(|(child_a, child_b)| {
-                                Self::Merged(child_a)
-                                    .isomorphic(&Self::Merged(child_b), class_mapping)
-                            })
+                        && zip(children_a, children_b).all(|(child_a, child_b)| {
+                            Self::Merged(child_a).isomorphic(&Self::Merged(child_b), class_mapping)
+                        })
                 }
                 (MergedTree::MixedTree { .. }, _) | (_, MergedTree::MixedTree { .. }) => false,
                 (MergedTree::Conflict { .. }, _) | (_, MergedTree::Conflict { .. }) => a == b,
