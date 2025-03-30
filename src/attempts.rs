@@ -207,7 +207,8 @@ impl AttemptsCache {
                     Some((f, mtime))
                 })
                 .collect();
-            subdirs.sort_by_key(|&(_, mtime)| mtime);
+            // sort by mtime _descending_ (oldest subdirs are at the end)
+            subdirs.sort_by(|(_, mtime_a), (_, mtime_b)| mtime_b.cmp(mtime_a));
             subdirs
         };
         if let Some(old_subdirs) = subdirs.get(self.max_size..) {
