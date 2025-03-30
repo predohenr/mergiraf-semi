@@ -193,7 +193,9 @@ impl<'a> MergedTree<'a> {
         }
 
         match self {
-            Self::ExactTree { node, .. } if nodes.contains(&node) => {
+            Self::ExactTree { node, .. } | Self::MixedTree { node, .. }
+                if nodes.contains(&node) =>
+            {
                 Self::line_based_local_fallback_for_revnode(node, class_mapping, settings)
             }
             Self::ExactTree {
@@ -222,9 +224,6 @@ impl<'a> MergedTree<'a> {
                 } else {
                     Self::new_mixed(node, cloned_children)
                 }
-            }
-            Self::MixedTree { node, .. } if nodes.contains(&node) => {
-                Self::line_based_local_fallback_for_revnode(node, class_mapping, settings)
             }
             Self::MixedTree { node, children, .. } => {
                 let cloned_children = children
