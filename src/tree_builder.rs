@@ -973,6 +973,11 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     .class_mapping
                     .children_at_revision(*node, modifying_revision)
                 {
+                    // if the tree doesn't exist at all in the modifying revision,
+                    // it does not contain any changes to be covered
+                    None => Some(HashSet::new()),
+                    Some(c) if c.is_empty() => Some(HashSet::new()),
+
                     Some(children_revnodes) => {
                         let children = children_revnodes
                             .into_iter()
@@ -985,14 +990,12 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                             })
                             .collect_vec();
                         self.cover_modified_nodes(
-                            &MergedTree::new_mixed(*node, children).unwrap(),
+                            // SAFETY: handled the empty-`children_revnodes` case in another match arm
+                            &unsafe { MergedTree::new_mixed_unchecked(*node, children) },
                             target_revision,
                             modifying_revision,
                         )
                     }
-                    // if the tree doesn't exist at all in the modifying revision,
-                    // it does not contain any changes to be covered
-                    None => Some(HashSet::new()),
                 }
             }
             MergedTree::MixedTree { node, children, .. } => {
