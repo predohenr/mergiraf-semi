@@ -217,13 +217,13 @@ impl<'a> MergedTree<'a> {
                         .expect("non-existent children for revision in revset of ExactTree");
                     let cloned_children: Vec<MergedTree<'a>> = children
                         .into_iter()
-                        .map(|c| {
-                            Self::new_exact(c, revisions, class_mapping)
-                                .force_line_based_fallback_on_specific_nodes(
-                                    nodes,
-                                    class_mapping,
-                                    settings,
-                                )
+                        .map(|c| Self::new_exact(c, revisions, class_mapping))
+                        .map(|child_tree| {
+                            child_tree.force_line_based_fallback_on_specific_nodes(
+                                nodes,
+                                class_mapping,
+                                settings,
+                            )
                         })
                         .collect();
                     if cloned_children
