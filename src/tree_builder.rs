@@ -777,13 +777,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             rev.iter()
                 .map(|n| n.source.trim())
                 .find(|s| *s != trimmed_left_delim)
-                .is_some_and(|s| s == trimmed_sep)
+                == Some(trimmed_sep)
         });
         let ends_with_separator = [&base, &left, &right].into_iter().any(|rev| {
             rev.iter()
                 .map(|n| n.source.trim())
                 .rfind(|s| *s != trimmed_right_delim)
-                .is_some_and(|s| s == trimmed_sep)
+                == Some(trimmed_sep)
         });
 
         let separator = MergedTree::CommutativeChildSeparator {
