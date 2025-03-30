@@ -313,7 +313,7 @@ impl<'a> MergedTree<'a> {
                     indentation,
                     class_mapping,
                 );
-                output.push_merged(tree_at_rev.reindented_source(&new_indentation).into());
+                output.push_merged(tree_at_rev.reindented_source(&new_indentation));
             }
             Self::MixedTree {
                 node: leader,
