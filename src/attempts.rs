@@ -315,7 +315,13 @@ mod tests {
         // create a few stale attempts
         let attempts: [Attempt; 4] = array::from_fn(|_| {
             // compensate for file system timestamp (im)precision
-            std::thread::sleep(core::time::Duration::from_millis(1));
+            let duration = if option_env!("CARGO_CI").is_some() {
+                // compensate CI noise
+                10
+            } else {
+                1
+            };
+            std::thread::sleep(core::time::Duration::from_millis(duration));
             cache
                 .new_attempt(
                     Path::new("foo/bar/MyFile"),
