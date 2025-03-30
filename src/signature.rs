@@ -488,7 +488,8 @@ mod tests {
                 )
             })
             .collect();
-        let mixed_tree = MergedTree::new_mixed(node_2, children).unwrap();
+        let mixed_tree = MergedTree::new_mixed(node_2, children)
+            .expect("`node_2` should contain children (`{`, `pair`, `}`): {node_2}");
         assert_eq!(
             AstNodeEquiv::Original(object),
             AstNodeEquiv::Merged(&mixed_tree)
