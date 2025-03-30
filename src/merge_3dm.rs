@@ -39,7 +39,7 @@ pub fn three_way_merge<'a>(
     auxiliary_matcher: &TreeMatcher,
     settings: &DisplaySettings<'a>,
     debug_dir: Option<&Path>,
-) -> (MergedTree<'a>, ClassMapping<'a>) {
+) -> (Option<MergedTree<'a>>, ClassMapping<'a>) {
     // match all pairs of revisions
     let (base_left_matching, base_right_matching, left_right_matching) = generate_matchings(
         base,
@@ -78,7 +78,8 @@ pub fn three_way_merge<'a>(
     );
 
     // post-process to highlight signature conflicts
-    let postprocessed_tree = postprocess_tree(merged_tree, primary_matcher, &class_mapping);
+    let postprocessed_tree =
+        merged_tree.map(|tree| postprocess_tree(tree, primary_matcher, &class_mapping));
 
     (postprocessed_tree, class_mapping)
 }
@@ -287,7 +288,7 @@ fn build_tree<'a>(
     base_changeset: &ChangeSet<'a>,
     cleaned_changeset: &ChangeSet<'a>,
     settings: &DisplaySettings<'a>,
-) -> MergedTree<'a> {
+) -> Option<MergedTree<'a>> {
     let start: Instant = Instant::now();
     let tree_builder = TreeBuilder::new(
         cleaned_changeset,
@@ -296,15 +297,15 @@ fn build_tree<'a>(
         primary_matcher.lang_profile,
         settings,
     );
-    let merged_tree = if let Ok(Some(tree)) = tree_builder.build_tree() {
+    let merged_tree = if let Ok(tree) = tree_builder.build_tree() {
         tree
     } else {
         let line_based = line_based_merge(base.source(), left.source(), right.source(), settings);
-        MergedTree::LineBasedMerge {
+        Some(MergedTree::LineBasedMerge {
             node: class_mapping.map_to_leader(RevNode::new(Revision::Base, base.root())),
             contents: line_based.contents,
             conflict_mass: line_based.conflict_mass,
-        }
+        })
     };
     debug!("constructing the merged tree took {:?}", start.elapsed());
 
