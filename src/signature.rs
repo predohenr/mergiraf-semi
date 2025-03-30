@@ -488,7 +488,7 @@ mod tests {
                 )
             })
             .collect();
-        let mixed_tree = MergedTree::new_mixed(node_2, children);
+        let mixed_tree = MergedTree::new_mixed(node_2, children).unwrap();
         assert_eq!(
             AstNodeEquiv::Original(object),
             AstNodeEquiv::Merged(&mixed_tree)

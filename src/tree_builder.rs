@@ -416,7 +416,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         self.class_mapping,
                     ))
                 } else {
-                    Ok(MergedTree::new_mixed(revnode, children))
+                    Ok(MergedTree::new_mixed(revnode, children).unwrap())
                 }
             }
         }
@@ -564,7 +564,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             let commutative_merge =
                 self.commutatively_merge_children(node, commutative_parent, visiting_state);
             if let Ok(successful_merge) = commutative_merge {
-                return Ok(MergedTree::new_mixed(node, successful_merge));
+                return Ok(MergedTree::new_mixed(node, successful_merge).unwrap());
             }
         }
         Ok(MergedTree::line_based_local_fallback_for_revnode(
@@ -985,7 +985,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                             })
                             .collect_vec();
                         self.cover_modified_nodes(
-                            &MergedTree::new_mixed(*node, children),
+                            &MergedTree::new_mixed(*node, children).unwrap(),
                             target_revision,
                             modifying_revision,
                         )

@@ -89,9 +89,11 @@ impl<'a> MergedTree<'a> {
         }
     }
 
-    /// Creates a new mixed tree, taking care of the pre-computation of the hash
-    pub(crate) fn new_mixed(node: Leader<'a>, children: Vec<Self>) -> Self {
-        // TODO we could refuse to create a new mixed tree with no children
+    /// Creates a new mixed tree without checking that `children` is empty
+    ///
+    /// ## Safety
+    /// `children` must be non-empty
+    pub(crate) unsafe fn new_mixed_unchecked(node: Leader<'a>, children: Vec<Self>) -> Self {
         debug_assert!(!children.is_empty());
         let mut hasher = crate::fxhasher();
         node.grammar_name().hash(&mut hasher);
@@ -109,6 +111,16 @@ impl<'a> MergedTree<'a> {
             node,
             children,
             hash: hasher.finish(),
+        }
+    }
+
+    /// Creates a new mixed tree, taking care of the pre-computation of the hash
+    pub(crate) fn new_mixed(node: Leader<'a>, children: Vec<Self>) -> Option<Self> {
+        if children.is_empty() {
+            None
+        } else {
+            // SAFETY: checked non-emptiness above
+            Some(unsafe { Self::new_mixed_unchecked(node, children) })
         }
     }
 
@@ -220,7 +232,7 @@ impl<'a> MergedTree<'a> {
                     {
                         self
                     } else {
-                        Self::new_mixed(node, cloned_children)
+                        Self::new_mixed(node, cloned_children).unwrap()
                     }
                 }
             }
@@ -238,7 +250,7 @@ impl<'a> MergedTree<'a> {
                             )
                         })
                         .collect();
-                    Self::new_mixed(node, cloned_children)
+                    Self::new_mixed(node, cloned_children).unwrap()
                 }
             }
             _ => self,

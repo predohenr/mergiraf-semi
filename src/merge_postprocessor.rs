@@ -37,9 +37,9 @@ impl<'a> MergedTree<'a> {
                         class_mapping,
                         commutative_parent,
                     );
-                    Self::new_mixed(node, highlighted)
+                    Self::new_mixed(node, highlighted).unwrap()
                 } else {
-                    Self::new_mixed(node, recursively_processed)
+                    Self::new_mixed(node, recursively_processed).unwrap()
                 }
             }
             Self::ExactTree { .. }
