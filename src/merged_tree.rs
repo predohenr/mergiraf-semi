@@ -232,7 +232,9 @@ impl<'a> MergedTree<'a> {
                     {
                         self
                     } else {
-                        Self::new_mixed(node, cloned_children).unwrap()
+                        // SAFETY: if `cloned_children` were empty, it would've passed the check
+                        // above, since `forall` is trivially true for empty sets/vecs
+                        unsafe { Self::new_mixed_unchecked(node, cloned_children) }
                     }
                 }
             }
@@ -250,7 +252,18 @@ impl<'a> MergedTree<'a> {
                             )
                         })
                         .collect();
-                    Self::new_mixed(node, cloned_children).unwrap()
+                    // SAFETY: there's a bit of a circular argument here.
+                    // `force_line_based_fallback_on_specific_nodes` has roughly 4 cases:
+                    // - found node to force fallback on -- calls
+                    //   `line_based_local_fallback_for_revnode`, which takes 1 node and returns 1 node
+                    // - force fallback on children of exact node -- ditto (see safety comment there)
+                    // - force fallback on children of mixed node -- this case. I argue that it also retains the node
+                    // - other -- no change
+                    //
+                    // Therefore, the whole method also retains the node. Thus, the `iter().map()`
+                    // above also doesn't reduce the number of children. And since it was non-zero
+                    // before (by construction of `MergedTree::MixedTree`), it will remains so now
+                    unsafe { Self::new_mixed_unchecked(node, cloned_children) }
                 }
             }
             _ => self,
