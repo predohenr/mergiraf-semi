@@ -87,7 +87,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     }
 
     /// Build the merged tree
-    pub fn build_tree(&self) -> Result<MergedTree<'a>, String> {
+    pub fn build_tree(&self) -> Result<Option<MergedTree<'a>>, String> {
         let mut visiting_state = VisitingState {
             // keep track of all nodes that have been deleted on one side and modified on the other
             deleted_and_modified: HashSet::new(),
@@ -96,7 +96,10 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         };
 
         // recursively build the tree by starting from the virtual root
-        let merged_tree = self.build_subtree(PCSNode::VirtualRoot, &mut visiting_state)?;
+        let Some(merged_tree) = self.build_subtree(PCSNode::VirtualRoot, &mut visiting_state)?
+        else {
+            return Ok(None);
+        };
 
         debug!("{merged_tree}");
 
@@ -126,10 +129,12 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             parents_to_recompute.iter().format(", ")
         );
 
-        Ok(merged_tree.force_line_based_fallback_on_specific_nodes(
-            &parents_to_recompute,
-            self.class_mapping,
-            self.settings,
+        Ok(Some(
+            merged_tree.force_line_based_fallback_on_specific_nodes(
+                &parents_to_recompute,
+                self.class_mapping,
+                self.settings,
+            ),
         ))
     }
 
@@ -139,7 +144,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         &'b self,
         node: PCSNode<'a>,
         visiting_state: &mut VisitingState<'a>,
-    ) -> Result<MergedTree<'a>, String> {
+    ) -> Result<Option<MergedTree<'a>>, String> {
         if let PCSNode::Node { node, .. } = node {
             let visited = &mut visiting_state.visited_nodes;
             if visited.contains(&node) {
@@ -160,7 +165,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         &'b self,
         node: PCSNode<'a>,
         visiting_state: &mut VisitingState<'a>,
-    ) -> Result<MergedTree<'a>, String> {
+    ) -> Result<Option<MergedTree<'a>>, String> {
         // if the node has isomorphic subtrees in all revisions, that's very boring,
         // so we just return a tree that matches that
         if let PCSNode::Node {
@@ -180,11 +185,11 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     revisions
                 };
 
-                return Ok(MergedTree::new_exact(
+                return Ok(Some(MergedTree::new_exact(
                     leader,
                     final_revisions,
                     self.class_mapping,
-                ));
+                )));
             }
         }
 
@@ -231,7 +236,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                             self.commutative_or_line_based_local_fallback(node, visiting_state);
                         return line_diff;
                     };
-                    children.push(child_result_tree);
+                    if let Some(child_result_tree) = child_result_tree {
+                        children.push(child_result_tree);
+                    }
                     predecessor = current_child;
                     seen_nodes.insert(predecessor);
                     cursor = children_map.get(&predecessor);
@@ -349,8 +356,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             // recursively build the tree representation for the unvisited base node to see if it has any changes
             self.build_subtree(unvisited_base_node, visiting_state)
                 .and_then(|base_tree| {
-                    self.cover_modified_nodes(&base_tree, target_revision, modified_revision)
-                        .ok_or_else(|| "no cover found".to_owned())
+                    if let Some(base_tree) = base_tree {
+                        self.cover_modified_nodes(&base_tree, target_revision, modified_revision)
+                            .ok_or_else(|| "no cover found".to_owned())
+                    } else {
+                        // no tree, no cover
+                        Ok(HashSet::new())
+                    }
                 })
                 .map(|cover| {
                     visiting_state.deleted_and_modified.extend(cover.iter());
@@ -363,7 +375,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         }
 
         match node {
-            PCSNode::VirtualRoot => children.into_iter().next().ok_or_else(|| {
+            PCSNode::VirtualRoot => children.into_iter().next().map(Some).ok_or_else(|| {
                 "the virtual root must have exactly one child, none found".to_string()
             }),
             PCSNode::LeftMarker => {
@@ -408,15 +420,16 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     (!self.class_mapping.is_reformatting(revnode, Revision::Left) || common_revisions.contains(Revision::Left)) &&
                     (!self.class_mapping.is_reformatting(revnode, Revision::Right) || common_revisions.contains(Revision::Right))
                 {
-                    Ok(MergedTree::new_exact(
+                    Ok(Some(MergedTree::new_exact(
                         revnode,
                         common_revisions
                             .as_nonempty()
                             .expect("Unexpected empty set (checked above)"),
                         self.class_mapping,
-                    ))
+                    )))
                 } else {
-                    Ok(MergedTree::new_mixed(revnode, children).unwrap())
+                    // I guess `children` can be empty... Therefore can't use `new_mixed_unchecked` here
+                    Ok(MergedTree::new_mixed(revnode, children))
                 }
             }
         }
@@ -548,7 +561,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         &self,
         node: PCSNode<'a>,
         visiting_state: &mut VisitingState<'a>,
-    ) -> Result<MergedTree<'a>, String> {
+    ) -> Result<Option<MergedTree<'a>>, String> {
         let pad = visiting_state.indentation();
         debug!("{pad}{node} commutative_or_line_based_local_fallback");
         let PCSNode::Node { node, .. } = node else {
@@ -564,14 +577,16 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             let commutative_merge =
                 self.commutatively_merge_children(node, commutative_parent, visiting_state);
             if let Ok(successful_merge) = commutative_merge {
-                return Ok(MergedTree::new_mixed(node, successful_merge).unwrap());
+                // `successful merge` might be empty, e.g. when base had two nodes and both sides
+                // removed one of them. Therefore can't use `new_mixed_unchecked` here
+                return Ok(MergedTree::new_mixed(node, successful_merge));
             }
         }
-        Ok(MergedTree::line_based_local_fallback_for_revnode(
+        Ok(Some(MergedTree::line_based_local_fallback_for_revnode(
             node,
             self.class_mapping,
             self.settings,
-        ))
+        )))
     }
 
     /// From a list of children of a commutative node, filter out separators
@@ -694,8 +709,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     },
                     &mut removed_visiting_state,
                 )?;
-                Ok((**revnode, subtree))
+                Ok(subtree.map(|subtree| (**revnode, subtree)))
             })
+            .flatten_ok()
             .collect::<Result<_, String>>()?;
         let right_removed_and_not_modified: HashSet<_> = right_removed_content
             .iter()
@@ -736,6 +752,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     visiting_state,
                 )
             })
+            .flatten_ok()
             .collect::<Result<_, _>>()?;
 
         // try to find examples of delimiters and separator in the existing revisions
@@ -916,6 +933,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     visiting_state,
                 )
             })
+            .flatten_ok()
             .collect::<Result<_, _>>()?;
         let mut suffix_trees: Vec<_> = common_suffix
             .iter()
@@ -928,6 +946,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     visiting_state,
                 )
             })
+            .flatten_ok()
             .collect::<Result<_, _>>()?;
 
         prefix_trees.append(&mut merge_result);
@@ -1084,11 +1103,11 @@ mod tests {
 
         assert_eq!(
             result_tree,
-            Ok(MergedTree::new_exact(
+            Ok(Some(MergedTree::new_exact(
                 class_mapping.map_to_leader(RevNode::new(Revision::Base, tree.root())),
                 RevisionNESet::singleton(Revision::Base),
                 &class_mapping,
-            ))
+            )))
         );
     }
 
@@ -1120,7 +1139,8 @@ mod tests {
             );
             tree_gatherer.build_tree()
         }
-        .expect("a successful merge was expected");
+        .expect("a successful merge was expected")
+        .expect("a non-empty resulting tree was expected");
 
         assert!(result_tree.contains(
             class_mapping.map_to_leader(RevNode::new(Revision::Base, tree.root())),

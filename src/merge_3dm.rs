@@ -296,14 +296,16 @@ fn build_tree<'a>(
         primary_matcher.lang_profile,
         settings,
     );
-    let merged_tree = tree_builder.build_tree().unwrap_or_else(|_| {
+    let merged_tree = if let Ok(Some(tree)) = tree_builder.build_tree() {
+        tree
+    } else {
         let line_based = line_based_merge(base.source(), left.source(), right.source(), settings);
         MergedTree::LineBasedMerge {
             node: class_mapping.map_to_leader(RevNode::new(Revision::Base, base.root())),
             contents: line_based.contents,
             conflict_mass: line_based.conflict_mass,
         }
-    });
+    };
     debug!("constructing the merged tree took {:?}", start.elapsed());
 
     merged_tree
