@@ -92,6 +92,7 @@ impl<'a> MergedTree<'a> {
     /// Creates a new mixed tree, taking care of the pre-computation of the hash
     pub(crate) fn new_mixed(node: Leader<'a>, children: Vec<Self>) -> Self {
         // TODO we could refuse to create a new mixed tree with no children
+        debug_assert!(!children.is_empty());
         let mut hasher = crate::fxhasher();
         node.grammar_name().hash(&mut hasher);
         children
