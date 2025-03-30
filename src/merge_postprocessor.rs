@@ -37,9 +37,21 @@ impl<'a> MergedTree<'a> {
                         class_mapping,
                         commutative_parent,
                     );
-                    Self::new_mixed(node, highlighted).unwrap()
+                    // SAFETY: highlight_duplicate_signatures` only deletes duplicates, so if the
+                    // input vec (`recursively_processed`) was non-empty, it can only ever be
+                    // shrunk to 1 node at the minimum (n duplicate signatures merged into one).
+                    //
+                    // And we know `recursively_processed` was non-empty, since it was created by
+                    // recursively calling `post_process_for_duplicate_signatures`, which
+                    // - starts from a `MergedTree::MixedTree` (the other kinds are ignored), which
+                    //   is non-empty by construction (using `MergedTree::new_mixed`)
+                    // - reduces it only using `highlight_duplicate_signatures`, which returns
+                    //   non-empty lists, as shown above
+                    unsafe { Self::new_mixed_unchecked(node, highlighted) }
                 } else {
-                    Self::new_mixed(node, recursively_processed).unwrap()
+                    // SAFETY: same as above, with the last `highlight_duplicate_signatures` not
+                    // even occurring
+                    unsafe { Self::new_mixed_unchecked(node, recursively_processed) }
                 }
             }
             Self::ExactTree { .. }
