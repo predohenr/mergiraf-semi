@@ -538,21 +538,20 @@ impl<'a> MergedTree<'a> {
         let nodes = [Revision::Left, Revision::Right, Revision::Base]
             .map(|rev| class_mapping.node_at_rev(node, rev));
 
-        match nodes {
-            [Some(left), Some(right), Some(base)] => {
-                let base_trailing = base.trailing_whitespace();
-                let left_trailing = left.trailing_whitespace();
-                let right_trailing = right.trailing_whitespace();
-                if base_trailing == left_trailing {
-                    right_trailing
-                } else {
-                    left_trailing
-                }
+        if let [Some(left), Some(right), Some(base)] = nodes {
+            let base_trailing = base.trailing_whitespace();
+            let left_trailing = left.trailing_whitespace();
+            let right_trailing = right.trailing_whitespace();
+            if base_trailing == left_trailing {
+                right_trailing
+            } else {
+                left_trailing
             }
-            _ => nodes
+        } else {
+            nodes
                 .into_iter()
                 .find_map(identity)
-                .and_then(AstNode::trailing_whitespace),
+                .and_then(AstNode::trailing_whitespace)
         }
     }
 
