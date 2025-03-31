@@ -83,17 +83,32 @@ pub fn structured_merge(
         settings,
         debug_dir,
     );
-    debug!("{result_tree}");
+    if let Some(result_tree) = result_tree {
+        debug!("{result_tree}");
 
-    Ok(MergeResult {
-        contents: result_tree.pretty_print(&class_mapping, settings),
-        conflict_count: result_tree.count_conflicts(settings),
-        conflict_mass: result_tree.conflict_mass(),
-        method: if parsed_merge.is_none() {
-            FULLY_STRUCTURED_METHOD
-        } else {
-            STRUCTURED_RESOLUTION_METHOD
-        },
-        has_additional_issues: false,
-    })
+        Ok(MergeResult {
+            contents: result_tree.pretty_print(&class_mapping, settings),
+            conflict_count: result_tree.count_conflicts(settings),
+            conflict_mass: result_tree.conflict_mass(),
+            method: if parsed_merge.is_none() {
+                FULLY_STRUCTURED_METHOD
+            } else {
+                STRUCTURED_RESOLUTION_METHOD
+            },
+            has_additional_issues: false,
+        })
+    } else {
+        debug!("");
+        Ok(MergeResult {
+            contents: String::new(),
+            conflict_count: 0,
+            conflict_mass: 0,
+            method: if parsed_merge.is_none() {
+                FULLY_STRUCTURED_METHOD
+            } else {
+                STRUCTURED_RESOLUTION_METHOD
+            },
+            has_additional_issues: false,
+        })
+    }
 }

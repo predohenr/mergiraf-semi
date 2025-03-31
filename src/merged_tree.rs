@@ -667,6 +667,40 @@ impl<'a> MergedTree<'a> {
     }
 }
 
+pub(crate) trait PrettyPrint<'a, 'u> {
+    fn pretty_print(
+        &'u self,
+        class_mapping: &ClassMapping<'a>,
+        settings: &DisplaySettings,
+    ) -> String;
+}
+
+impl<'a, 'u> PrettyPrint<'a, 'u> for MergedTree<'a>
+where
+    'u: 'a,
+{
+    fn pretty_print(
+        &'u self,
+        class_mapping: &ClassMapping<'a>,
+        settings: &DisplaySettings,
+    ) -> String {
+        self.pretty_print(class_mapping, settings)
+    }
+}
+
+impl<'a, 'u> PrettyPrint<'a, 'u> for Option<MergedTree<'a>>
+where
+    'u: 'a,
+{
+    fn pretty_print(
+        &'u self,
+        class_mapping: &ClassMapping<'a>,
+        settings: &DisplaySettings,
+    ) -> String {
+        self.as_ref()
+            .map_or_else(String::new, |t| t.pretty_print(class_mapping, settings))
+    }
+}
 impl Display for MergedTree<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.debug_print(0))

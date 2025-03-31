@@ -330,7 +330,10 @@ fn postprocess_tree<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{lang_profile::LangProfile, settings::DisplaySettings, test_utils::ctx};
+    use crate::{
+        lang_profile::LangProfile, merged_tree::PrettyPrint, settings::DisplaySettings,
+        test_utils::ctx,
+    };
 
     use super::*;
 
@@ -375,8 +378,9 @@ mod tests {
             &settings,
             None,
         );
-
+        let merged_tree = merged_tree.expect("not empty");
         debug!("{merged_tree}");
+
         let pretty_printed = merged_tree.pretty_print(&classmapping, &settings);
         assert_eq!(pretty_printed, "[0, 1, {\"a\":2}, 3]");
     }
@@ -758,6 +762,7 @@ fn baz() {
             &settings,
             None,
         );
+        let merged_tree = merged_tree.expect("not empty");
 
         /// Whether line-based fallback was performed on any node in this tree
         fn contains_line_based_merge(tree: &MergedTree) -> bool {
