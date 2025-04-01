@@ -9,7 +9,6 @@ on:
 env:
   CARGO_INCREMENTAL: 0
   CARGO_PROFILE_TEST_DEBUG: 0
-  CARGO_CI: 1
 
 jobs:
   test:
