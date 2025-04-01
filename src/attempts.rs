@@ -224,7 +224,7 @@ impl AttemptsCache {
 
 #[cfg(test)]
 mod tests {
-    use core::array;
+    use std::{array, thread, time::Duration};
 
     use super::*;
 
@@ -315,7 +315,7 @@ mod tests {
         // create a few stale attempts
         let attempts: [Attempt; 4] = array::from_fn(|_| {
             // compensate for file system timestamp (im)precision
-            std::thread::sleep(core::time::Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(100));
             cache
                 .new_attempt(
                     Path::new("foo/bar/MyFile"),
