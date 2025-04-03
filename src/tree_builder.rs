@@ -1046,7 +1046,8 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 }
 
 fn fmt_set<S>(s: &HashSet<(Revision, PCSNode<'_>), S>) -> impl Display {
-    s.iter().map(|(r, n)| format!("({r},{n})")).format(", ")
+    s.iter()
+        .format_with(", ", |(r, n), f| f(&format_args!("({r},{n})")))
 }
 
 #[cfg(test)]

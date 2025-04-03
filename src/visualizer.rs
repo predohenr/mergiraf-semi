@@ -162,8 +162,7 @@ fn add_node<W: Write>(
         "    {nodeid}[{}]",
         attrs
             .iter()
-            .map(|(k, v)| format!("{k}=\"{v}\""))
-            .format(",")
+            .format_with(",", |(k, v), f| f(&format_args!("{k}=\"{v}\"")))
     )?;
 
     if !is_exact_match {

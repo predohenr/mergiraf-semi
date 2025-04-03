@@ -508,8 +508,7 @@ pub fn languages(gitattributes: bool) -> String {
                 lang_profile
                     .extensions
                     .iter()
-                    .map(|ext| format!("*.{ext}"))
-                    .format(", ")
+                    .format_with(", ", |ext, f| f(&format_args!("*.{ext}")))
             );
         }
     }

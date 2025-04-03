@@ -22,12 +22,10 @@ impl Display for Signature<'_, '_> {
                 .iter()
                 .map(|x| format!(
                     "[{}]",
-                    x.iter()
-                        .map(|element| match element {
-                            AstNodeEquiv::Original(ast_node) => ast_node.source.to_owned(),
-                            AstNodeEquiv::Merged(tree) => tree.to_string(),
-                        })
-                        .format(", ")
+                    x.iter().format_with(", ", |element, f| match element {
+                        AstNodeEquiv::Original(ast_node) => f(&ast_node.source),
+                        AstNodeEquiv::Merged(tree) => f(tree),
+                    })
                 ))
                 .format(", ")
         )
