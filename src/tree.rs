@@ -1,4 +1,3 @@
-use core::fmt::Write;
 use std::{
     borrow::Cow,
     cell::UnsafeCell,
@@ -402,22 +401,15 @@ impl<'a> AstNode<'a> {
         impl Display for SExpr<'_, '_> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 if self.0.is_leaf() {
-                    f.write_str(self.0.source)?;
+                    f.write_str(self.0.source)
                 } else {
-                    f.write_str(self.0.grammar_name)?;
-                    f.write_char('(')?;
-                    let mut first = true;
-                    for child in &self.0.children {
-                        if first {
-                            first = false;
-                        } else {
-                            f.write_char(' ')?;
-                        }
-                        write!(f, "{child}")?;
-                    }
-                    f.write_char(')')?;
+                    write!(
+                        f,
+                        "{grammar_name}({children})",
+                        grammar_name = self.0.grammar_name,
+                        children = self.0.children.iter().copied().map(SExpr).format(" ")
+                    )
                 }
-                Ok(())
             }
         }
         SExpr(self)
