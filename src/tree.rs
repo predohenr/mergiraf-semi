@@ -1,3 +1,4 @@
+use core::fmt::Write;
 use std::{
     borrow::Cow,
     cell::UnsafeCell,
@@ -396,29 +397,30 @@ impl<'a> AstNode<'a> {
     }
 
     /// Represent the tree as a sort of S-expression
-    pub fn s_expr(&self) -> String {
-        let mut output = String::new();
-        self.internal_s_expr(&mut output);
-        output
-    }
-
-    fn internal_s_expr(&self, output: &mut String) {
-        if self.is_leaf() {
-            output.push_str(self.source);
-        } else {
-            output.push_str(self.grammar_name);
-            output.push('(');
-            let mut first = true;
-            for child in &self.children {
-                if first {
-                    first = false;
+    pub fn s_expr(&self) -> impl Display {
+        struct SExpr<'a, 'b>(&'a AstNode<'b>);
+        impl Display for SExpr<'_, '_> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                if self.0.is_leaf() {
+                    f.write_str(self.0.source)?;
                 } else {
-                    output.push(' ');
+                    f.write_str(self.0.grammar_name)?;
+                    f.write_char('(')?;
+                    let mut first = true;
+                    for child in &self.0.children {
+                        if first {
+                            first = false;
+                        } else {
+                            f.write_char(' ')?;
+                        }
+                        write!(f, "{child}")?;
+                    }
+                    f.write_char(')')?;
                 }
-                child.internal_s_expr(output);
+                Ok(())
             }
-            output.push(')');
         }
+        SExpr(self)
     }
 
     /// The node that comes just before this node in the list of children
@@ -868,7 +870,7 @@ mod tests {
         let ctx = ctx();
 
         assert_eq!(
-            ctx.parse_json("{\"foo\": 3}").root().s_expr(),
+            ctx.parse_json("{\"foo\": 3}").root().s_expr().to_string(),
             "document(object({ pair(string(\" foo \") : 3) }))"
         );
     }
