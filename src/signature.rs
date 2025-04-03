@@ -18,16 +18,13 @@ impl Display for Signature<'_, '_> {
         write!(
             f,
             "Signature [{}]",
-            self.0
-                .iter()
-                .map(|x| format!(
-                    "[{}]",
-                    x.iter().format_with(", ", |element, f| match element {
-                        AstNodeEquiv::Original(ast_node) => f(&ast_node.source),
-                        AstNodeEquiv::Merged(tree) => f(tree),
-                    })
-                ))
-                .format(", ")
+            self.0.iter().format_with(", ", |x, f| f(&format_args!(
+                "[{}]",
+                x.iter().format_with(", ", |element, f| match element {
+                    AstNodeEquiv::Original(ast_node) => f(&ast_node.source),
+                    AstNodeEquiv::Merged(tree) => f(tree),
+                })
+            )))
         )
     }
 }
