@@ -805,7 +805,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn check_heights() {
+    fn heights() {
         let ctx = ctx();
 
         assert_eq!(ctx.parse_json("null").height(), 1);
@@ -814,7 +814,7 @@ mod tests {
     }
 
     #[test]
-    fn check_sizes() {
+    fn sizes() {
         let ctx = ctx();
 
         assert_eq!(ctx.parse_json("null").size(), 2);
@@ -823,7 +823,7 @@ mod tests {
     }
 
     #[test]
-    fn check_children_by_field_names() {
+    fn children_by_field_names() {
         let ctx = ctx();
 
         let root = ctx.parse_json("{\"foo\": 3}").root();
@@ -841,7 +841,7 @@ mod tests {
     }
 
     #[test]
-    fn check_children_by_field_names_with_modifiers() {
+    fn children_by_field_names_with_modifiers() {
         let ctx = ctx();
 
         let root = ctx.parse_java("public class MyCls {}").root();
@@ -853,7 +853,7 @@ mod tests {
     }
 
     #[test]
-    fn check_atomic_nodes() {
+    fn atomic_nodes() {
         let ctx = ctx();
 
         let root = ctx.parse_java("import java.io.InputStream;").root();
@@ -862,7 +862,7 @@ mod tests {
     }
 
     #[test]
-    fn check_s_expr() {
+    fn s_expr() {
         let ctx = ctx();
 
         assert_eq!(
