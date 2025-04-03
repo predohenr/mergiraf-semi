@@ -425,14 +425,14 @@ impl<'a> AstNode<'a> {
     /// of its parent (if any).
     pub fn predecessor(&'a self) -> Option<&'a Self> {
         let parent = self.parent()?;
-        let mut previous = None;
-        for sibling in &parent.children {
-            if sibling.id == self.id {
-                return previous;
-            }
-            previous = Some(sibling);
-        }
-        None
+        parent
+            .children
+            .iter()
+            .rev()
+            .skip_while(|sibling| sibling.id != self.id)
+            .skip(1)
+            .copied()
+            .next()
     }
 
     /// The node that comes just after this node in the list of children
