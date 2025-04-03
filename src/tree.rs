@@ -424,8 +424,7 @@ impl<'a> AstNode<'a> {
     /// The node that comes just before this node in the list of children
     /// of its parent (if any).
     pub fn predecessor(&'a self) -> Option<&'a Self> {
-        let parent = self.parent()?;
-        parent
+        self.parent()?
             .children
             .iter()
             .rev()
@@ -438,8 +437,7 @@ impl<'a> AstNode<'a> {
     /// The node that comes just after this node in the list of children
     /// of its parent (if any).
     pub fn successor(&'a self) -> Option<&'a Self> {
-        let parent = self.parent()?;
-        parent
+        self.parent()?
             .children
             .iter()
             .skip_while(|sibling| sibling.id != self.id)
