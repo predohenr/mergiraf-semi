@@ -477,12 +477,7 @@ impl<'a> AstNode<'a> {
     pub fn preceding_whitespace(&'a self) -> Option<&'a str> {
         let parent = self.parent()?;
         let predecessor = self.predecessor()?;
-        // in some grammars (such as Go), newlines can be parsed explicitly as nodes, meaning that
-        // the whitespace at the end of the predecessor should be included as well in what we return here.
-        let predecessor_end_whitespace =
-            predecessor.source.len() - predecessor.source.trim_end().len();
-        let start =
-            predecessor.byte_range.end - predecessor_end_whitespace - parent.byte_range.start;
+        let start = predecessor.byte_range.end - parent.byte_range.start;
         let end = self.byte_range.start - parent.byte_range.start;
         Some(&parent.source[start..end])
     }
