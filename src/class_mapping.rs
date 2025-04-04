@@ -95,7 +95,7 @@ impl<'a> ClassMapping<'a> {
 
     /// Adds a matching to the mapping. The `from_rev` indicates the revision that's on the left hand side of the mapping.
     /// The `to_rev` indicates the revision that's on the right hand side of the matching.
-    /// If we are matching from left to right, then we only add mappings for nodes where at least one isn't previously matched.
+    /// If we are matching from left to right, then we disregard matchings which are inconsistent with the base matchings added so far.
     /// The `is_exact` parameters indicates if two nodes being matched indicates that they are isomorphic.
     pub fn add_matching(
         &mut self,
@@ -107,6 +107,16 @@ impl<'a> ClassMapping<'a> {
         for (right_node, left_match) in matching.iter_right_to_left() {
             let key = RevNode::new(to_rev, right_node);
             let left_rev_node = RevNode::new(from_rev, left_match);
+            if (from_rev == Revision::Left && to_rev == Revision::Right)
+                && matches!((self.map.get(&left_rev_node), self.map.get(&key)),
+                (Some(Leader(RevNode { rev: Revision::Base, node: left_leader })), Some(Leader(RevNode { rev: Revision::Base, node: right_leader }))) if left_leader != right_leader)
+            {
+                // Adding this matching would render the class mapping inconsistent, as the nodes are
+                // already matched to distinct base nodes. So ignore this matching.
+                // TODO: consider following Spork in restricting this even more, by requiring that both nodes aren't matched at all
+                // and that the parents of both nodes need to be matched together.
+                continue;
+            }
             let leader_left = self.map.get(&key).map_or(&key, |leader| &leader.0);
             let leader_right = self
                 .map
@@ -422,6 +432,48 @@ mod tests {
     use crate::test_utils::ctx;
 
     use super::*;
+
+    /// If the left to right matching is inconsistent with the base to left and base to right matchings,
+    /// then it is ignored.
+    #[test]
+    fn left_right_matching_does_not_override_base_matchings() {
+        let ctx = ctx();
+
+        let base_tree = ctx.parse_rust("struct Foo;\nstruct Bar;\n");
+        let left_tree = ctx.parse_rust("struct Foo;\n");
+        let right_tree = ctx.parse_rust("struct Bar;\n");
+
+        let foo_base = RevNode::new(Revision::Base, base_tree.root().child(0).unwrap());
+        assert_eq!(foo_base.node.source, "struct Foo;");
+        let bar_base = RevNode::new(Revision::Base, base_tree.root().child(1).unwrap());
+        assert_eq!(bar_base.node.source, "struct Bar;");
+        let foo_left = RevNode::new(Revision::Left, left_tree.root().child(0).unwrap());
+        assert_eq!(foo_left.node.source, "struct Foo;");
+        let bar_right = RevNode::new(Revision::Right, right_tree.root().child(0).unwrap());
+        assert_eq!(bar_right.node.source, "struct Bar;");
+
+        let mut base_left = Matching::new();
+        base_left.add(base_tree.root(), left_tree.root());
+        base_left.add(foo_base.node, foo_left.node);
+        let mut base_right = Matching::new();
+        base_right.add(base_tree.root(), right_tree.root());
+        base_right.add(bar_base.node, bar_right.node);
+        let mut left_right = Matching::new();
+        left_right.add(left_tree.root(), right_tree.root());
+        left_right.add(foo_left.node, bar_right.node); // this matching is wrong!
+
+        let mut class_mapping = ClassMapping::new();
+        class_mapping.add_matching(&base_left, Revision::Base, Revision::Left, false);
+        class_mapping.add_matching(&base_right, Revision::Base, Revision::Right, false);
+        class_mapping.add_matching(&left_right, Revision::Left, Revision::Right, false);
+
+        // because the wrong left-right matching is between nodes that were already matched to the base,
+        // it was ignored and has not merged the classes of both nodes
+        assert_ne!(
+            class_mapping.map_to_leader(foo_left),
+            class_mapping.map_to_leader(bar_right)
+        )
+    }
 
     /// If two out of three revisions are matched, then all three revisions get mapped to the same leader
     #[test]
