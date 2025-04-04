@@ -738,7 +738,21 @@ fn baz() {
         let left = ctx.parse_rust(left);
         let right = ctx.parse_rust(right);
 
-        let (primary_matcher, auxiliary_matcher) = rust_matchers();
+        let lang_profile = LangProfile::rust();
+        let primary_matcher = TreeMatcher {
+            min_height: 1,
+            sim_threshold: 0.4,
+            max_recovery_size: 100,
+            use_rted: true,
+            lang_profile,
+        };
+        let auxiliary_matcher = TreeMatcher {
+            min_height: 2,
+            sim_threshold: 0.6,
+            max_recovery_size: 100,
+            use_rted: false,
+            lang_profile,
+        };
 
         let settings = DisplaySettings {
             conflict_marker_size: Some(9),
