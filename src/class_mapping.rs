@@ -472,7 +472,7 @@ mod tests {
         assert_ne!(
             class_mapping.map_to_leader(foo_left),
             class_mapping.map_to_leader(bar_right)
-        )
+        );
     }
 
     /// If two out of three revisions are matched, then all three revisions get mapped to the same leader
