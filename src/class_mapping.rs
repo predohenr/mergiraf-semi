@@ -104,12 +104,12 @@ impl<'a> ClassMapping<'a> {
         to_rev: Revision,
         is_exact: bool,
     ) {
-        for (right_node, left_match) in matching.iter_right_to_left() {
-            let key = RevNode::new(to_rev, right_node);
-            let left_rev_node = RevNode::new(from_rev, left_match);
+        for (right_node, left_node) in matching.iter_right_to_left() {
+            let left_rev_node = RevNode::new(from_rev, left_node);
+            let right_rev_node = RevNode::new(to_rev, right_node);
             // TODO: use if-let-chains when they become stable
             if (from_rev == Revision::Left && to_rev == Revision::Right)
-                && matches!((self.map.get(&left_rev_node), self.map.get(&key)),
+                && matches!((self.map.get(&left_rev_node), self.map.get(&right_rev_node)),
                 (Some(Leader(RevNode { rev: Revision::Base, node: left_leader })), Some(Leader(RevNode { rev: Revision::Base, node: right_leader }))) if left_leader != right_leader)
             {
                 // Adding this matching would render the class mapping inconsistent, as the nodes are
@@ -118,7 +118,10 @@ impl<'a> ClassMapping<'a> {
                 // and that the parents of both nodes need to be matched together.
                 continue;
             }
-            let leader_left = self.map.get(&key).map_or(&key, |leader| &leader.0);
+            let leader_left = self
+                .map
+                .get(&right_rev_node)
+                .map_or(&right_rev_node, |leader| &leader.0);
             let leader_right = self
                 .map
                 .get(&left_rev_node)
@@ -129,14 +132,14 @@ impl<'a> ClassMapping<'a> {
                 *leader_right
             });
             self.map.insert(left_rev_node, leader);
-            self.map.insert(key, leader);
+            self.map.insert(right_rev_node, leader);
             let repr = self.representatives.entry(leader).or_default();
             // keep track of exact matchings
             if is_exact && !repr.contains_key(&to_rev) {
                 let exacts = self.exact_matchings.entry(leader).or_default();
                 *exacts += 1;
             }
-            repr.insert(to_rev, key);
+            repr.insert(to_rev, right_rev_node);
             repr.insert(from_rev, left_rev_node);
         }
     }
