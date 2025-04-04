@@ -95,7 +95,7 @@ impl<'a> ClassMapping<'a> {
 
     /// Adds a matching to the mapping. The `from_rev` indicates the revision that's on the left hand side of the mapping.
     /// The `to_rev` indicates the revision that's on the right hand side of the matching.
-    /// We only add mappings for nodes which are previously not matched.
+    /// If we are matching from left to right, then we only add mappings for nodes where at least one isn't previously matched.
     /// The `is_exact` parameters indicates if two nodes being matched indicates that they are isomorphic.
     pub fn add_matching(
         &mut self,
@@ -107,10 +107,17 @@ impl<'a> ClassMapping<'a> {
         for (right_node, left_match) in matching.iter_right_to_left() {
             let key = RevNode::new(to_rev, right_node);
             let left_rev_node = RevNode::new(from_rev, left_match);
-            let leader = *self
+            let leader_left = self.map.get(&key).map_or(&key, |leader| &leader.0);
+            let leader_right = self
                 .map
-                .entry(left_rev_node)
-                .or_insert(Leader(left_rev_node));
+                .get(&left_rev_node)
+                .map_or(&left_rev_node, |leader| &leader.0);
+            let leader = Leader(if leader_left.rev < leader_right.rev {
+                *leader_left
+            } else {
+                *leader_right
+            });
+            self.map.insert(left_rev_node, leader);
             self.map.insert(key, leader);
             let repr = self.representatives.entry(leader).or_default();
             // keep track of exact matchings
@@ -407,5 +414,76 @@ impl RevisionNESet {
 impl Display for RevisionNESet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::test_utils::ctx;
+
+    use super::*;
+
+    /// If two out of three revisions are matched, then all three revisions get mapped to the same leader
+    #[test]
+    fn classes_are_properly_merged() {
+        let ctx = ctx();
+
+        let base_tree = ctx.parse_rust("struct FooBase;\nstruct BarBase;\nstruct HeyBase;\n");
+        let left_tree = ctx.parse_rust("struct FooLeft;\nstruct BarLeft;\nstruct HeyLeft;\n");
+        let right_tree = ctx.parse_rust("struct FooRight;\nstruct BarRight;\nstruct HeyRight;\n");
+
+        let foo_base = RevNode::new(Revision::Base, base_tree.root().child(0).unwrap());
+        let foo_left = RevNode::new(Revision::Left, left_tree.root().child(0).unwrap());
+        let foo_right = RevNode::new(Revision::Right, right_tree.root().child(0).unwrap());
+        let bar_base = RevNode::new(Revision::Base, base_tree.root().child(1).unwrap());
+        let bar_left = RevNode::new(Revision::Left, left_tree.root().child(1).unwrap());
+        let bar_right = RevNode::new(Revision::Right, right_tree.root().child(1).unwrap());
+        let hey_base = RevNode::new(Revision::Base, base_tree.root().child(2).unwrap());
+        let hey_left = RevNode::new(Revision::Left, left_tree.root().child(2).unwrap());
+        let hey_right = RevNode::new(Revision::Right, right_tree.root().child(2).unwrap());
+
+        let mut base_left = Matching::new();
+        base_left.add(base_tree.root(), left_tree.root());
+        // FooBase and FooLeft are NOT matched
+        base_left.add(bar_base.node, bar_left.node); // BarBase and BarLeft are matched
+        base_left.add(hey_base.node, hey_left.node); // HeyBase and HeyLeft are matched
+
+        let mut base_right = Matching::new();
+        base_right.add(base_tree.root(), right_tree.root());
+        base_right.add(foo_base.node, foo_right.node); // FooBase and FooRight are matched
+        // BarBase and BarRight are NOT matched
+        base_right.add(hey_base.node, hey_right.node); // HeyBase and HeyRight are matched
+
+        let mut left_right = Matching::new();
+        left_right.add(left_tree.root(), right_tree.root());
+        left_right.add(foo_left.node, foo_right.node); // FooLeft and FooRight are matched
+        left_right.add(bar_left.node, bar_right.node); // BarLeft and BarRight are matched
+        // HeyLeft and HeyRight are NOT matched
+
+        let mut class_mapping = ClassMapping::new();
+        class_mapping.add_matching(&base_left, Revision::Base, Revision::Left, false);
+        class_mapping.add_matching(&base_right, Revision::Base, Revision::Right, false);
+        class_mapping.add_matching(&left_right, Revision::Left, Revision::Right, false);
+
+        // matchings of Foo look like: Base <-> Right <-> Left
+        let expected_foo_leader = Leader(foo_base);
+        assert_eq!(class_mapping.map_to_leader(foo_base), expected_foo_leader);
+        assert_eq!(class_mapping.map_to_leader(foo_left), expected_foo_leader);
+        assert_eq!(class_mapping.map_to_leader(foo_right), expected_foo_leader);
+        assert!(class_mapping.revision_set(expected_foo_leader).is_full());
+
+        // matchings of Bar look like: Base <-> Left <-> Right
+        let expected_bar_leader = Leader(bar_base);
+        assert_eq!(class_mapping.map_to_leader(bar_base), expected_bar_leader);
+        assert_eq!(class_mapping.map_to_leader(bar_left), expected_bar_leader);
+        assert_eq!(class_mapping.map_to_leader(bar_right), expected_bar_leader);
+        assert!(class_mapping.revision_set(expected_bar_leader).is_full());
+
+        // matchings of Hey look like: Left <-> Base <-> Right
+        let expected_hey_leader = Leader(hey_base);
+        assert_eq!(class_mapping.map_to_leader(hey_base), expected_hey_leader);
+        assert_eq!(class_mapping.map_to_leader(hey_left), expected_hey_leader);
+        assert_eq!(class_mapping.map_to_leader(hey_right), expected_hey_leader);
+        assert!(class_mapping.revision_set(expected_hey_leader).is_full());
     }
 }

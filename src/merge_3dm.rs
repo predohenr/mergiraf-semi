@@ -184,13 +184,6 @@ fn create_class_mapping<'a>(
         true,
     );
     class_mapping.add_matching(
-        &left_right_matching.exact,
-        Revision::Left,
-        Revision::Right,
-        true,
-    );
-
-    class_mapping.add_matching(
         &base_left_matching.full,
         Revision::Base,
         Revision::Left,
@@ -201,6 +194,15 @@ fn create_class_mapping<'a>(
         Revision::Base,
         Revision::Right,
         false,
+    );
+    // Only add the left-right matching after adding all the matchings
+    // to the base, because we want to selectively add left-right matches
+    // only when they don't conflict with base matchings.
+    class_mapping.add_matching(
+        &left_right_matching.exact,
+        Revision::Left,
+        Revision::Right,
+        true,
     );
     class_mapping.add_matching(
         &left_right_matching.full,
