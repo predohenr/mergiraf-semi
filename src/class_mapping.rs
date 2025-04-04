@@ -500,21 +500,21 @@ mod tests {
 
         let mut base_left = Matching::new();
         base_left.add(base_tree.root(), left_tree.root());
-        // FooBase and FooLeft are NOT matched
+        //                                                       FooBase and FooLeft are NOT matched
         base_left.add(bar_base.node, bar_left.node); // BarBase and BarLeft are matched
         base_left.add(hey_base.node, hey_left.node); // HeyBase and HeyLeft are matched
 
         let mut base_right = Matching::new();
         base_right.add(base_tree.root(), right_tree.root());
         base_right.add(foo_base.node, foo_right.node); // FooBase and FooRight are matched
-        // BarBase and BarRight are NOT matched
+        //                                                         BarBase and BarRight are NOT matched
         base_right.add(hey_base.node, hey_right.node); // HeyBase and HeyRight are matched
 
         let mut left_right = Matching::new();
         left_right.add(left_tree.root(), right_tree.root());
         left_right.add(foo_left.node, foo_right.node); // FooLeft and FooRight are matched
         left_right.add(bar_left.node, bar_right.node); // BarLeft and BarRight are matched
-        // HeyLeft and HeyRight are NOT matched
+        //                                                         HeyLeft and HeyRight are NOT matched
 
         let mut class_mapping = ClassMapping::new();
         class_mapping.add_matching(&base_left, Revision::Base, Revision::Left, false);
