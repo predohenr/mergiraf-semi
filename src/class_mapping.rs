@@ -107,6 +107,7 @@ impl<'a> ClassMapping<'a> {
         for (right_node, left_match) in matching.iter_right_to_left() {
             let key = RevNode::new(to_rev, right_node);
             let left_rev_node = RevNode::new(from_rev, left_match);
+            // TODO: use if-let-chains when they become stable
             if (from_rev == Revision::Left && to_rev == Revision::Right)
                 && matches!((self.map.get(&left_rev_node), self.map.get(&key)),
                 (Some(Leader(RevNode { rev: Revision::Base, node: left_leader })), Some(Leader(RevNode { rev: Revision::Base, node: right_leader }))) if left_leader != right_leader)
