@@ -138,13 +138,14 @@ impl<'a> AstNode<'a> {
         }
         let node = cursor.node();
         let range = node.byte_range();
-        // Strip any trailing newline from the node's source, because we're better
+        // Strip any trailing newlines from the node's source, because we're better
         // off treating this as whitespace between nodes, to keep track of indentation shifts
         let local_source = &global_source[range.start..range.end];
         let (range, local_source) = if local_source.ends_with('\n') && node.parent().is_some() {
+            let trimmed_source = local_source.trim_end_matches('\n');
             (
-                range.start..(range.end - 1),
-                &local_source[..(local_source.len() - 1)],
+                range.start..(range.end - local_source.len() + trimmed_source.len()),
+                trimmed_source,
             )
         } else {
             (range, local_source)
@@ -1016,8 +1017,8 @@ mod tests {
         let tree = ctx.parse_toml("[foo]\na = 1\n\n[bar]\nb = 2");
         let first_table = tree.root().child(0).unwrap();
         let second_table = tree.root().child(1).unwrap();
-        assert_eq!(first_table.source, "[foo]\na = 1\n");
-        assert_eq!(first_table.trailing_whitespace(), Some("\n"));
+        assert_eq!(first_table.source, "[foo]\na = 1");
+        assert_eq!(first_table.trailing_whitespace(), None);
         assert_eq!(second_table.source, "[bar]\nb = 2");
         assert_eq!(second_table.trailing_whitespace(), None);
     }
