@@ -137,9 +137,9 @@ impl<'a> AstNode<'a> {
             cursor.goto_parent();
         }
         let node = cursor.node();
-        let range = node.byte_range();
         // Strip any trailing newlines from the node's source, because we're better
         // off treating this as whitespace between nodes, to keep track of indentation shifts
+        let range = node.byte_range();
         let local_source = &global_source[range.start..range.end];
         let (range, local_source) = if local_source.ends_with('\n') && node.parent().is_some() {
             let trimmed_source = local_source.trim_end_matches('\n');
