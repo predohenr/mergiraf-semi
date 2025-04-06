@@ -682,7 +682,7 @@ impl<'a> MergedTree<'a> {
                     .iter()
                     .map(|c| c.debug_print(indentation + 2))
                     .format("\n");
-                format!("Mixed({node}\n{children_printed}{result})")
+                format!("Mixed({node}\n{children_printed}\n{result})")
             }
             Self::Conflict { .. } => "Conflict()".to_string(),
             Self::LineBasedMerge { .. } => "LineBasedConflict()".to_string(),
