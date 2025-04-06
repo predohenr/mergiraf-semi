@@ -811,11 +811,7 @@ mod tests {
         let pair = object.child(1).unwrap();
         assert_eq!(root.children_by_field_name("non_existent"), None);
         assert_eq!(
-            pair.children_by_field_name("key")
-                .unwrap()
-                .first()
-                .unwrap()
-                .source,
+            pair.children_by_field_name("key").unwrap()[0].source,
             "\"foo\""
         );
     }
