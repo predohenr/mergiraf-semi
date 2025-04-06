@@ -995,11 +995,9 @@ mod tests {
         let tree = ctx.parse_json("[1, 2,\n 3]");
 
         let root = tree.root()[0];
-        let bracket = root[0];
-        let one = root[1];
-        let comma = root[2];
-        let two = root[3];
-        let three = root[5];
+        let [bracket, one, comma, two, _, three] = root[0..=5] else {
+            unreachable!()
+        };
 
         assert_eq!(root.preceding_whitespace(), None);
         assert_eq!(bracket.preceding_whitespace(), None);
@@ -1096,11 +1094,9 @@ mod tests {
         let tree = ctx.parse_json(" [ 1 , 2,\n 3]");
 
         let root = tree.root()[0];
-        let bracket = root[0];
-        let one = root[1];
-        let comma = root[2];
-        let two = root[3];
-        let comma_2 = root[4];
+        let [bracket, one, comma, two, comma_2] = root[0..=4] else {
+            unreachable!()
+        };
 
         assert_eq!(bracket.source_with_surrounding_whitespace(), "[ ");
         assert_eq!(one.source_with_surrounding_whitespace(), " 1 ");
