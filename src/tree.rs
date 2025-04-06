@@ -1210,7 +1210,7 @@ mod tests {
             ]
         );
         assert_eq!(
-            comment_2.children.get(1).unwrap().preceding_whitespace(),
+            comment_2.child(1).unwrap().preceding_whitespace(),
             Some("\n   ")
         );
     }
