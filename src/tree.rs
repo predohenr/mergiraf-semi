@@ -5,9 +5,10 @@ use std::{
     fmt::Display,
     hash::{Hash, Hasher},
     iter::zip,
-    ops::{Index, Range},
-    slice::SliceIndex,
+    ops::Range,
 };
+#[cfg(test)]
+use std::{ops::Index, slice::SliceIndex};
 
 use either::Either;
 use itertools::Itertools;
@@ -730,6 +731,7 @@ impl Display for AstNode<'_> {
     }
 }
 
+#[cfg(test)] // should avoid panicking code elsewhere
 impl<'a, T> Index<T> for AstNode<'a>
 where
     T: SliceIndex<[&'a Self]>,
