@@ -139,6 +139,7 @@ impl LangProfile {
             .children
             .iter()
             .any(|child| self.has_signature_conflicts(child));
+
         conflict_in_children
             || (if node.children.len() < 2 {
                 false
