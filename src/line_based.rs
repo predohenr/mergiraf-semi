@@ -1,6 +1,5 @@
-use crate::{MergeResult, TSParser, parse, pcs::Revision};
+use crate::{MergeResult, TSParser};
 use diffy_imara::{Algorithm, ConflictStyle, MergeOptions};
-use typed_arena::Arena;
 
 use crate::{lang_profile::LangProfile, parsed_merge::ParsedMerge, settings::DisplaySettings};
 pub const LINE_BASED_METHOD: &str = "line_based";
@@ -54,32 +53,16 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
     let parsed_merge =
         line_based_merge_parsed(contents_base, contents_left, contents_right, settings);
 
-    let mut merge_result = MergeResult::from_parsed_merge(&parsed_merge, settings);
+    let merge_result = MergeResult::from_parsed_merge(&parsed_merge, settings);
 
     let mut parser = TSParser::new();
     parser
         .set_language(&lang_profile.language)
         .unwrap_or_else(|_| panic!("Error loading {} grammar", lang_profile.name));
-
-    let mut revision_has_issues = |contents: &str| {
-        let arena = Arena::new();
-        let ref_arena = Arena::new();
-
-        let tree = parse(&mut parser, contents, lang_profile, &arena, &ref_arena);
-
-        tree.map_or(true, |ast| lang_profile.has_signature_conflicts(ast.root()))
-    };
-
-    merge_result.has_additional_issues = if merge_result.conflict_count == 0 {
-        revision_has_issues(&merge_result.contents)
-    } else {
-        [Revision::Base, Revision::Left, Revision::Right]
-            .into_iter()
-            .map(|rev| parsed_merge.reconstruct_revision(rev))
-            .any(|contents| revision_has_issues(&contents))
-    };
-
-    (parsed_merge, merge_result)
+    (
+        parsed_merge,
+        merge_result.detect_syntax_and_signature_errors(&mut parser, lang_profile, settings),
+    )
 }
 
 #[cfg(test)]
