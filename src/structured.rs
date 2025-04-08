@@ -111,5 +111,6 @@ pub fn structured_merge(
             STRUCTURED_RESOLUTION_METHOD
         },
         has_additional_issues: false,
-    })
+    }
+    .detect_syntax_and_signature_errors(&mut parser, lang_profile, settings))
 }
