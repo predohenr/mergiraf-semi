@@ -60,8 +60,13 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
     let parsed_merge =
         line_based_merge_parsed(contents_base, contents_left, contents_right, settings);
 
-    let contents = parsed_merge.render(settings);
-    let conflict_count = parsed_merge.conflict_count();
+    let mut merge_result = MergeResult {
+        contents: parsed_merge.render(settings),
+        conflict_count: parsed_merge.conflict_count(),
+        conflict_mass: parsed_merge.conflict_mass(),
+        method: LINE_BASED_METHOD,
+        has_additional_issues: true,
+    };
 
     let mut parser = TSParser::new();
     parser
@@ -77,8 +82,8 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
         tree.map_or(true, |ast| lang_profile.has_signature_conflicts(ast.root()))
     };
 
-    let has_additional_issues = if conflict_count == 0 {
-        revision_has_issues(&contents)
+    let has_additional_issues = if merge_result.conflict_count == 0 {
+        revision_has_issues(&merge_result.contents)
     } else {
         [Revision::Base, Revision::Left, Revision::Right]
             .into_iter()
@@ -86,13 +91,8 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
             .any(|contents| revision_has_issues(&contents))
     };
 
-    let merge_result = MergeResult {
-        contents,
-        conflict_count,
-        conflict_mass: parsed_merge.conflict_mass(),
-        method: LINE_BASED_METHOD,
-        has_additional_issues,
-    };
+    merge_result.has_additional_issues = has_additional_issues;
+
     (parsed_merge, merge_result)
 }
 
