@@ -281,7 +281,7 @@ impl<'a> MergedTree<'a> {
         settings: &DisplaySettings,
     ) -> String {
         let mut output = MergedText::new();
-        self.pretty_print_recursively(&mut output, class_mapping, None, "", settings);
+        self.pretty_print_recursively(&mut output, class_mapping, None, "");
         output.render(settings)
     }
 
@@ -292,7 +292,6 @@ impl<'a> MergedTree<'a> {
         class_mapping: &ClassMapping<'a>,
         previous_sibling: Option<&PreviousSibling<'a>>,
         indentation: &str,
-        settings: &DisplaySettings,
     ) {
         match self {
             Self::ExactTree {
@@ -330,7 +329,6 @@ impl<'a> MergedTree<'a> {
                         class_mapping,
                         previous_sibling.as_ref(),
                         &new_indentation,
-                        settings,
                     );
                     previous_sibling = match *c {
                         Self::ExactTree { node, .. }
@@ -625,12 +623,10 @@ impl<'a> MergedTree<'a> {
     }
 
     /// The number of conflicts in this merge
-    pub fn count_conflicts(&self, settings: &DisplaySettings) -> usize {
+    pub fn count_conflicts(&self) -> usize {
         match self {
             Self::ExactTree { .. } | Self::CommutativeChildSeparator { .. } => 0,
-            Self::MixedTree { children, .. } => {
-                children.iter().map(|c| c.count_conflicts(settings)).sum()
-            }
+            Self::MixedTree { children, .. } => children.iter().map(|c| c.count_conflicts()).sum(),
             Self::Conflict { .. } => 1,
             Self::LineBasedMerge { parsed, .. } => parsed.conflict_count(),
         }
