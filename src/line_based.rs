@@ -82,7 +82,7 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
         tree.map_or(true, |ast| lang_profile.has_signature_conflicts(ast.root()))
     };
 
-    let has_additional_issues = if merge_result.conflict_count == 0 {
+    merge_result.has_additional_issues = if merge_result.conflict_count == 0 {
         revision_has_issues(&merge_result.contents)
     } else {
         [Revision::Base, Revision::Left, Revision::Right]
@@ -90,8 +90,6 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
             .map(|rev| parsed_merge.reconstruct_revision(rev))
             .any(|contents| revision_has_issues(&contents))
     };
-
-    merge_result.has_additional_issues = has_additional_issues;
 
     (parsed_merge, merge_result)
 }
