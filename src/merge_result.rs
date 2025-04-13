@@ -56,6 +56,8 @@ impl MergeResult {
             conflict_count: parsed_merge.conflict_count(),
             conflict_mass: parsed_merge.conflict_mass(),
             method: LINE_BASED_METHOD,
+            // the line-based merge might have come from a non-syntax-aware tool,
+            // and we cautiously assume that it does have issues
             has_additional_issues: true,
         }
     }
