@@ -396,7 +396,7 @@ impl<'a> MergedTree<'a> {
                         .indentation_shift()
                         .unwrap_or("")
                 );
-                output.push_line_based_merge(parsed, &full_indentation, settings);
+                output.push_line_based_merge(parsed, &full_indentation);
             }
             Self::CommutativeChildSeparator { separator, .. } => {
                 output.push_merged(Cow::from(*separator));
