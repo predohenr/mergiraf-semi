@@ -626,7 +626,7 @@ impl<'a> MergedTree<'a> {
     pub fn count_conflicts(&self) -> usize {
         match self {
             Self::ExactTree { .. } | Self::CommutativeChildSeparator { .. } => 0,
-            Self::MixedTree { children, .. } => children.iter().map(|c| c.count_conflicts()).sum(),
+            Self::MixedTree { children, .. } => children.iter().map(Self::count_conflicts).sum(),
             Self::Conflict { .. } => 1,
             Self::LineBasedMerge { parsed, .. } => parsed.conflict_count(),
         }
