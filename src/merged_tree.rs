@@ -378,6 +378,9 @@ impl<'a> MergedTree<'a> {
                 );
             }
             Self::LineBasedMerge { parsed, node } => {
+                if parsed.is_empty() {
+                    return;
+                }
                 Self::add_preceding_whitespace(
                     output,
                     *node,

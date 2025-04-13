@@ -421,6 +421,11 @@ impl<'a> ParsedMerge<'a> {
             })
             .sum()
     }
+
+    // Whether the merge is empty when rendered
+    pub(crate) fn is_empty(&self) -> bool {
+        self.chunks.is_empty() || self.render_conflictless().is_some_and(|s| s.is_empty())
+    }
 }
 
 #[cfg(test)]
