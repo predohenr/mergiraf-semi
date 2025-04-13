@@ -1,4 +1,7 @@
-use crate::attempts::Attempt;
+use crate::{
+    attempts::Attempt, line_based::LINE_BASED_METHOD, parsed_merge::ParsedMerge,
+    settings::DisplaySettings,
+};
 use log::info;
 
 /// A merged output (represented as a string) together with statistics
@@ -41,6 +44,19 @@ impl MergeResult {
                     attempt.id()
                 ),
             }
+        }
+    }
+
+    pub(crate) fn from_parsed_merge(
+        parsed_merge: &ParsedMerge,
+        settings: &DisplaySettings,
+    ) -> Self {
+        Self {
+            contents: parsed_merge.render(settings),
+            conflict_count: parsed_merge.conflict_count(),
+            conflict_mass: parsed_merge.conflict_mass(),
+            method: LINE_BASED_METHOD,
+            has_additional_issues: true,
         }
     }
 }

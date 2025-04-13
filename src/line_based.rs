@@ -39,13 +39,7 @@ pub fn line_based_merge(
     let parsed_merge =
         line_based_merge_parsed(contents_base, contents_left, contents_right, settings);
 
-    MergeResult {
-        contents: parsed_merge.render(settings),
-        conflict_count: parsed_merge.conflict_count(),
-        conflict_mass: parsed_merge.conflict_mass(),
-        method: LINE_BASED_METHOD,
-        has_additional_issues: true,
-    }
+    MergeResult::from_parsed_merge(&parsed_merge, settings)
 }
 
 /// Do a line-based merge. If it is conflict-free, also check if it introduced any duplicate signatures,
@@ -60,13 +54,7 @@ pub(crate) fn line_based_merge_with_duplicate_signature_detection(
     let parsed_merge =
         line_based_merge_parsed(contents_base, contents_left, contents_right, settings);
 
-    let mut merge_result = MergeResult {
-        contents: parsed_merge.render(settings),
-        conflict_count: parsed_merge.conflict_count(),
-        conflict_mass: parsed_merge.conflict_mass(),
-        method: LINE_BASED_METHOD,
-        has_additional_issues: true,
-    };
+    let mut merge_result = MergeResult::from_parsed_merge(&parsed_merge, settings);
 
     let mut parser = TSParser::new();
     parser
