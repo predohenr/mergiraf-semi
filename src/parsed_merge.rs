@@ -359,7 +359,7 @@ impl<'a> ParsedMerge<'a> {
                         }
                     }
 
-                    result.push_str(&settings.middle_marker());
+                    result.push_str(&settings.middle_marker_or_default());
                     result.push('\n');
 
                     result.push_str(right.unwrap_or_default());

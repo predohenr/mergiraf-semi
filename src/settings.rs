@@ -96,7 +96,7 @@ impl<'a> DisplaySettings<'a> {
     /// The marker before the beginning of "right" (last) part of a conflict.
     /// It does not contain any newline character.
     /// Uses the default values of `conflict_marker_size` if not set
-    pub fn middle_marker(&self) -> String {
+    pub fn middle_marker_or_default(&self) -> String {
         "=".repeat(self.conflict_marker_size_or_default())
     }
 
