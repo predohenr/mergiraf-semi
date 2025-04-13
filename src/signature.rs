@@ -139,8 +139,11 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                             })
                     }
                     MergedTree::Conflict { .. } => false,
-                    MergedTree::LineBasedMerge { node, .. } => {
-                        node.grammar_name() == a.grammar_name && todo!()
+                    MergedTree::LineBasedMerge { node, parsed, .. } => {
+                        node.grammar_name() == a.grammar_name
+                            // "SAFETY": nodes in an AST don't have conflicts in them
+                            // (otherwise, they wouldn't have parsed in the first place)
+                            && parsed.render_conflictless().is_some_and(|s| s == a.source)
                     }
                     MergedTree::CommutativeChildSeparator { separator } => {
                         separator.trim() == a.source

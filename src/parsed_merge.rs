@@ -375,6 +375,22 @@ impl<'a> ParsedMerge<'a> {
         result
     }
 
+    /// If the parsed merge contains no conflicts, "render" it by concatenating all the chunks.
+    /// Otherwise, return `None`.
+    ///
+    /// This is helpful when we want to compare the contents of a merge with some string, and we
+    /// know that the latter doesn't contain any conflicts as well. An additional benefit is not
+    /// requiring [`DisplaySettings`] to render, unlike [`Self::render`]
+    pub(crate) fn render_conflictless(&self) -> Option<String> {
+        self.chunks
+            .iter()
+            .map(|c| match c {
+                MergedChunk::Resolved { contents, .. } => Some(*contents),
+                MergedChunk::Conflict { .. } => None,
+            })
+            .collect()
+    }
+
     fn binary_search(slice: &[OffsetMap], start: usize, length: usize) -> Option<usize> {
         let mut left = 0;
         let mut right = slice.len();
