@@ -139,8 +139,8 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                             })
                     }
                     MergedTree::Conflict { .. } => false,
-                    MergedTree::LineBasedMerge { node, contents, .. } => {
-                        node.grammar_name() == a.grammar_name && contents == a.source
+                    MergedTree::LineBasedMerge { node, .. } => {
+                        node.grammar_name() == a.grammar_name && todo!()
                     }
                     MergedTree::CommutativeChildSeparator { separator } => {
                         separator.trim() == a.source
@@ -222,9 +222,9 @@ impl Hash for AstNodeEquiv<'_, '_> {
                     left.hash(state);
                     right.hash(state);
                 }
-                MergedTree::LineBasedMerge { node, contents, .. } => {
+                MergedTree::LineBasedMerge { node, parsed, .. } => {
                     node.hash(state);
-                    contents.hash(state);
+                    parsed.hash(state);
                 }
                 MergedTree::CommutativeChildSeparator { separator } => {
                     separator.hash(state);

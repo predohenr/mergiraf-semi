@@ -61,14 +61,12 @@ impl<'a> MergedText<'a> {
     /// If the text contains newlines it also gets re-indented to the indentation level supplied.
     pub(crate) fn push_line_based_merge(
         &mut self,
-        line_based_merge: &str,
+        parsed: &ParsedMerge,
         indentation: &str,
         settings: &DisplaySettings,
     ) {
-        let parsed = ParsedMerge::parse(line_based_merge, settings)
-            .expect("Parsing the line-based merge failed");
         let mut newline_found = false;
-        let sections = parsed.chunks.into_iter().map(|section| match section {
+        let sections = parsed.chunks.iter().map(|section| match section {
             crate::parsed_merge::MergedChunk::Resolved { contents, .. } => {
                 let result = MergeSection::Merged(
                     Self::reindent_line_based_merge(contents, indentation, newline_found, true)

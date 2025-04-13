@@ -223,7 +223,7 @@ fn is_separator(element: &MergedTree, trimmed_separator: &'static str) -> bool {
             node.as_representative().node.source.trim() == trimmed_separator
         }
         MergedTree::MixedTree { .. } | MergedTree::Conflict { .. } => false,
-        MergedTree::LineBasedMerge { contents, .. } => contents.trim() == trimmed_separator,
+        MergedTree::LineBasedMerge { .. } => todo!(),
         MergedTree::CommutativeChildSeparator { .. } => true,
     }
 }

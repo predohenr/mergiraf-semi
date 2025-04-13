@@ -13,7 +13,7 @@ pub(crate) const PARSED_MERGE_DIFF2_DETECTED: &str =
     "Mergiraf cannot solve conflicts displayed in the diff2 style";
 
 /// A file which potentially contains merge conflicts, parsed as such.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct ParsedMerge<'a> {
     /// The actual contents of the parsed merge
     pub chunks: Vec<MergedChunk<'a>>,
@@ -26,7 +26,7 @@ pub struct ParsedMerge<'a> {
 }
 
 /// A chunk in a file with merge conflicts: either a readily merged chunk or a conflict.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum MergedChunk<'a> {
     /// A readily-merged chunk
     Resolved {
@@ -61,7 +61,7 @@ pub enum MergedChunk<'a> {
 }
 
 /// A correspondence between a section of a reconstructed revision and the merge output
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 struct OffsetMap {
     /// The start of the section in the reconstructed revision
     rev_start: usize,

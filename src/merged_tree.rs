@@ -10,8 +10,9 @@ use itertools::Itertools;
 
 use crate::{
     class_mapping::{ClassMapping, Leader, RevNode, RevisionNESet},
-    line_based::line_based_merge,
+    line_based::line_based_merge_parsed,
     merged_text::MergedText,
+    parsed_merge::ParsedMerge,
     pcs::Revision,
     settings::DisplaySettings,
     tree::AstNode,
@@ -58,9 +59,7 @@ pub enum MergedTree<'a> {
         /// The syntactic node which corresponds to this part of the file
         node: Leader<'a>,
         /// The result of the line-based merging
-        contents: String,
-        /// The size of the conflicts included in this merge output
-        conflict_mass: usize,
+        parsed: ParsedMerge<'a>,
     },
     /// A synthetic part of the merged output, not taken from any revision, added
     /// to separate merged children of a commutative parent.
@@ -170,11 +169,11 @@ impl<'a> MergedTree<'a> {
                 let base_src = base.map_or(Cow::from(""), |base| base.unindented_source());
                 let left_src = left.unindented_source();
                 let right_src = right.unindented_source();
-                let line_based_merge = line_based_merge(&base_src, &left_src, &right_src, settings);
+                let line_based_merge =
+                    line_based_merge_parsed(&base_src, &left_src, &right_src, settings);
                 Self::LineBasedMerge {
                     node,
-                    contents: line_based_merge.contents,
-                    conflict_mass: line_based_merge.conflict_mass,
+                    parsed: line_based_merge,
                 }
             }
         }
@@ -378,10 +377,7 @@ impl<'a> MergedTree<'a> {
                     Self::pretty_print_astnode_list(Revision::Right, right).into(),
                 );
             }
-            Self::LineBasedMerge { contents, node, .. } => {
-                if contents.is_empty() {
-                    return;
-                }
+            Self::LineBasedMerge { parsed, node } => {
                 Self::add_preceding_whitespace(
                     output,
                     *node,
@@ -397,7 +393,7 @@ impl<'a> MergedTree<'a> {
                         .indentation_shift()
                         .unwrap_or("")
                 );
-                output.push_line_based_merge(contents, &full_indentation, settings);
+                output.push_line_based_merge(parsed, &full_indentation, settings);
             }
             Self::CommutativeChildSeparator { separator, .. } => {
                 output.push_merged(Cow::from(*separator));
@@ -633,10 +629,7 @@ impl<'a> MergedTree<'a> {
                 children.iter().map(|c| c.count_conflicts(settings)).sum()
             }
             Self::Conflict { .. } => 1,
-            Self::LineBasedMerge { contents, .. } => {
-                let left_marker = ">".repeat(settings.conflict_marker_size_or_default());
-                contents.matches(&left_marker).count()
-            }
+            Self::LineBasedMerge { parsed, .. } => parsed.conflict_count(),
         }
     }
 
@@ -651,7 +644,7 @@ impl<'a> MergedTree<'a> {
                     + Self::pretty_print_astnode_list(Revision::Base, base).len()
                     + Self::pretty_print_astnode_list(Revision::Right, right).len()
             }
-            Self::LineBasedMerge { conflict_mass, .. } => *conflict_mass,
+            Self::LineBasedMerge { parsed, .. } => parsed.conflict_mass(),
         }
     }
 
