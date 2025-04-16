@@ -9,13 +9,13 @@ use std::{
 use itertools::Itertools;
 
 use crate::{
+    ast::AstNode,
     class_mapping::{ClassMapping, Leader, RevNode, RevisionNESet},
     line_based::line_based_merge_parsed,
     merged_text::MergedText,
     parsed_merge::ParsedMerge,
     pcs::Revision,
     settings::DisplaySettings,
-    tree::AstNode,
 };
 
 /// A merged tree, which can contain a mixture of elements from the original trees,
