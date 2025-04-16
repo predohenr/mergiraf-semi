@@ -77,8 +77,13 @@ impl<'tree> Matching<'tree> {
     /// Adds an entire other matching
     pub fn add_matching(&mut self, other: &Self) {
         for (right, left) in other.iter_right_to_left() {
-            self.add(left, right);
+            // if some other node was matched to either `left` or `right`,
+            // remove it so that the matching remains one-to-one
+            self.remove(left, right);
         }
+
+        self.left_to_right.extend(&other.left_to_right);
+        self.right_to_left.extend(&other.right_to_left);
     }
 
     /// Number of matched nodes
