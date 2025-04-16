@@ -197,14 +197,16 @@ impl TreeMatcher<'_> {
             let mut best_candidate = None;
             for candidate in candidates {
                 let sim = matching.dice(left_node, candidate);
-                if sim > max_sim && sim > self.sim_threshold {
-                    max_sim = sim;
-                    best_candidate = Some(candidate);
-                } else if sim > max_sim && sim > self.sim_threshold * 0.75 {
-                    debug!(
-                        "discarding match with similarity {}, close to threshold {}",
-                        sim, self.sim_threshold
-                    );
+                if sim > max_sim {
+                    if sim > self.sim_threshold {
+                        max_sim = sim;
+                        best_candidate = Some(candidate);
+                    } else if sim > self.sim_threshold * 0.75 {
+                        debug!(
+                            "discarding match with similarity {}, close to threshold {}",
+                            sim, self.sim_threshold
+                        );
+                    }
                 }
             }
             if let Some(winner) = best_candidate {
