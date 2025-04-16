@@ -310,9 +310,15 @@ impl<'a> AstNode<'a> {
         if let Some(dfs) = unsafe { *self.dfs.get() } {
             Either::Left(dfs.iter().copied())
         } else {
-            Either::Right(DfsIterator {
-                current: vec![&self],
-            })
+            Either::Right(self.calculate_dfs())
+        }
+    }
+
+    /// Helper function mainly used for testing.
+    /// Circumvents the cached `dfs` field and instead computes DFS manually.
+    fn calculate_dfs(&'a self) -> DfsIterator<'a> {
+        DfsIterator {
+            current: vec![&self],
         }
     }
 
