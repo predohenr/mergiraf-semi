@@ -51,7 +51,10 @@ impl<'tree> Matching<'tree> {
 
     /// Adds a match between two nodes (in both directions)
     pub fn add(&mut self, from: &'tree AstNode<'tree>, to: &'tree AstNode<'tree>) {
+        // if some other node was matched to either `from` or `to`,
+        // remove it so that the matching remains one-to-one
         self.remove(from, to);
+
         self.left_to_right.insert(from, to);
         self.right_to_left.insert(to, from);
     }
