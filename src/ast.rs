@@ -763,7 +763,7 @@ impl<'a> Iterator for DfsIterator<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let size = self.current.iter().map(|node| node.descendant_count).sum();
+        let size = self.current.iter().copied().map(AstNode::size).sum();
         (size, Some(size))
     }
 }
