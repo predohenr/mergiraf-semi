@@ -1,5 +1,8 @@
 use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    iter::zip,
+};
 
 use crate::ast::AstNode;
 
@@ -107,14 +110,17 @@ impl<'tree> Matching<'tree> {
 
     // Assuming that the matches in this mapping are only between isomorphic nodes,
     // recursively match the descendants of all matched nodes
-    pub fn add_submatches(&self) -> Self {
-        let mut result = Self::new();
-        for (right_match, left_match) in self.iter_right_to_left() {
-            for (left_descendant, right_descendant) in left_match.dfs().zip(right_match.dfs()) {
-                result.add(left_descendant, right_descendant);
-            }
+    pub fn add_submatches(self) -> Self {
+        let (left_to_right, right_to_left) = self
+            .left_to_right
+            .into_iter()
+            .flat_map(|(l_match, r_match)| zip(l_match.dfs(), r_match.dfs()))
+            .map(|(l_submatch, r_submatch)| ((l_submatch, r_submatch), (r_submatch, l_submatch)))
+            .collect();
+        Self {
+            left_to_right,
+            right_to_left,
         }
-        result
     }
 
     /// Retrieve match ids from left to right
