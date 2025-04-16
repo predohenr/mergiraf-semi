@@ -62,6 +62,18 @@ impl<'tree> Matching<'tree> {
         self.right_to_left.insert(to, from);
     }
 
+    pub fn extend<I>(&mut self, pairs: I)
+    where
+        I: Iterator<Item = (&'tree AstNode<'tree>, &'tree AstNode<'tree>)> + Clone,
+    {
+        for (l, r) in pairs.clone() {
+            self.remove(l, r);
+        }
+
+        self.left_to_right.extend(pairs.clone());
+        self.right_to_left.extend(pairs.map(|(l, r)| (r, l)));
+    }
+
     /// Removes matches involving both elements (in both directions)
     pub fn remove(&mut self, from: &'tree AstNode<'tree>, to: &'tree AstNode<'tree>) {
         if let Some(other_right) = self.left_to_right.get(from) {
