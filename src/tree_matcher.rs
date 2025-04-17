@@ -338,10 +338,8 @@ impl TreeMatcher<'_> {
             if children_r.len() != 1 {
                 continue;
             }
-            // SAFETY: checked above
-            let child_l = unsafe { children_l.iter().next().unwrap_unchecked() };
-            // SAFETY: checked above
-            let child_r = unsafe { children_r.iter().next().unwrap_unchecked() };
+            let child_l = children_l.iter().next().expect("checked len above");
+            let child_r = children_r.iter().next().expect("checked len above");
             if matching.can_be_matched(child_l, child_r) {
                 if signature.is_some() || recursive {
                     self.match_subtrees_linearly(
