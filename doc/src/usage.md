@@ -1,7 +1,7 @@
 # Usage
 
 ## Enabling `diff3` conflict style
-No matter which of the following workflows you choose, you'll want to enable the [`diff3` merge conflict style](https://git-scm.com/docs/git-config#Documentation/git-config.txt-mergeconflictStyle).
+No matter which of the following workflows you choose, you'll want to enable the [`diff3` merge conflict style](https://git-scm.com/docs/git-config#Documentation/git-config.txt-mergeconflictStyle).[^why-diff3]
 To do that, add the following section in your `~/.gitconfig` file:
 ```ini
 [merge]
@@ -209,3 +209,5 @@ If you would like to tweak it, please refer to the [relevant section](https://jj
 Note that it's not recommended to use `mergiraf solve` for interactive use in a Jujutsu repository.
 This is because depending on your configuration, Jujutsu will use different conflict markers than Git, which Mergiraf cannot parse.
 Fortunately, when you use `jj resolve --tool mergiraf`, Jujutsu is nice enough to prepare the conflicted files with Git-style conflict markers, before passing them to Mergiraf.
+
+[^why-diff3]: The reason for this is that Mergiraf will try to resolve conflicts by reconstructing the base, left, and right revisions. The default style, `merge`, doesn't provide the information about the base revision at all. And `zdiff3`, the ***zealous*** version of `diff3`, pulls the changes common to the left and right revision out of the conflict. While this might help during manual merging, it can confuses Mergiraf: if both sides end with a brace, `zdiff3` will pull it outside, so the reconstructed base revision will have unbalanced braces and thus fail to parse.
