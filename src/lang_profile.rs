@@ -53,6 +53,27 @@ impl LangProfile {
         Self::_detect_from_filename(filename)
     }
 
+    /// Loads a language either by name or by detecting it from a filename
+    pub fn find_by_filename_or_name<P>(
+        filename: &P,
+        language_name: Option<&str>,
+    ) -> Result<&'static Self, String>
+    where
+        P: AsRef<Path> + ?Sized,
+    {
+        if let Some(lang_name) = language_name {
+            Self::find_by_name(lang_name)
+                .ok_or_else(|| format!("Specified language '{lang_name}' could not be found."))
+        } else {
+            Self::detect_from_filename(filename).ok_or_else(|| {
+                format!(
+                    "Could not find a supported language for {}.",
+                    filename.as_ref().display()
+                )
+            })
+        }
+    }
+
     fn _detect_from_filename(filename: &Path) -> Option<&'static Self> {
         // TODO make something more advanced like in difftastic
         // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
@@ -246,5 +267,28 @@ mod tests {
 
         assert!(lang_profile.has_signature_conflicts(with_conflicts));
         assert!(!lang_profile.has_signature_conflicts(without_conflicts));
+    }
+
+    #[test]
+    fn find_by_filename_or_name() {
+        assert_eq!(
+            LangProfile::find_by_filename_or_name(Path::new("file.json"), None)
+                .unwrap()
+                .name,
+            "JSON"
+        );
+        assert_eq!(
+            LangProfile::find_by_filename_or_name(Path::new("file.java"), Some("JSON"))
+                .unwrap()
+                .name,
+            "JSON"
+        );
+        LangProfile::find_by_filename_or_name(
+            Path::new("file.json"),
+            Some("non-existent language"),
+        )
+        .expect_err("If a language name is provided, the file name should be ignored");
+        LangProfile::find_by_filename_or_name(Path::new("file.unknown_extension"), None)
+            .expect_err("Looking up language by unknown extension should fail");
     }
 }
