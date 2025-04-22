@@ -34,12 +34,14 @@ pub struct LangProfile {
 
 impl LangProfile {
     /// Load a profile by language name.
+    /// Alternate names or extensions are also considered.
     pub fn find_by_name(name: &str) -> Option<&'static Self> {
         SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
             lang_profile.name.eq_ignore_ascii_case(name)
                 || lang_profile
                     .alternate_names
                     .iter()
+                    .chain(lang_profile.extensions.iter())
                     .any(|aname| aname.eq_ignore_ascii_case(name))
         })
     }
@@ -267,6 +269,22 @@ mod tests {
 
         assert!(lang_profile.has_signature_conflicts(with_conflicts));
         assert!(!lang_profile.has_signature_conflicts(without_conflicts));
+    }
+
+    #[test]
+    fn find_by_name() {
+        assert_eq!(LangProfile::find_by_name("JSON").unwrap().name, "JSON");
+        assert_eq!(LangProfile::find_by_name("Json").unwrap().name, "JSON");
+        assert_eq!(LangProfile::find_by_name("python").unwrap().name, "Python");
+        assert_eq!(LangProfile::find_by_name("py").unwrap().name, "Python");
+        assert_eq!(
+            LangProfile::find_by_name("Java properties").unwrap().name,
+            "Java properties"
+        );
+        assert!(
+            LangProfile::find_by_name("unknown language").is_none(),
+            "Language shouldn't be found"
+        );
     }
 
     #[test]
