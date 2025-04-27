@@ -63,11 +63,11 @@ impl LangProfile {
     {
         if let Some(lang_name) = language_name {
             Self::find_by_name(lang_name)
-                .ok_or_else(|| format!("Specified language '{lang_name}' could not be found."))
+                .ok_or_else(|| format!("Specified language '{lang_name}' could not be found"))
         } else {
             Self::detect_from_filename(filename).ok_or_else(|| {
                 format!(
-                    "Could not find a supported language for {}.",
+                    "Could not find a supported language for {}",
                     filename.as_ref().display()
                 )
             })
