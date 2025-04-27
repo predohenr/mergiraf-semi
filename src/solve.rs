@@ -23,17 +23,7 @@ pub fn resolve_merge_cascading<'a>(
 ) -> Result<MergeResult, String> {
     let mut solves = Vec::with_capacity(3);
 
-    let lang_profile = if let Some(lang_name) = language {
-        LangProfile::find_by_name(lang_name)
-            .ok_or_else(|| format!("Specified language '{lang_name}' could not be found."))?
-    } else {
-        LangProfile::detect_from_filename(fname_base).ok_or_else(|| {
-            format!(
-                "Could not find a supported language for {}",
-                fname_base.display()
-            )
-        })?
-    };
+    let lang_profile = LangProfile::find_by_filename_or_name(fname_base, language)?;
 
     match ParsedMerge::parse(merge_contents, &settings) {
         Err(err) => {
