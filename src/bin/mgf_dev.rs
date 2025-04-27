@@ -214,12 +214,9 @@ mod tests {
     #[test]
     fn set_language() {
         let repo_dir = tempfile::tempdir().expect("failed to create the temp dir");
-        let test_file = repo_dir.path().join(Path::new("file.txt"));
-        fs::copy(
-            Path::new("examples/java/working/demo/Base.java"),
-            &test_file,
-        )
-        .expect("Failed to copy the Java file to the temporary directory");
+        let test_file = repo_dir.path().join("file.txt");
+        fs::copy("examples/java/working/demo/Base.java", &test_file)
+            .expect("Failed to copy the Java file to the temporary directory");
         assert_eq!(
             real_main(&CliArgs::parse_from([
                 "mgf_dev",

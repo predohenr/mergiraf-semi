@@ -38,10 +38,8 @@ impl LangProfile {
     pub fn find_by_name(name: &str) -> Option<&'static Self> {
         SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
             lang_profile.name.eq_ignore_ascii_case(name)
-                || lang_profile
-                    .alternate_names
-                    .iter()
-                    .chain(lang_profile.extensions.iter())
+                || (lang_profile.alternate_names.iter())
+                    .chain(&lang_profile.extensions)
                     .any(|aname| aname.eq_ignore_ascii_case(name))
         })
     }
@@ -290,22 +288,25 @@ mod tests {
     #[test]
     fn find_by_filename_or_name() {
         assert_eq!(
-            LangProfile::find_by_filename_or_name(Path::new("file.json"), None)
+            LangProfile::find_by_filename_or_name("file.json", None)
                 .unwrap()
                 .name,
             "JSON"
         );
         assert_eq!(
-            LangProfile::find_by_filename_or_name(Path::new("file.java"), Some("JSON"))
+            LangProfile::find_by_filename_or_name("file.java", Some("JSON"))
                 .unwrap()
                 .name,
             "JSON"
         );
-        LangProfile::find_by_filename_or_name(
-            Path::new("file.json"),
-            Some("non-existent language"),
-        )
-        .expect_err("If a language name is provided, the file name should be ignored");
+        assert!(
+            LangProfile::find_by_filename_or_name(
+                Path::new("file.json"),
+                Some("non-existent language"),
+            )
+            .is_err(),
+            "If a language name is provided, the file name should be ignored"
+        );
         LangProfile::find_by_filename_or_name(Path::new("file.unknown_extension"), None)
             .expect_err("Looking up language by unknown extension should fail");
     }
