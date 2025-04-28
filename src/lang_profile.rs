@@ -300,14 +300,13 @@ mod tests {
             "JSON"
         );
         assert!(
-            LangProfile::find_by_filename_or_name(
-                Path::new("file.json"),
-                Some("non-existent language"),
-            )
-            .is_err(),
+            LangProfile::find_by_filename_or_name("file.json", Some("non-existent language"),)
+                .is_err(),
             "If a language name is provided, the file name should be ignored"
         );
-        LangProfile::find_by_filename_or_name(Path::new("file.unknown_extension"), None)
-            .expect_err("Looking up language by unknown extension should fail");
+        assert!(
+            LangProfile::find_by_filename_or_name("file.unknown_extension", None).is_err(),
+            "Looking up language by unknown extension should fail"
+        );
     }
 }

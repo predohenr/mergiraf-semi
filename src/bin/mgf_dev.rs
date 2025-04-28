@@ -223,7 +223,7 @@ mod tests {
                 "parse",
                 "--language",
                 "java",
-                test_file.display().to_string().as_str(),
+                test_file.to_str().unwrap(),
             ])),
             Ok(0)
         );
