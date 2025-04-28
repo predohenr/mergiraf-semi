@@ -241,12 +241,12 @@ impl TreeMatcher<'_> {
                 .skip(1)
                 .take_while(|ancestor| !ancestor.is_root())
                 .take_while(|ancestor| seen_ancestors.insert(*ancestor))
+                .filter(|ancestor| {
+                    left_node.grammar_name == ancestor.grammar_name
+                        && matching.get_from_right(ancestor).is_none()
+                })
             {
-                if left_node.grammar_name == ancestor.grammar_name
-                    && matching.get_from_right(ancestor).is_none()
-                {
-                    candidates.push(ancestor);
-                }
+                candidates.push(ancestor);
             }
         }
         candidates
