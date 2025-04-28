@@ -239,7 +239,7 @@ impl TreeMatcher<'_> {
             for ancestor in seed
                 .ancestors()
                 .skip(1)
-                .filter(|ancestor| !ancestor.is_root())
+                .take_while(|ancestor| !ancestor.is_root())
             {
                 if seen_ancestors.contains(ancestor) {
                     break;
