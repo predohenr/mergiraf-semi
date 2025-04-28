@@ -141,7 +141,7 @@ impl LangProfile {
             .any(|child| self.has_signature_conflicts(child));
 
         let conflict_in_self = || {
-            !(node.children.len() < 2)
+            node.children.len() >= 2
                 && self.get_commutative_parent(node.grammar_name).is_some()
                 && !node
                     .children
