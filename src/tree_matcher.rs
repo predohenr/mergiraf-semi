@@ -240,10 +240,8 @@ impl TreeMatcher<'_> {
                 .ancestors()
                 .skip(1)
                 .take_while(|ancestor| !ancestor.is_root())
+                .take_while(|ancestor| seen_ancestors.insert(*ancestor))
             {
-                if !seen_ancestors.insert(ancestor) {
-                    break;
-                }
                 if left_node.grammar_name == ancestor.grammar_name
                     && matching.get_from_right(ancestor).is_none()
                 {
