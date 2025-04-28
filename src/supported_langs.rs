@@ -559,7 +559,7 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
         },
         LangProfile {
             name: "Typescript (TSX)",
-            alternate_names: &["TSX"],
+            alternate_names: &[],
             extensions: vec!["tsx"],
             language: tree_sitter_typescript::LANGUAGE_TSX.into(),
             atomic_nodes: vec![],
