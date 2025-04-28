@@ -236,7 +236,7 @@ impl TreeMatcher<'_> {
         let mut seen_ancestors = HashSet::new();
         let mut candidates = Vec::new();
         for seed in seeds {
-            for ancestor in seed
+            let node_candidates = seed
                 .ancestors()
                 .skip(1)
                 .take_while(|ancestor| !ancestor.is_root())
@@ -244,10 +244,8 @@ impl TreeMatcher<'_> {
                 .filter(|ancestor| {
                     left_node.grammar_name == ancestor.grammar_name
                         && matching.get_from_right(ancestor).is_none()
-                })
-            {
-                candidates.push(ancestor);
-            }
+                });
+            candidates.extend(node_candidates);
         }
         candidates
     }
