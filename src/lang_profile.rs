@@ -140,8 +140,8 @@ impl LangProfile {
             .iter()
             .any(|child| self.has_signature_conflicts(child));
 
-        conflict_in_children
-            || (if node.children.len() < 2 {
+        let conflict_in_self = || {
+            if node.children.len() < 2 {
                 false
             } else if self.get_commutative_parent(node.grammar_name).is_some() {
                 !node
@@ -151,7 +151,10 @@ impl LangProfile {
                     .all_unique()
             } else {
                 false
-            })
+            }
+        };
+
+        conflict_in_children || conflict_in_self()
     }
 
     /// Should this node type be treated as atomic?
