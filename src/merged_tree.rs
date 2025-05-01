@@ -629,31 +629,6 @@ impl<'a> MergedTree<'a> {
             .map_or("", |(_, shift)| shift)
     }
 
-    /// The number of conflicts in this merge
-    pub fn count_conflicts(&self) -> usize {
-        match self {
-            Self::ExactTree { .. } | Self::CommutativeChildSeparator { .. } => 0,
-            Self::MixedTree { children, .. } => children.iter().map(Self::count_conflicts).sum(),
-            Self::Conflict { .. } => 1,
-            Self::LineBasedMerge { parsed, .. } => parsed.conflict_count(),
-        }
-    }
-
-    /// The number of conflicting bytes, as an attempt to quantify the effort
-    /// required to solve them.
-    pub fn conflict_mass(&self) -> usize {
-        match self {
-            Self::ExactTree { .. } | Self::CommutativeChildSeparator { .. } => 0,
-            Self::MixedTree { children, .. } => children.iter().map(Self::conflict_mass).sum(),
-            Self::Conflict { base, left, right } => {
-                Self::pretty_print_astnode_list(Revision::Left, left).len()
-                    + Self::pretty_print_astnode_list(Revision::Base, base).len()
-                    + Self::pretty_print_astnode_list(Revision::Right, right).len()
-            }
-            Self::LineBasedMerge { parsed, .. } => parsed.conflict_mass(),
-        }
-    }
-
     fn pretty_print_astnode_list(_revision: Revision, list: &[&'a AstNode<'a>]) -> String {
         let mut output = String::new();
         let mut first = true;

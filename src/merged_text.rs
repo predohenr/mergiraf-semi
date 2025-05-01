@@ -36,6 +36,27 @@ impl<'a> MergedText<'a> {
         Self::default()
     }
 
+    /// Number of conflict sections in the text
+    pub(crate) fn count_conflicts(&self) -> usize {
+        self.sections
+            .iter()
+            .filter(|section| matches!(section, MergeSection::Conflict { .. }))
+            .count()
+    }
+
+    /// Sum of the size of conflicts
+    pub(crate) fn conflict_mass(&self) -> usize {
+        self.sections
+            .iter()
+            .map(|section| match section {
+                MergeSection::Merged(_) => 0,
+                MergeSection::Conflict { base, left, right } => {
+                    base.len() + left.len() + right.len()
+                }
+            })
+            .sum()
+    }
+
     /// Appends merged text at the end
     pub(crate) fn push_merged(&mut self, contents: Cow<'a, str>) {
         self.sections.push(MergeSection::Merged(contents));
@@ -599,5 +620,20 @@ there we go
             merged_text.reconstruct_revision(Revision::Right),
             "let's say ha to me!"
         );
+    }
+
+    #[test]
+    fn conflict_count_and_mass() {
+        let merged_text = MergedText {
+            sections: vec![
+                merged("let's say "),
+                conflict("ho", "hi", "ha"),
+                merged(" to "),
+                conflict("you", "everyone", "me"),
+                merged("!"),
+            ],
+        };
+        assert_eq!(merged_text.conflict_mass(), 19);
+        assert_eq!(merged_text.count_conflicts(), 2);
     }
 }
