@@ -275,15 +275,21 @@ impl<'a> MergedTree<'a> {
         }
     }
 
+    /// Renders the tree to a series of strings, with merged and conflicting sections
+    pub fn to_merged_text(&'a self, class_mapping: &ClassMapping<'a>) -> MergedText<'a> {
+        let mut merged_text = MergedText::new();
+        self.pretty_print_recursively(&mut merged_text, class_mapping, None, "");
+        merged_text
+    }
+
+    #[cfg(test)]
     /// Pretty-prints the result tree into its final output. Exciting!
     pub fn pretty_print<'u: 'a>(
         &'u self,
         class_mapping: &ClassMapping<'a>,
         settings: &DisplaySettings,
     ) -> String {
-        let mut output = MergedText::new();
-        self.pretty_print_recursively(&mut output, class_mapping, None, "");
-        output.render(settings)
+        self.to_merged_text(class_mapping).render(settings)
     }
 
     /// Recursively pretty-prints a sub part of the result tree.

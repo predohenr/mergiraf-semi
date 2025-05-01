@@ -98,15 +98,15 @@ pub fn structured_merge(
     );
     debug!("{result_tree}");
 
-    Ok(MergeResult {
-        contents: result_tree.pretty_print(&class_mapping, settings),
-        conflict_count: result_tree.count_conflicts(),
-        conflict_mass: result_tree.conflict_mass(),
-        method: if parsed_merge.is_none() {
-            FULLY_STRUCTURED_METHOD
-        } else {
-            STRUCTURED_RESOLUTION_METHOD
-        },
-        has_additional_issues: false,
-    })
+    let merged_text = result_tree.to_merged_text(&class_mapping);
+    let method = if parsed_merge.is_none() {
+        FULLY_STRUCTURED_METHOD
+    } else {
+        STRUCTURED_RESOLUTION_METHOD
+    };
+    Ok(MergeResult::from_merged_text(
+        &merged_text,
+        settings,
+        method,
+    ))
 }

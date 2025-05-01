@@ -1,6 +1,6 @@
 use crate::{
-    attempts::Attempt, line_based::LINE_BASED_METHOD, parsed_merge::ParsedMerge,
-    settings::DisplaySettings,
+    attempts::Attempt, line_based::LINE_BASED_METHOD, merged_text::MergedText,
+    parsed_merge::ParsedMerge, settings::DisplaySettings,
 };
 use log::info;
 
@@ -47,6 +47,24 @@ impl MergeResult {
         }
     }
 
+    /// Turn a `MergedText` into a merge result
+    pub(crate) fn from_merged_text(
+        merged_text: &MergedText<'_>,
+        settings: &DisplaySettings,
+        method: &'static str,
+    ) -> Self {
+        let rendered = merged_text.render(settings);
+        Self {
+            contents: rendered,
+            conflict_count: merged_text.count_conflicts(),
+            conflict_mass: merged_text.conflict_mass(),
+            method,
+            has_additional_issues: false,
+        }
+    }
+
+    /// Turn a parsed line-based merge into a merge result, without checking
+    /// that it is syntactically valid.
     pub(crate) fn from_parsed_merge(
         parsed_merge: &ParsedMerge,
         settings: &DisplaySettings,
