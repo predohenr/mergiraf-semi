@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use itertools::Itertools;
 use regex::Regex;
 
-use crate::{parsed_merge::ParsedMerge, settings::DisplaySettings};
+use crate::{parsed_merge::ParsedMerge, pcs::Revision, settings::DisplaySettings};
 
 /// A merged file represented as a sequence of sections,
 /// some being successfully merged and others being conflicts.
@@ -133,6 +133,25 @@ impl<'a> MergedText<'a> {
         } else {
             reindented
         }
+    }
+
+    /// Reconstruct the source of a revision based on the merged output.
+    ///
+    /// Because some changes from both revisions have likely already been
+    /// merged in the non-conflicting sections, this is not the original revision,
+    /// but rather a half-merged version of it.
+    pub(crate) fn reconstruct_revision(&self, revision: Revision) -> String {
+        self.sections
+            .iter()
+            .map(|section| match section {
+                MergeSection::Merged(contents) => contents.as_ref(),
+                MergeSection::Conflict { left, base, right } => match revision {
+                    Revision::Base => base.as_ref(),
+                    Revision::Left => left.as_ref(),
+                    Revision::Right => right.as_ref(),
+                },
+            })
+            .collect()
     }
 
     /// Renders the full file according to the supplied [`DisplaySettings`]
@@ -555,5 +574,30 @@ there we go
 ";
 
         assert_eq!(merged_text.render(&DisplaySettings::default()), expected);
+    }
+
+    #[test]
+    fn reconstruct_revision() {
+        let merged_text = MergedText {
+            sections: vec![
+                merged("let's say "),
+                conflict("ho", "hi", "ha"),
+                merged(" to "),
+                conflict("you", "everyone", "me"),
+                merged("!"),
+            ],
+        };
+        assert_eq!(
+            merged_text.reconstruct_revision(Revision::Base),
+            "let's say ho to you!"
+        );
+        assert_eq!(
+            merged_text.reconstruct_revision(Revision::Left),
+            "let's say hi to everyone!"
+        );
+        assert_eq!(
+            merged_text.reconstruct_revision(Revision::Right),
+            "let's say ha to me!"
+        );
     }
 }
