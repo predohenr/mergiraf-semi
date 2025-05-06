@@ -38,7 +38,7 @@ tree-sitter-lua = "0.2.0"
 tree-sitter-ruby = "0.23.1"
 tree-sitter-properties = "0.3.0"
 tree-sitter-md = "0.3.2"
-tree-sitter-hcl = { git = "https://github.com/maunzCache/tree-sitter-hcl.git", branch = "feat/support-tree-sitter-0.24" }
+tree-sitter-hcl = { git = "https://github.com/tree-sitter-grammars/tree-sitter-hcl", rev = "41a2e702413a53f2614533b2aa9c187816116cbc" }
 regex = "1.11.1"
 itertools = "0.14.0"
 tree-sitter-nix = "0.0.2"

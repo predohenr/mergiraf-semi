@@ -992,10 +992,10 @@ dependencies = [
 [[package]]
 name = "tree-sitter-hcl"
 version = "0.0.1"
-source = "git+https://github.com/maunzCache/tree-sitter-hcl.git?branch=feat%2Fsupport-tree-sitter-0.24#d4bf1412467d0704794b8db392ea1e38117dbf23"
+source = "git+https://github.com/tree-sitter-grammars/tree-sitter-hcl?rev=41a2e702413a53f2614533b2aa9c187816116cbc#41a2e702413a53f2614533b2aa9c187816116cbc"
 dependencies = [
  "cc",
- "tree-sitter",
+ "tree-sitter-language",
 ]
 
 [[package]]

@@ -777,12 +777,13 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
         },
         LangProfile {
             name: "HCL",
+            alternate_names: &[],
             extensions: vec!["hcl", "tf", "tfvars"],
-            language: tree_sitter_hcl::language(),
+            language: tree_sitter_hcl::LANGUAGE.into(),
             atomic_nodes: vec![],
             commutative_parents: vec![],
             signatures: vec![],
-        },
+        }
     ]
 });
 
