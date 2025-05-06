@@ -275,6 +275,106 @@ impl<'a> MergedTree<'a> {
         }
     }
 
+    /// Checks if the merged tree is isomorphic to a parsed source,
+    /// when considered at a particular revision.
+    /// This is used as a safety check to make sure that the rendered
+    /// version of this merge (which is then re-parsed) is faithful to
+    /// the intended merge structure, as a means of detecting invalid
+    /// whitespace generation or merges that are syntactically invalid.
+    pub fn isomorphic_to_source<'b>(
+        &'a self,
+        other_node: &'b AstNode<'b>,
+        revision: Revision,
+        class_mapping: &ClassMapping<'a>,
+    ) -> bool {
+        match self {
+            MergedTree::ExactTree {
+                node, revisions, ..
+            } => {
+                let ast_node = class_mapping.node_at_rev(*node, revisions.any()).expect(
+                    "inconsistency between revision set of ExactTree and the class mapping",
+                );
+                ast_node.isomorphic_to(other_node)
+            }
+            MergedTree::MixedTree { node, children, .. } => {
+                node.grammar_name() == other_node.grammar_name && {
+                    let mut contains_line_based_merge = false;
+                    let children_at_rev: Vec<_> =
+                        children
+                            .iter()
+                            .flat_map(|child| {
+                                match child {
+                                    MergedTree::LineBasedMerge { .. } => {
+                                        // If one of the children is a line-based merge, we just give up
+                                        // and assume that the nodes are isomorphic. This is because
+                                        // the line-based merge might contain any number of actual children,
+                                        // so we are unable to match the other children together.
+                                        // It would be better to re-parse the textual merge, but that would assume
+                                        // the ability to parse a snippet of text for a particular node type, which
+                                        // is not supported by tree-sitter yet:
+                                        // https://github.com/tree-sitter/tree-sitter/issues/711
+                                        contains_line_based_merge = true;
+                                        vec![MergedChild::LineBased]
+                                    }
+                                    MergedTree::Conflict { base, left, right } => {
+                                        let nodes = match revision {
+                                            Revision::Base => base,
+                                            Revision::Left => left,
+                                            Revision::Right => right,
+                                        };
+                                        nodes
+                                            .iter()
+                                            .map(|ast_node| MergedChild::Original(ast_node))
+                                            .collect()
+                                    }
+                                    _ => {
+                                        vec![MergedChild::Merged(child)]
+                                    }
+                                }
+                            })
+                            .filter(|child| {
+                                // filter out nodes which wouldn't be present in a parsed tree,
+                                // so as not to create a mismatch in the number of children
+                                match child {
+                                    MergedChild::Merged(
+                                        MergedTree::CommutativeChildSeparator { separator },
+                                    ) => !separator.trim().is_empty(),
+                                    MergedChild::Merged(MergedTree::MixedTree {
+                                        children, ..
+                                    }) if children.is_empty() => false,
+                                    _ => true,
+                                }
+                            })
+                            .collect();
+                    contains_line_based_merge
+                        || (children_at_rev.len() == other_node.children.len()
+                            && (children_at_rev.iter().zip(&other_node.children).all(
+                                |(child, other_child)| match child {
+                                    MergedChild::Merged(merged_tree) => merged_tree
+                                        .isomorphic_to_source(other_child, revision, class_mapping),
+                                    MergedChild::Original(ast_node) => {
+                                        ast_node.isomorphic_to(other_child)
+                                    }
+                                    MergedChild::LineBased => true,
+                                },
+                            )))
+                }
+            }
+            MergedTree::LineBasedMerge { .. } => {
+                // See above
+                true
+            }
+            MergedTree::Conflict { .. } => {
+                // Conflict is only allowed to appear as a child of another node, in which case
+                // it will be flattened above
+                false
+            }
+            MergedTree::CommutativeChildSeparator { separator } => {
+                separator.trim() == other_node.source.trim()
+            }
+        }
+    }
+
     /// Renders the tree to a series of strings, with merged and conflicting sections
     pub fn to_merged_text(&'a self, class_mapping: &ClassMapping<'a>) -> MergedText<'a> {
         let mut merged_text = MergedText::new();
@@ -673,6 +773,16 @@ impl Display for MergedTree<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.debug_print(0))
     }
+}
+
+/// Represents a child from a MergedTree::MixedTree
+/// where any conflicts have been replaced by their version in
+/// one revision.
+/// Only used internally in `MergedTree::isomorphic_to_source`.
+enum MergedChild<'a, 'b> {
+    Merged(&'a MergedTree<'a>),
+    Original(&'b AstNode<'b>),
+    LineBased,
 }
 
 #[cfg(test)]
