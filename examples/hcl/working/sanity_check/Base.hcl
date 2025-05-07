@@ -1,3 +1,3 @@
-variable "foo" {
-  description = "hello world"
+configuration {
+  service_name = "bar-service"
 }
