@@ -116,7 +116,7 @@ pub fn structured_merge(
             lang_profile,
             &arena,
             &ref_arena,
-        )?;
+        )?; // if the revision is syntactically incorrect, then fail the whole structured merge
         if !result_tree.isomorphic_to_source(tree.root(), *revision, &class_mapping) {
             debug!(
                 "discarding merge because rendered revision {revision} isn't isomorphic to the merged tree"
