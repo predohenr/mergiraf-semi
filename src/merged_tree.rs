@@ -357,7 +357,6 @@ impl<'a> MergedTree<'a> {
                                 class_mapping,
                             ),
                             MergedChild::Original(ast_node) => ast_node.isomorphic_to(other_child),
-                            MergedChild::LineBased => true,
                         },
                     ))
             }
@@ -783,7 +782,6 @@ impl Display for MergedTree<'_> {
 enum MergedChild<'a, 'b> {
     Merged(&'a MergedTree<'a>),
     Original(&'b AstNode<'b>),
-    LineBased,
 }
 
 #[cfg(test)]
