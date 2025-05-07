@@ -328,10 +328,7 @@ impl<'a> MergedTree<'a> {
                                 Revision::Left => left,
                                 Revision::Right => right,
                             };
-                            nodes
-                                .iter()
-                                .map(|ast_node| MergedChild::Original(ast_node))
-                                .collect()
+                            nodes.iter().copied().map(MergedChild::Original).collect()
                         }
                         _ => {
                             vec![MergedChild::Merged(child)]
