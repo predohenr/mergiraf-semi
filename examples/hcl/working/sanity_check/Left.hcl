@@ -1,7 +1,7 @@
 variable "foo" {
   type        = string
   description = "you know the drill"
-  default     = "baz"
+  default     = "bar"
 }
 
 configuration {
