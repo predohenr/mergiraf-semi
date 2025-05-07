@@ -341,10 +341,8 @@ impl<'a> MergedTree<'a> {
                             MergedChild::Merged(MergedTree::CommutativeChildSeparator {
                                 separator,
                             }) => !separator.trim().is_empty(),
-                            MergedChild::Merged(MergedTree::MixedTree { children, .. })
-                                if children.is_empty() =>
-                            {
-                                false
+                            MergedChild::Merged(MergedTree::MixedTree { children, .. }) => {
+                                !children.is_empty()
                             }
                             _ => true,
                         }
