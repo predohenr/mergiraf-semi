@@ -51,7 +51,7 @@ pub fn resolve_merge_cascading<'a>(
                 Err(err) => warn!("Error while resolving conflicts: {err}"),
             }
 
-            let mut rendered_from_parsed = MergeResult::from_parsed_merge(&parsed_merge, &settings);
+            let mut rendered_from_parsed = parsed_merge.into_merge_result(&settings);
             // For now, we assume that the original merge with conflicts is free of syntax errors
             // and duplicate signatures, so that it has priority over any other merge that we'd produce
             // and would be syntactically invalid.

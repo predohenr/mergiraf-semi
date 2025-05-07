@@ -130,9 +130,5 @@ pub fn structured_merge(
     } else {
         STRUCTURED_RESOLUTION_METHOD
     };
-    Ok(MergeResult::from_merged_text(
-        &merged_text,
-        settings,
-        method,
-    ))
+    Ok(merged_text.into_merge_result(settings, method))
 }

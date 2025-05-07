@@ -3,7 +3,9 @@ use std::borrow::Cow;
 use itertools::Itertools;
 use regex::Regex;
 
-use crate::{parsed_merge::ParsedMerge, pcs::Revision, settings::DisplaySettings};
+use crate::{
+    merge_result::MergeResult, parsed_merge::ParsedMerge, pcs::Revision, settings::DisplaySettings,
+};
 
 /// A merged file represented as a sequence of sections,
 /// some being successfully merged and others being conflicts.
@@ -382,6 +384,22 @@ impl<'a> MergedText<'a> {
     fn maybe_add_newline(output: &mut String) {
         if !output.ends_with('\n') && !output.is_empty() {
             output.push('\n');
+        }
+    }
+
+    /// Render to a merge result
+    pub(crate) fn into_merge_result(
+        &self,
+        settings: &DisplaySettings,
+        method: &'static str,
+    ) -> MergeResult {
+        let rendered = self.render(settings);
+        MergeResult {
+            contents: rendered,
+            conflict_count: self.count_conflicts(),
+            conflict_mass: self.conflict_mass(),
+            method: method,
+            has_additional_issues: false,
         }
     }
 }
