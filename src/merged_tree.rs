@@ -6,7 +6,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use itertools::Itertools;
+use itertools::{EitherOrBoth, Itertools};
 
 use crate::{
     ast::AstNode,
@@ -314,7 +314,7 @@ impl<'a> MergedTree<'a> {
                 if contains_line_based_merge {
                     return true;
                 }
-                let children_at_rev: Vec<_> = children
+                let children_at_rev = children
                     .iter()
                     .flat_map(|child| match child {
                         MergedTree::LineBasedMerge { .. } => {
@@ -346,19 +346,22 @@ impl<'a> MergedTree<'a> {
                             }
                             _ => true,
                         }
+                    });
+                children_at_rev
+                    .zip_longest(&other_node.children)
+                    .all(|pair| {
+                        if let EitherOrBoth::Both(child, other_child) = pair {
+                            match child {
+                                MergedChild::Merged(merged_tree) => merged_tree
+                                    .isomorphic_to_source(other_child, revision, class_mapping),
+                                MergedChild::Original(ast_node) => {
+                                    ast_node.isomorphic_to(other_child)
+                                }
+                            }
+                        } else {
+                            false
+                        }
                     })
-                    .collect();
-                children_at_rev.len() == other_node.children.len()
-                    && (children_at_rev.iter().zip(&other_node.children).all(
-                        |(child, other_child)| match child {
-                            MergedChild::Merged(merged_tree) => merged_tree.isomorphic_to_source(
-                                other_child,
-                                revision,
-                                class_mapping,
-                            ),
-                            MergedChild::Original(ast_node) => ast_node.isomorphic_to(other_child),
-                        },
-                    ))
             }
             MergedTree::LineBasedMerge { .. } => {
                 // See above
