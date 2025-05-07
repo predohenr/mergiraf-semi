@@ -297,68 +297,70 @@ impl<'a> MergedTree<'a> {
                 ast_node.isomorphic_to(other_node)
             }
             MergedTree::MixedTree { node, children, .. } => {
-                node.grammar_name() == other_node.grammar_name && {
-                    let mut contains_line_based_merge = false;
-                    let children_at_rev: Vec<_> =
-                        children
-                            .iter()
-                            .flat_map(|child| {
-                                match child {
-                                    MergedTree::LineBasedMerge { .. } => {
-                                        // If one of the children is a line-based merge, we just give up
-                                        // and assume that the nodes are isomorphic. This is because
-                                        // the line-based merge might contain any number of actual children,
-                                        // so we are unable to match the other children together.
-                                        // It would be better to re-parse the textual merge, but that would assume
-                                        // the ability to parse a snippet of text for a particular node type, which
-                                        // is not supported by tree-sitter yet:
-                                        // https://github.com/tree-sitter/tree-sitter/issues/711
-                                        contains_line_based_merge = true;
-                                        vec![MergedChild::LineBased]
-                                    }
-                                    MergedTree::Conflict { base, left, right } => {
-                                        let nodes = match revision {
-                                            Revision::Base => base,
-                                            Revision::Left => left,
-                                            Revision::Right => right,
-                                        };
-                                        nodes
-                                            .iter()
-                                            .map(|ast_node| MergedChild::Original(ast_node))
-                                            .collect()
-                                    }
-                                    _ => {
-                                        vec![MergedChild::Merged(child)]
-                                    }
-                                }
-                            })
-                            .filter(|child| {
-                                // filter out nodes which wouldn't be present in a parsed tree,
-                                // so as not to create a mismatch in the number of children
-                                match child {
-                                    MergedChild::Merged(
-                                        MergedTree::CommutativeChildSeparator { separator },
-                                    ) => !separator.trim().is_empty(),
-                                    MergedChild::Merged(MergedTree::MixedTree {
-                                        children, ..
-                                    }) if children.is_empty() => false,
-                                    _ => true,
-                                }
-                            })
-                            .collect();
-                    contains_line_based_merge
-                        || (children_at_rev.len() == other_node.children.len()
-                            && (children_at_rev.iter().zip(&other_node.children).all(
-                                |(child, other_child)| match child {
-                                    MergedChild::Merged(merged_tree) => merged_tree
-                                        .isomorphic_to_source(other_child, revision, class_mapping),
-                                    MergedChild::Original(ast_node) => {
-                                        ast_node.isomorphic_to(other_child)
-                                    }
-                                    MergedChild::LineBased => true,
-                                },
-                            )))
+                if node.grammar_name() != other_node.grammar_name {
+                    return false;
                 }
+                let mut contains_line_based_merge = false;
+                let children_at_rev: Vec<_> = children
+                    .iter()
+                    .flat_map(|child| {
+                        match child {
+                            MergedTree::LineBasedMerge { .. } => {
+                                // If one of the children is a line-based merge, we just give up
+                                // and assume that the nodes are isomorphic. This is because
+                                // the line-based merge might contain any number of actual children,
+                                // so we are unable to match the other children together.
+                                // It would be better to re-parse the textual merge, but that would assume
+                                // the ability to parse a snippet of text for a particular node type, which
+                                // is not supported by tree-sitter yet:
+                                // https://github.com/tree-sitter/tree-sitter/issues/711
+                                contains_line_based_merge = true;
+                                vec![MergedChild::LineBased]
+                            }
+                            MergedTree::Conflict { base, left, right } => {
+                                let nodes = match revision {
+                                    Revision::Base => base,
+                                    Revision::Left => left,
+                                    Revision::Right => right,
+                                };
+                                nodes
+                                    .iter()
+                                    .map(|ast_node| MergedChild::Original(ast_node))
+                                    .collect()
+                            }
+                            _ => {
+                                vec![MergedChild::Merged(child)]
+                            }
+                        }
+                    })
+                    .filter(|child| {
+                        // filter out nodes which wouldn't be present in a parsed tree,
+                        // so as not to create a mismatch in the number of children
+                        match child {
+                            MergedChild::Merged(MergedTree::CommutativeChildSeparator {
+                                separator,
+                            }) => !separator.trim().is_empty(),
+                            MergedChild::Merged(MergedTree::MixedTree { children, .. })
+                                if children.is_empty() =>
+                            {
+                                false
+                            }
+                            _ => true,
+                        }
+                    })
+                    .collect();
+                contains_line_based_merge
+                    || (children_at_rev.len() == other_node.children.len()
+                        && (children_at_rev.iter().zip(&other_node.children).all(
+                            |(child, other_child)| match child {
+                                MergedChild::Merged(merged_tree) => merged_tree
+                                    .isomorphic_to_source(other_child, revision, class_mapping),
+                                MergedChild::Original(ast_node) => {
+                                    ast_node.isomorphic_to(other_child)
+                                }
+                                MergedChild::LineBased => true,
+                            },
+                        )))
             }
             MergedTree::LineBasedMerge { .. } => {
                 // See above
