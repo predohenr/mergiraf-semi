@@ -388,6 +388,7 @@ impl<'a> MergedText<'a> {
     }
 
     /// Render to a merge result
+    #[allow(clippy::wrong_self_convention)]
     pub(crate) fn into_merge_result(
         &self,
         settings: &DisplaySettings,
@@ -398,7 +399,7 @@ impl<'a> MergedText<'a> {
             contents: rendered,
             conflict_count: self.count_conflicts(),
             conflict_mass: self.conflict_mass(),
-            method: method,
+            method,
             has_additional_issues: false,
         }
     }

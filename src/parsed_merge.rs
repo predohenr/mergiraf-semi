@@ -446,6 +446,7 @@ impl<'a> ParsedMerge<'a> {
     }
 
     /// Render into a merge result with the provided settings
+    #[allow(clippy::wrong_self_convention)]
     pub(crate) fn into_merge_result(&self, settings: &DisplaySettings<'_>) -> MergeResult {
         MergeResult {
             contents: self.render(settings),
