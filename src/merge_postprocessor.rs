@@ -286,7 +286,7 @@ fn merge_same_sigs<'a>(
         let separator = separator.map(|revnode| revnode.node);
         // NOTE: here we're adding the separator (coming from one particular revision)
         // to conflict sides in other revisions too, meaning that the nodes in each conflict
-        // sides aren't necessarily coming from the corresponding revision. Which is bad,
+        // side aren't necessarily coming from the corresponding revision. Which is bad,
         // but it's not clear how that can be avoided: it can be that the separator doesn't appear
         // at all in a given revision.
         (
