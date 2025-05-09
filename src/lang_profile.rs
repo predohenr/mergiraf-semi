@@ -165,7 +165,8 @@ impl LangProfile {
 pub struct CommutativeParent {
     // the type of the root node
     pub parent_type: &'static str,
-    // any separator that needs to be inserted between the children
+    // any separator that needs to be inserted between the children.
+    // It can be overridden by specifying separators in each children group.
     pub separator: &'static str,
     // any left delimiter that can come before all children
     pub left_delim: Option<&'static str>,
@@ -226,6 +227,14 @@ impl CommutativeParent {
         }
     }
 
+    /// Restrict a commutative parent to some children groups, possibly with their own separators
+    pub(crate) fn restricted_to(self, children_groups: Vec<ChildrenGroup>) -> Self {
+        Self {
+            children_groups,
+            ..self
+        }
+    }
+
     /// Can children with the supplied types commute together?
     pub(crate) fn children_can_commute(&self, node_types: &HashSet<&str>) -> bool {
         self.children_groups.is_empty()
@@ -241,12 +250,25 @@ impl CommutativeParent {
 pub struct ChildrenGroup {
     /// The types of nodes, as grammar names
     pub node_types: HashSet<&'static str>,
+    /// An optional separator specific to this children group,
+    /// better suited than the one from the commutative parent.
+    /// It must only differ from the separator of the parent up to
+    /// whitespace (their trimmed versions should be equal).
+    pub separator: Option<&'static str>,
 }
 
 impl ChildrenGroup {
     pub(crate) fn new(types: &[&'static str]) -> Self {
         Self {
             node_types: types.iter().copied().collect(),
+            separator: None,
+        }
+    }
+
+    pub(crate) fn with_separator(types: &[&'static str], separator: &'static str) -> Self {
+        Self {
+            node_types: types.iter().copied().collect(),
+            separator: Some(separator),
         }
     }
 }
