@@ -120,7 +120,7 @@ impl<'a> MergedTree<'a> {
         left: Vec<&'a AstNode<'a>>,
         right: Vec<&'a AstNode<'a>>,
         class_mapping: &ClassMapping<'a>,
-    ) -> Either<Self, impl Iterator<Item = Self>> {
+    ) -> Either<iter::Once<Self>, impl Iterator<Item = Self>> {
         let isomorphic_sides = |first_side: &[&'a AstNode<'a>], second_side: &[&'a AstNode<'a>]| {
             first_side.len() == second_side.len()
                 && iter::zip(first_side.iter(), second_side.iter())
@@ -164,7 +164,7 @@ impl<'a> MergedTree<'a> {
                 class_mapping,
             ))
         } else {
-            Either::Left(MergedTree::Conflict { base, left, right })
+            Either::Left(iter::once(MergedTree::Conflict { base, left, right }))
         }
     }
 
