@@ -677,9 +677,10 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .chain(right_leaders.iter())
             .map(Leader::grammar_name)
             .collect();
-        if !commutative_parent.children_can_commute(&child_types) {
+        let Some(raw_separator) = commutative_parent.children_can_commute(&child_types) else {
             return Err("The children are not allowed to commute".to_string());
-        }
+        };
+        let trimmed_sep = raw_separator.trim();
 
         // then, compute the symmetric difference between the base and right lists
         let right_removed: HashSet<&Leader<'_>> = base_leaders
@@ -793,7 +794,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 // remove the indentation at the end of separators
                 // (it will be added back when pretty-printing, possibly at a different level)
                 .next()
-                .map_or(commutative_parent.separator, |separator| {
+                .map_or(raw_separator, |separator| {
                     let newline = separator.rfind('\n');
                     match newline {
                         None => separator,

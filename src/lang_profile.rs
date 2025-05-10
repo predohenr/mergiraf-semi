@@ -236,12 +236,19 @@ impl CommutativeParent {
     }
 
     /// Can children with the supplied types commute together?
-    pub(crate) fn children_can_commute(&self, node_types: &HashSet<&str>) -> bool {
-        self.children_groups.is_empty()
-            || self
-                .children_groups
-                .iter()
-                .any(|group| group.node_types.is_superset(node_types))
+    /// If so, return the separator to use when inserting two nodes
+    /// in the same place.
+    pub(crate) fn children_can_commute(&self, node_types: &HashSet<&str>) -> Option<&'static str> {
+        self.children_groups
+            .is_empty()
+            .then_some(self.separator)
+            .or(self.children_groups.iter().find_map(|group| {
+                if group.node_types.is_superset(node_types) {
+                    group.separator.or(Some(self.separator))
+                } else {
+                    None
+                }
+            }))
     }
 }
 
