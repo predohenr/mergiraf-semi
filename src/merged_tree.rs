@@ -4,6 +4,7 @@ use std::{
     collections::HashSet,
     fmt::Display,
     hash::{Hash, Hasher},
+    iter,
 };
 
 use itertools::{EitherOrBoth, Itertools};
@@ -118,10 +119,10 @@ impl<'a> MergedTree<'a> {
         left: Vec<&'a AstNode<'a>>,
         right: Vec<&'a AstNode<'a>>,
         class_mapping: &ClassMapping<'a>,
-    ) -> Vec<Self> {
+    ) -> impl Iterator<Item = Self> {
         let isomorphic_sides = |first_side: &[&'a AstNode<'a>], second_side: &[&'a AstNode<'a>]| {
             first_side.len() == second_side.len()
-                && std::iter::zip(first_side.iter(), second_side.iter())
+                && iter::zip(first_side.iter(), second_side.iter())
                     .all(|(first, second)| first.isomorphic_to(second))
         };
 
@@ -130,17 +131,14 @@ impl<'a> MergedTree<'a> {
             first_rev: Revision,
             second_rev: Revision,
             class_mapping: &ClassMapping<'a>,
-        ) -> Vec<MergedTree<'a>> {
-            first_side
-                .into_iter()
-                .map(|l| {
-                    MergedTree::new_exact(
-                        class_mapping.map_to_leader(RevNode::new(first_rev, l)),
-                        RevisionNESet::singleton(first_rev).with(second_rev),
-                        class_mapping,
-                    )
-                })
-                .collect()
+        ) -> impl Iterator<Item = MergedTree<'a>> {
+            first_side.into_iter().map(|l| {
+                MergedTree::new_exact(
+                    class_mapping.map_to_leader(RevNode::new(first_rev, l)),
+                    RevisionNESet::singleton(first_rev).with(second_rev),
+                    class_mapping,
+                )
+            })
         }
 
         if isomorphic_sides(&left, &right) {
@@ -150,7 +148,7 @@ impl<'a> MergedTree<'a> {
         } else if isomorphic_sides(&base, &left) {
             extract_rev(right, Revision::Right, Revision::Right, class_mapping)
         } else {
-            vec![MergedTree::Conflict { base, left, right }]
+            iter::once(MergedTree::Conflict { base, left, right })
         }
     }
 
