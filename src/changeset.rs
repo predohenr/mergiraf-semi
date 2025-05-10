@@ -265,7 +265,7 @@ mod tests {
 
         let tmp_dir = tempdir().expect("failed to create a temp dir");
 
-        let path = tmp_dir.into_path().join("changeset.txt");
+        let path = tmp_dir.path().to_owned().join("changeset.txt");
         changeset.save(&path);
 
         let contents = fs::read_to_string(&path).expect("Failed to read the changeset.txt file");
