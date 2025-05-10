@@ -56,17 +56,17 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             atomic_nodes: vec!["import_declaration"],
             commutative_parents: vec![
                 // top-level node, for imports and class declarations
-                CommutativeParent::without_delimiters("program", "\n").restricted_to_groups(&[
-                    &["module_declaration"],
-                    &["package_declaration"],
-                    &["import_declaration"],
-                    &[
+                CommutativeParent::without_delimiters("program", "\n\n").restricted_to(vec![
+                    ChildrenGroup::new(&["module_declaration"]),
+                    ChildrenGroup::new(&["package_declaration"]),
+                    ChildrenGroup::with_separator(&["import_declaration"], "\n"),
+                    ChildrenGroup::new(&[
                         "class_declaration",
                         "record_declaration",
                         "interface_declaration",
                         "annotation_type_declaration",
                         "enum_declaration",
-                    ],
+                    ]),
                 ]),
                 // strictly speaking, this isn't true (order can be accessed via reflection)
                 CommutativeParent::new("class_body", " {\n", "\n\n", "\n}\n").restricted_to(vec![
@@ -184,13 +184,16 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
                     .restricted_to_groups(&[&["import"], &["function_declaration"]]),
                 CommutativeParent::new("class_body", " {\n", "\n\n", "\n}\n")
                     .restricted_to_groups(&[&["property_declaration"], &["function_declaration"]]),
-                CommutativeParent::without_delimiters("modifiers", "\n").restricted_to_groups(&[
-                    &["annotation"],
-                    &[
-                        "visibility_modifier",
-                        "inheritance_modifier",
-                        "member_modifier",
-                    ],
+                CommutativeParent::without_delimiters("modifiers", "\n").restricted_to(vec![
+                    ChildrenGroup::new(&["annotation"]),
+                    ChildrenGroup::with_separator(
+                        &[
+                            "visibility_modifier",
+                            "inheritance_modifier",
+                            "member_modifier",
+                        ],
+                        " ",
+                    ),
                 ]),
                 CommutativeParent::without_delimiters("class_declaration", ", ")
                     .restricted_to_groups(&[&["delegation_specifier"]]),
@@ -328,9 +331,12 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             language: tree_sitter_go::LANGUAGE.into(),
             atomic_nodes: vec!["interpreted_string_literal"], // for https://github.com/tree-sitter/tree-sitter-go/issues/150
             commutative_parents: vec![
-                CommutativeParent::without_delimiters("source_file", "\n").restricted_to_groups(&[
-                    &["import_declaration"],
-                    &["function_declaration", "method_declaration"],
+                CommutativeParent::without_delimiters("source_file", "\n").restricted_to(vec![
+                    ChildrenGroup::new(&["import_declaration"]),
+                    ChildrenGroup::with_separator(
+                        &["function_declaration", "method_declaration"],
+                        "\n\n",
+                    ),
                 ]),
                 CommutativeParent::new("import_spec_list", "(\n", "\n", "\n)\n")
                     .restricted_to_groups(&[&["import_spec"]]),
@@ -448,7 +454,10 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             commutative_parents: vec![
                 CommutativeParent::new("initializer_list", "{", ",", "}"),
                 CommutativeParent::new("field_declaration_list", "{\n", "\n", "\n}\n")
-                    .restricted_to_groups(&[&["field_declaration"], &["function_definition"]]),
+                    .restricted_to(vec![
+                        ChildrenGroup::new(&["field_declaration"]),
+                        ChildrenGroup::with_separator(&["function_definition"], "\n\n"),
+                    ]),
             ],
             signatures: vec![
                 signature("initializer_pair", vec![vec![Field("designator")]]),
