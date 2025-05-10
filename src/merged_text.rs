@@ -666,7 +666,7 @@ there we go
                 Cow::Borrowed(base),
                 Cow::Borrowed(left),
                 Cow::Borrowed(right),
-            )
+            );
         };
         push_conflict("foo", "foo", "bar");
         push_conflict("foo", "bar", "bar");

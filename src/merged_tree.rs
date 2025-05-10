@@ -112,6 +112,44 @@ impl<'a> MergedTree<'a> {
         }
     }
 
+    /// Creates a new conflict, or a list of exact nodes if the conflict is spurious
+    pub(crate) fn new_conflict(
+        base: Vec<&'a AstNode<'a>>,
+        left: Vec<&'a AstNode<'a>>,
+        right: Vec<&'a AstNode<'a>>,
+        class_mapping: &ClassMapping<'a>,
+    ) -> Vec<Self> {
+        let isomorphic_sides = |first_side: &[&'a AstNode<'a>], second_side: &[&'a AstNode<'a>]| {
+            first_side.len() == second_side.len()
+                && std::iter::zip(first_side.iter(), second_side.iter())
+                    .all(|(first, second)| first.isomorphic_to(second))
+        };
+
+        let extract_rev = |first_side: Vec<&'a AstNode<'a>>, first_rev, second_rev| {
+            first_side
+                .iter()
+                .copied()
+                .map(|l| {
+                    MergedTree::new_exact(
+                        class_mapping.map_to_leader(RevNode::new(first_rev, l)),
+                        RevisionNESet::singleton(first_rev).with(second_rev),
+                        class_mapping,
+                    )
+                })
+                .collect()
+        };
+
+        if isomorphic_sides(&left, &right) {
+            extract_rev(left, Revision::Left, Revision::Right)
+        } else if isomorphic_sides(&base, &right) {
+            extract_rev(left, Revision::Left, Revision::Left)
+        } else if isomorphic_sides(&base, &left) {
+            extract_rev(right, Revision::Right, Revision::Right)
+        } else {
+            vec![MergedTree::Conflict { base, left, right }]
+        }
+    }
+
     /// Determines with which field of its parent this node is associated
     pub(crate) fn field_name(&self, class_mapping: &ClassMapping<'a>) -> Option<&'static str> {
         match self {
