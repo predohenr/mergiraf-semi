@@ -125,7 +125,12 @@ impl<'a> MergedTree<'a> {
                     .all(|(first, second)| first.isomorphic_to(second))
         };
 
-        let extract_rev = |first_side: Vec<&'a AstNode<'a>>, first_rev, second_rev| {
+        fn extract_rev<'a>(
+            first_side: Vec<&'a AstNode<'a>>,
+            first_rev: Revision,
+            second_rev: Revision,
+            class_mapping: &ClassMapping<'a>,
+        ) -> Vec<MergedTree<'a>> {
             first_side
                 .into_iter()
                 .map(|l| {
@@ -136,14 +141,14 @@ impl<'a> MergedTree<'a> {
                     )
                 })
                 .collect()
-        };
+        }
 
         if isomorphic_sides(&left, &right) {
-            extract_rev(left, Revision::Left, Revision::Right)
+            extract_rev(left, Revision::Left, Revision::Right, class_mapping)
         } else if isomorphic_sides(&base, &right) {
-            extract_rev(left, Revision::Left, Revision::Left)
+            extract_rev(left, Revision::Left, Revision::Left, class_mapping)
         } else if isomorphic_sides(&base, &left) {
-            extract_rev(right, Revision::Right, Revision::Right)
+            extract_rev(right, Revision::Right, Revision::Right, class_mapping)
         } else {
             vec![MergedTree::Conflict { base, left, right }]
         }
