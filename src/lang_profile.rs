@@ -229,6 +229,20 @@ impl CommutativeParent {
 
     /// Restrict a commutative parent to some children groups, possibly with their own separators
     pub(crate) fn restricted_to(self, children_groups: Vec<ChildrenGroup>) -> Self {
+        #[cfg(debug_assertions)]
+        {
+            for children_group in &children_groups {
+                if let Some(specific_separator) = children_group.separator {
+                    assert!(
+                        specific_separator.trim() == self.separator.trim(),
+                        "Children group separator '{}' inconsistent with parent separator '{}' in commutative parent '{}'",
+                        specific_separator,
+                        self.separator,
+                        self.parent_type
+                    );
+                }
+            }
+        }
         Self {
             children_groups,
             ..self
@@ -238,17 +252,24 @@ impl CommutativeParent {
     /// Can children with the supplied types commute together?
     /// If so, return the separator to use when inserting two nodes
     /// in the same place.
-    pub(crate) fn children_can_commute(&self, node_types: &HashSet<&str>) -> Option<&'static str> {
-        self.children_groups
-            .is_empty()
-            .then_some(self.separator)
-            .or(self.children_groups.iter().find_map(|group| {
+    pub(crate) fn child_separator(&self, node_types: &HashSet<&str>) -> Option<&'static str> {
+        if self.children_groups.is_empty() {
+            // If there are no children groups to restrict commutativity to,
+            // any children can commute and the default separator is used
+            Some(self.separator)
+        } else {
+            // Otherwise, children can only commute if their types all belong
+            // to the same group, in which case the separator is either that of
+            // that specific group, or the default one for the commutative parent
+            // as a fall-back.
+            self.children_groups.iter().find_map(|group| {
                 if group.node_types.is_superset(node_types) {
                     group.separator.or(Some(self.separator))
                 } else {
                     None
                 }
-            }))
+            })
+        }
     }
 }
 
