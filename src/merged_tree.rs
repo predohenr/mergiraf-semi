@@ -132,7 +132,7 @@ impl<'a> MergedTree<'a> {
             second_rev: Revision,
             class_mapping: &ClassMapping<'a>,
         ) -> impl Iterator<Item = MergedTree<'a>> {
-            first_side.into_iter().map(|l| {
+            first_side.into_iter().map(move |l| {
                 MergedTree::new_exact(
                     class_mapping.map_to_leader(RevNode::new(first_rev, l)),
                     RevisionNESet::singleton(first_rev).with(second_rev),
