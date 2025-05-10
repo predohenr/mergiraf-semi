@@ -127,8 +127,7 @@ impl<'a> MergedTree<'a> {
 
         let extract_rev = |first_side: Vec<&'a AstNode<'a>>, first_rev, second_rev| {
             first_side
-                .iter()
-                .copied()
+                .into_iter()
                 .map(|l| {
                     MergedTree::new_exact(
                         class_mapping.map_to_leader(RevNode::new(first_rev, l)),
