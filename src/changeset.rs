@@ -166,7 +166,7 @@ impl<'a> ChangeSet<'a> {
 
     /// Save to file, for debugging purposes
     pub fn save(&self, fname: impl AsRef<Path>) {
-        let f = File::open(fname).expect("Unable to open changeset file");
+        let f = File::create(fname).expect("Unable to open changeset file");
         let mut f = BufWriter::new(f);
 
         for pcs in self.iter().sorted() {
