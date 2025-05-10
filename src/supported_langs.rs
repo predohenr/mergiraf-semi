@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 
 use crate::{
-    lang_profile::{CommutativeParent, LangProfile},
+    lang_profile::{ChildrenGroup, CommutativeParent, LangProfile},
     signature::{
         PathStep::{ChildType, Field},
         signature,
@@ -69,53 +69,55 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
                     ],
                 ]),
                 // strictly speaking, this isn't true (order can be accessed via reflection)
-                CommutativeParent::new("class_body", " {\n", "\n", "\n}\n").restricted_to_groups(
-                    &[
-                        &["field_declaration"],
-                        &[
+                CommutativeParent::new("class_body", " {\n", "\n\n", "\n}\n").restricted_to(vec![
+                    ChildrenGroup::with_separator(&["field_declaration"], "\n"),
+                    ChildrenGroup::new(&[
+                        "record_declaration",
+                        "class_declaration",
+                        "interface_declaration",
+                        "annotation_type_declaration",
+                        "enum_declaration",
+                    ]),
+                    ChildrenGroup::new(&[
+                        "constructor_declaration",
+                        "method_declaration",
+                        "compact_constructor_declaration",
+                    ]),
+                ]),
+                CommutativeParent::new("interface_body", " {\n", "\n\n", "\n}\n").restricted_to(
+                    vec![
+                        ChildrenGroup::with_separator(&["field_declaration"], "\n"),
+                        ChildrenGroup::new(&[
                             "record_declaration",
                             "class_declaration",
                             "interface_declaration",
                             "annotation_type_declaration",
                             "enum_declaration",
-                        ],
-                        &[
-                            "constructor_declaration",
-                            "method_declaration",
-                            "compact_constructor_declaration",
-                        ],
+                        ]),
+                        ChildrenGroup::new(&["method_declaration"]),
                     ],
                 ),
-                CommutativeParent::new("interface_body", " {\n", "\n", "\n}\n")
-                    .restricted_to_groups(&[
-                        &["field_declaration"],
+                CommutativeParent::without_delimiters("modifiers", " ").restricted_to(vec![
+                    ChildrenGroup::with_separator(
                         &[
-                            "record_declaration",
-                            "class_declaration",
-                            "interface_declaration",
-                            "annotation_type_declaration",
-                            "enum_declaration",
+                            "public",
+                            "protected",
+                            "private",
+                            "abstract",
+                            "static",
+                            "final",
+                            "strictfp",
+                            "default",
+                            "synchronized",
+                            "native",
+                            "transient",
+                            "volatile",
+                            "sealed",
+                            "non-sealed",
                         ],
-                        &["method_declaration"],
-                    ]),
-                CommutativeParent::without_delimiters("modifiers", " ").restricted_to_groups(&[
-                    &[
-                        "public",
-                        "protected",
-                        "private",
-                        "abstract",
-                        "static",
-                        "final",
-                        "strictfp",
-                        "default",
-                        "synchronized",
-                        "native",
-                        "transient",
-                        "volatile",
-                        "sealed",
-                        "non-sealed",
-                    ],
-                    &["marker_annotation", "annotation"],
+                        " ",
+                    ),
+                    ChildrenGroup::with_separator(&["marker_annotation", "annotation"], "\n"),
                 ]),
                 CommutativeParent::without_delimiters("throws", ", ")
                     .restricted_to_groups(&[&["identifier"]]),
