@@ -7,6 +7,7 @@ use std::{
     iter,
 };
 
+use either::Either;
 use itertools::{EitherOrBoth, Itertools};
 
 use crate::{
@@ -119,7 +120,7 @@ impl<'a> MergedTree<'a> {
         left: Vec<&'a AstNode<'a>>,
         right: Vec<&'a AstNode<'a>>,
         class_mapping: &ClassMapping<'a>,
-    ) -> impl Iterator<Item = Self> {
+    ) -> Either<Self, impl Iterator<Item = Self>> {
         let isomorphic_sides = |first_side: &[&'a AstNode<'a>], second_side: &[&'a AstNode<'a>]| {
             first_side.len() == second_side.len()
                 && iter::zip(first_side.iter(), second_side.iter())
@@ -142,13 +143,28 @@ impl<'a> MergedTree<'a> {
         }
 
         if isomorphic_sides(&left, &right) {
-            extract_rev(left, Revision::Left, Revision::Right, class_mapping)
+            Either::Right(extract_rev(
+                left,
+                Revision::Left,
+                Revision::Right,
+                class_mapping,
+            ))
         } else if isomorphic_sides(&base, &right) {
-            extract_rev(left, Revision::Left, Revision::Left, class_mapping)
+            Either::Right(extract_rev(
+                left,
+                Revision::Left,
+                Revision::Left,
+                class_mapping,
+            ))
         } else if isomorphic_sides(&base, &left) {
-            extract_rev(right, Revision::Right, Revision::Right, class_mapping)
+            Either::Right(extract_rev(
+                right,
+                Revision::Right,
+                Revision::Right,
+                class_mapping,
+            ))
         } else {
-            iter::once(MergedTree::Conflict { base, left, right })
+            Either::Left(MergedTree::Conflict { base, left, right })
         }
     }
 
