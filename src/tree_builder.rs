@@ -636,8 +636,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     ) -> Result<Vec<MergedTree<'a>>, String> {
         let pad = visiting_state.indentation();
         debug!("{pad}commutatively_merge_lists");
-        let raw_separator = commutative_parent.separator;
-        let trimmed_sep = raw_separator.trim();
+        let trimmed_sep = commutative_parent.trimmed_separator();
         let trimmed_left_delim = commutative_parent.left_delim.unwrap_or_default().trim();
         let trimmed_right_delim = commutative_parent.right_delim.unwrap_or_default().trim();
         // TODO improve handling of comments? comments added by the right side should ideally be placed sensibly

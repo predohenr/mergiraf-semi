@@ -167,7 +167,7 @@ pub struct CommutativeParent {
     pub parent_type: &'static str,
     // any separator that needs to be inserted between the children.
     // It can be overridden by specifying separators in each children group.
-    pub separator: &'static str,
+    separator: &'static str,
     // any left delimiter that can come before all children
     pub left_delim: Option<&'static str>,
     // any right delimiter that can come after all children
@@ -272,6 +272,13 @@ impl CommutativeParent {
                 }
             })
         }
+    }
+
+    /// The separator for children in this group, trimmed from leading and trailing whitespace.
+    /// To obtain the separator to be inserted between two commutatively merged elements,
+    /// use `child_separator` instead.
+    pub(crate) fn trimmed_separator(&self) -> &'static str {
+        self.separator.trim()
     }
 }
 
