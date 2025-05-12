@@ -231,15 +231,13 @@ impl CommutativeParent {
     pub(crate) fn restricted_to(self, children_groups: Vec<ChildrenGroup>) -> Self {
         #[cfg(debug_assertions)]
         {
-            let escape_separator = |sep: &str| sep.replace('\n', "\\n").replace('\t', "\\t");
             for children_group in &children_groups {
                 if let Some(specific_separator) = children_group.separator {
                     assert_eq!(
                         specific_separator.trim(),
                         self.separator.trim(),
-                        "Children group separator '{}' inconsistent with parent separator '{}' in commutative parent '{}'",
-                        escape_separator(specific_separator),
-                        escape_separator(self.separator),
+                        "Children group separator '{specific_separator:?}' inconsistent with parent separator '{:?}' in commutative parent '{:?}'",
+                        self.separator,
                         self.parent_type
                     );
                 }
