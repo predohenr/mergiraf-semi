@@ -276,8 +276,10 @@ mod tests {
     fn has_signature_conflicts() {
         let ctx = ctx();
 
-        let with_conflicts = ctx.parse_json("[{\"a\":1, \"b\":2, \"a\":3}]").root();
-        let without_conflicts = ctx.parse_json("{\"a\": [4], \"b\": [4]}").root();
+        let with_conflicts = ctx
+            .parse_json("[{\"a\":1, \"b\":2, \"a\":3}]")
+            .redundant_root();
+        let without_conflicts = ctx.parse_json("{\"a\": [4], \"b\": [4]}").redundant_root();
 
         assert!(with_conflicts.has_signature_conflicts());
         assert!(!without_conflicts.has_signature_conflicts());

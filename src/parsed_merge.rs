@@ -298,7 +298,7 @@ impl<'a> ParsedMerge<'a> {
         tree: &'b Ast<'b>,
     ) -> HashMap<(&'static str, Range<usize>), &'b AstNode<'b>> {
         let mut map = HashMap::new();
-        self.recursively_index_node(revision, tree.root(), &mut map);
+        self.recursively_index_node(revision, tree.redundant_root(), &mut map);
         map
     }
 
@@ -1044,10 +1044,10 @@ struct MyType {
         let matching =
             parsed.generate_matching(Revision::Left, Revision::Right, &parsed_left, &parsed_right);
 
-        let mytype_left = parsed_left.root()[0][1];
-        let mytype_right = parsed_right.root()[0][1];
-        let closing_bracket_left = parsed_left.root()[0][2][7];
-        let closing_bracket_right = parsed_right.root()[0][2][3];
+        let mytype_left = parsed_left.redundant_root()[0][1];
+        let mytype_right = parsed_right.redundant_root()[0][1];
+        let closing_bracket_left = parsed_left.redundant_root()[0][2][7];
+        let closing_bracket_right = parsed_right.redundant_root()[0][2][3];
 
         assert!(matching.are_matched(mytype_left, mytype_right));
         assert!(matching.are_matched(closing_bracket_left, closing_bracket_right));
@@ -1080,9 +1080,9 @@ struct MyType {
         let parsed_base = ctx.parse_nix(&base_rev);
         let parsed_left = ctx.parse_nix(&left_rev);
 
-        let binding_set_base = parsed_base.root()[0][2][1];
+        let binding_set_base = parsed_base.redundant_root()[0][2][1];
         assert_eq!(binding_set_base.grammar_name, "binding_set");
-        let binding_left = parsed_left.root()[0][2][1][0];
+        let binding_left = parsed_left.redundant_root()[0][2][1][0];
         assert_eq!(binding_left.grammar_name, "binding");
         // two nodes of different types have the same range
         assert_eq!(binding_set_base.byte_range, binding_left.byte_range);

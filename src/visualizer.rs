@@ -109,7 +109,7 @@ pub fn tree_to_graph<W: Write>(
     let mut visited = HashSet::new();
     writeln!(writer, "  subgraph {prefix} {{")?;
     add_node(
-        node.root(),
+        node.redundant_root(),
         writer,
         prefix,
         matched,

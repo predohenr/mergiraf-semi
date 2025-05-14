@@ -294,7 +294,7 @@ fn build_tree<'a>(
         let line_based =
             line_based_merge_parsed(base.source(), left.source(), right.source(), settings);
         MergedTree::LineBasedMerge {
-            node: class_mapping.map_to_leader(RevNode::new(Revision::Base, base.root())),
+            node: class_mapping.map_to_leader(RevNode::new(Revision::Base, base.redundant_root())),
             parsed: line_based,
         }
     });

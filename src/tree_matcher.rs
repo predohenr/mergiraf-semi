@@ -60,11 +60,11 @@ impl TreeMatcher {
 
         let arena = Arena::new();
         let truncated_left = left
-            .root()
+            .redundant_root()
             .truncate(|node| exact_matching.get_from_left(node).is_some(), &arena);
 
         let truncated_right = right
-            .root()
+            .redundant_root()
             .truncate(|node| exact_matching.get_from_right(node).is_some(), &arena);
         let mut truncated_matching: Matching = matching.translate(truncated_left, truncated_right);
 
@@ -73,8 +73,8 @@ impl TreeMatcher {
             self.bottom_up_pass(truncated_left, truncated_right, &mut truncated_matching);
         debug!("matching took {:?}", start.elapsed());
         let mut full = matching;
-        let container = container_matching.translate(left.root(), right.root());
-        let recovery = recovery_matches.translate(left.root(), right.root());
+        let container = container_matching.translate(left.redundant_root(), right.redundant_root());
+        let recovery = recovery_matches.translate(left.redundant_root(), right.redundant_root());
         full.add_matching(&container);
         full.add_matching(&recovery);
         DetailedMatching {
@@ -109,8 +109,8 @@ impl TreeMatcher {
 
         let mut l1 = PriorityList::new();
         let mut l2 = PriorityList::new();
-        l1.push(left.root());
-        l2.push(right.root());
+        l1.push(left.redundant_root());
+        l2.push(right.redundant_root());
         loop {
             let pm_1 = l1.peek_max().unwrap_or(-1);
             let pm_2 = l2.peek_max().unwrap_or(-1);
