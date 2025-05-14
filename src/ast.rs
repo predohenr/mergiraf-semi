@@ -369,6 +369,11 @@ impl<'a> AstNode<'a> {
             .expect("There must be at least one ancestor of any node: the node itself")
     }
 
+    // Temporarily added to ease the removal of Ast
+    pub fn redundant_root(&'a self) -> &'a Self {
+        self
+    }
+
     /// Whether this node is isomorphic to another.
     /// This doesn't take commutativity into account.
     pub fn isomorphic_to<'b>(&'a self, other: &'b AstNode<'b>) -> bool {
