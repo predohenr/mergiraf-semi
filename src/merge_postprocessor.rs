@@ -7,7 +7,7 @@ use regex::Regex;
 use crate::{
     ast::AstNode,
     class_mapping::{ClassMapping, Leader, RevNode, RevisionNESet},
-    lang_profile::{CommutativeParent, LangProfile},
+    lang_profile::CommutativeParent,
     merged_tree::MergedTree,
     pcs::Revision,
     signature::isomorphic_merged_trees,
@@ -19,18 +19,17 @@ impl<'a> MergedTree<'a> {
     /// and potentially add a conflict there.
     pub(crate) fn post_process_for_duplicate_signatures(
         self,
-        lang_profile: &LangProfile,
         class_mapping: &ClassMapping<'a>,
     ) -> Self {
         match self {
             Self::MixedTree { node, children, .. } => {
                 let recursively_processed = children
                     .into_iter()
-                    .map(|element| {
-                        element.post_process_for_duplicate_signatures(lang_profile, class_mapping)
-                    })
+                    .map(|element| element.post_process_for_duplicate_signatures(class_mapping))
                     .collect();
-                let commutative_parent = lang_profile.get_commutative_parent(node.grammar_name());
+                let commutative_parent = node
+                    .lang_profile()
+                    .get_commutative_parent(node.grammar_name());
                 if let Some(commutative_parent) = commutative_parent {
                     let highlighted = highlight_duplicate_signatures(
                         node,

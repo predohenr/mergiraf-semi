@@ -80,7 +80,7 @@ pub fn three_way_merge<'a>(
     );
 
     // post-process to highlight signature conflicts
-    let postprocessed_tree = postprocess_tree(merged_tree, lang_profile, &class_mapping);
+    let postprocessed_tree = postprocess_tree(merged_tree, &class_mapping);
 
     (postprocessed_tree, class_mapping)
 }
@@ -315,12 +315,10 @@ fn build_tree<'a>(
 
 fn postprocess_tree<'a>(
     merged_tree: MergedTree<'a>,
-    lang_profile: &LangProfile,
     class_mapping: &ClassMapping<'a>,
 ) -> MergedTree<'a> {
     let start: Instant = Instant::now();
-    let postprocessed_tree =
-        merged_tree.post_process_for_duplicate_signatures(lang_profile, class_mapping);
+    let postprocessed_tree = merged_tree.post_process_for_duplicate_signatures(class_mapping);
     debug!(
         "post-processing the merged tree for signature conflicts took {:?}",
         start.elapsed()
