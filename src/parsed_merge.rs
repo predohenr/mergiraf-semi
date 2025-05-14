@@ -3,12 +3,8 @@ use std::{collections::HashMap, ops::Range};
 use regex::Regex;
 
 use crate::{
-    ast::{Ast, AstNode},
-    line_based::LINE_BASED_METHOD,
-    matching::Matching,
-    merge_result::MergeResult,
-    pcs::Revision,
-    settings::DisplaySettings,
+    ast::AstNode, line_based::LINE_BASED_METHOD, matching::Matching, merge_result::MergeResult,
+    pcs::Revision, settings::DisplaySettings,
 };
 
 pub(crate) const PARSED_MERGE_DIFF2_DETECTED: &str =
@@ -277,8 +273,8 @@ impl<'a> ParsedMerge<'a> {
         &self,
         first_revision: Revision,
         second_revision: Revision,
-        first_tree: &'b Ast<'b>,
-        second_tree: &'b Ast<'b>,
+        first_tree: &'b AstNode<'b>,
+        second_tree: &'b AstNode<'b>,
     ) -> Matching<'b> {
         let first_index = self.index_tree_by_merged_ranges(first_revision, first_tree);
         let second_index = self.index_tree_by_merged_ranges(second_revision, second_tree);
@@ -295,7 +291,7 @@ impl<'a> ParsedMerge<'a> {
     fn index_tree_by_merged_ranges<'b>(
         &self,
         revision: Revision,
-        tree: &'b Ast<'b>,
+        tree: &'b AstNode<'b>,
     ) -> HashMap<(&'static str, Range<usize>), &'b AstNode<'b>> {
         let mut map = HashMap::new();
         self.recursively_index_node(revision, tree.redundant_root(), &mut map);

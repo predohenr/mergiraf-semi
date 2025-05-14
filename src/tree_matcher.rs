@@ -10,10 +10,7 @@ use tree_edit_distance::{Edit, diff};
 use typed_arena::Arena;
 
 use crate::{
-    ast::{Ast, AstNode},
-    matching::Matching,
-    multimap::MultiMap,
-    priority_list::PriorityList,
+    ast::AstNode, matching::Matching, multimap::MultiMap, priority_list::PriorityList,
     signature::Signature,
 };
 
@@ -47,8 +44,8 @@ impl TreeMatcher {
     /// It can be supplied with an initial matching of nodes which are known
     pub fn match_trees<'a>(
         &self,
-        left: &'a Ast<'a>,
-        right: &'a Ast<'a>,
+        left: &'a AstNode<'a>,
+        right: &'a AstNode<'a>,
         initial_matching: Option<&Matching<'a>>,
     ) -> DetailedMatching<'a> {
         let start = Instant::now();
@@ -88,8 +85,8 @@ impl TreeMatcher {
     // First pass of the GumTree classic algorithm, top down, creating the exact matchings between isomorphic subtrees
     fn top_down_pass<'a>(
         &self,
-        left: &'a Ast<'a>,
-        right: &'a Ast<'a>,
+        left: &'a AstNode<'a>,
+        right: &'a AstNode<'a>,
         initial_matching: Option<&Matching<'a>>,
     ) -> (Matching<'a>, Matching<'a>) {
         let mut matching = Matching::new();

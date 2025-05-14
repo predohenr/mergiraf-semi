@@ -7,7 +7,7 @@ use std::{
 use itertools::Itertools;
 
 use crate::{
-    ast::{Ast, AstNode},
+    ast::AstNode,
     class_mapping::{ClassMapping, RevNode},
     multimap::MultiMap,
     pcs::{PCS, PCSNode, Revision},
@@ -31,7 +31,7 @@ impl<'a> ChangeSet<'a> {
     /// Adds PCS triples that encodes a tree
     pub fn add_tree(
         &mut self,
-        tree: &'a Ast<'a>,
+        tree: &'a AstNode<'a>,
         revision: Revision,
         classmapping: &ClassMapping<'a>,
     ) {

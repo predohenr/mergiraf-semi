@@ -22,16 +22,6 @@ use crate::{
     signature::{Signature, SignatureDefinition},
 };
 
-/// A syntax tree.
-///
-/// All its nodes are allocated in an arena. Together with the reference to
-/// the source code that was parsed, this determines the lifetime parameter.
-#[derive(Debug)]
-pub struct Ast<'a> {
-    source: &'a str,
-    root: &'a AstNode<'a>,
-}
-
 /// A node in a syntax tree.
 ///
 /// It refers to the part of the source code it was parsed from,
@@ -69,51 +59,6 @@ pub struct AstNode<'a> {
     dfs: UnsafeCell<Option<&'a [&'a Self]>>,
     /// The language this node was parsed from
     pub lang_profile: &'a LangProfile,
-}
-
-impl<'a> Ast<'a> {
-    /// Create a new tree from a `tree_sitter` tree, the source code it was generated from,
-    /// and an arena to allocate the nodes from.
-    pub fn new(
-        tree: &Tree,
-        source: &'a str,
-        lang_profile: &'a LangProfile,
-        arena: &'a Arena<AstNode<'a>>,
-        ref_arena: &'a Arena<&'a AstNode<'a>>,
-    ) -> Result<Self, String> {
-        let root = AstNode::new(tree, source, lang_profile, arena, ref_arena)?;
-        Ok(Self { source, root })
-    }
-
-    /// The height of the tree
-    pub fn height(&self) -> i32 {
-        self.redundant_root().height()
-    }
-
-    /// The number of nodes in the tree
-    pub fn size(&self) -> usize {
-        self.redundant_root().size()
-    }
-
-    /// The root of the tree
-    pub fn redundant_root(&self) -> &'a AstNode<'a> {
-        self.root
-    }
-
-    /// Start a Depth-First Search in prefix order on the tree
-    pub fn dfs(&'a self) -> impl ExactSizeIterator<Item = &'a AstNode<'a>> {
-        self.redundant_root().dfs()
-    }
-
-    /// Start a Depth-First Search in postfix order on the tree
-    pub fn postfix(&'a self) -> impl Iterator<Item = &'a AstNode<'a>> {
-        self.redundant_root().postfix()
-    }
-
-    /// The source code this tree was parsed from
-    pub fn source(&self) -> &'a str {
-        self.source
-    }
 }
 
 impl<'a> AstNode<'a> {

@@ -6,10 +6,7 @@ use std::path::Path;
 use itertools::Itertools;
 use log::error;
 
-use crate::{
-    ast::{Ast, AstNode},
-    tree_matcher::DetailedMatching,
-};
+use crate::{ast::AstNode, tree_matcher::DetailedMatching};
 
 const COLOR_EXACTLY_MATCHED_NODE: &str = "#ff2222";
 const COLOR_NON_FULLY_MATCHED_NODE: &str = "#40e0d0";
@@ -20,8 +17,8 @@ const COLOR_RECOVERY_MATCHING: &str = "green";
 /// Renders a mapping between two trees as a dotty graph
 pub fn write_matching_to_dotty_file<'a>(
     path: impl AsRef<Path>,
-    left: &Ast<'a>,
-    right: &Ast<'a>,
+    left: &'a AstNode<'a>,
+    right: &'a AstNode<'a>,
     mapping: &DetailedMatching<'a>,
 ) {
     let path = path.as_ref();
@@ -35,8 +32,8 @@ pub fn write_matching_to_dotty_file<'a>(
 
 pub fn matching_to_graph<'a>(
     path: &Path,
-    left: &Ast<'a>,
-    right: &Ast<'a>,
+    left: &'a AstNode<'a>,
+    right: &'a AstNode<'a>,
     mapping: &DetailedMatching<'a>,
 ) -> io::Result<()> {
     let file = OpenOptions::new()
@@ -99,9 +96,9 @@ pub fn matching_to_graph<'a>(
 }
 
 /// Renders a tree as a dotty graph
-pub fn tree_to_graph<W: Write>(
+pub fn tree_to_graph<'a, W: Write>(
     writer: &mut W,
-    node: &Ast<'_>,
+    node: &'a AstNode<'a>,
     prefix: &str,
     matched: &HashSet<usize>,
     exactly_matched: &HashSet<usize>,
