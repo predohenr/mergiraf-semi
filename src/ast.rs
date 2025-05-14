@@ -17,7 +17,10 @@ use rustc_hash::FxHashMap;
 use tree_sitter::{Tree, TreeCursor};
 use typed_arena::Arena;
 
-use crate::lang_profile::{CommutativeParent, LangProfile};
+use crate::{
+    lang_profile::{CommutativeParent, LangProfile},
+    signature::Signature,
+};
 
 /// A syntax tree.
 ///
@@ -671,8 +674,7 @@ impl<'a> AstNode<'a> {
 
         let sig = (parent.is_some())
             .then(|| {
-                self.lang_profile
-                    .extract_signature_from_original_node(self)
+                self.signature()
                     .map(|sig| format!(" {}", Color::LightCyan.paint(sig.to_string())))
             })
             .flatten()
@@ -711,14 +713,21 @@ impl<'a> AstNode<'a> {
                 && !self
                     .children
                     .iter()
-                    .filter_map(|child| {
-                        self.lang_profile
-                            .extract_signature_from_original_node(child)
-                    })
+                    .copied()
+                    .filter_map(AstNode::signature)
                     .all_unique()
         };
 
         conflict_in_self() || conflict_in_children()
+    }
+
+    /// Extracts a signature for this node if we have a signature definition
+    /// for this type of nodes in the language profile.
+    pub(crate) fn signature(&'a self) -> Option<Signature<'a, 'a>> {
+        let definition = self
+            .lang_profile
+            .find_signature_definition_by_grammar_name(self.grammar_name)?;
+        Some(definition.extract_signature_from_original_node(self))
     }
 }
 

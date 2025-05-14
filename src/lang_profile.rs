@@ -2,11 +2,7 @@ use std::{collections::HashSet, ffi::OsStr, path::Path};
 
 use tree_sitter::Language;
 
-use crate::{
-    ast::AstNode,
-    signature::{Signature, SignatureDefinition},
-    supported_langs::SUPPORTED_LANGUAGES,
-};
+use crate::{signature::SignatureDefinition, supported_langs::SUPPORTED_LANGUAGES};
 
 /// Language-dependent settings to influence how merging is done.
 /// All those settings are declarative (except for the tree-sitter parser, which is
@@ -91,16 +87,6 @@ impl LangProfile {
         self.commutative_parents
             .iter()
             .find(|cr| cr.parent_type == grammar_type)
-    }
-
-    /// Extracts a signature for the given node if we have a signature definition
-    /// for this type of nodes.
-    pub(crate) fn extract_signature_from_original_node<'a>(
-        &self,
-        node: &'a AstNode<'a>,
-    ) -> Option<Signature<'a, 'a>> {
-        let definition = self.find_signature_definition_by_grammar_name(node.grammar_name)?;
-        Some(definition.extract_signature_from_original_node(node))
     }
 
     pub(crate) fn find_signature_definition_by_grammar_name(
