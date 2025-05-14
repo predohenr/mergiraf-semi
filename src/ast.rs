@@ -64,6 +64,8 @@ pub struct AstNode<'a> {
     /// This is computed right after construction and then never written to again.
     /// On nodes that have been truncated (which is rare) this will be `None`.
     dfs: UnsafeCell<Option<&'a [&'a Self]>>,
+    /// The language this node was parsed from
+    pub lang_profile: &'a LangProfile,
 }
 
 impl<'a> Ast<'a> {
@@ -72,7 +74,7 @@ impl<'a> Ast<'a> {
     pub fn new(
         tree: &Tree,
         source: &'a str,
-        lang_profile: &LangProfile,
+        lang_profile: &'a LangProfile,
         arena: &'a Arena<AstNode<'a>>,
         ref_arena: &'a Arena<&'a AstNode<'a>>,
     ) -> Result<Self, String> {
@@ -116,7 +118,7 @@ impl<'a> AstNode<'a> {
     fn internal_new<'b>(
         cursor: &mut TreeCursor<'b>,
         global_source: &'a str,
-        lang_profile: &LangProfile,
+        lang_profile: &'a LangProfile,
         arena: &'a Arena<Self>,
     ) -> Result<&'a Self, String> {
         let mut children = Vec::new();
@@ -180,6 +182,7 @@ impl<'a> AstNode<'a> {
                     descendant_count: 1,
                     parent: UnsafeCell::new(None),
                     dfs: UnsafeCell::new(None),
+                    lang_profile,
                 }));
                 offset += line.len() + 1;
             }
@@ -217,6 +220,7 @@ impl<'a> AstNode<'a> {
             descendant_count,
             parent: UnsafeCell::new(None),
             dfs: UnsafeCell::new(None),
+            lang_profile,
         });
         result.internal_set_parent_on_children();
         Ok(result)
