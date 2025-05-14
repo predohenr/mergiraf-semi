@@ -81,7 +81,14 @@ impl<'a> Ast<'a> {
         arena: &'a Arena<AstNode<'a>>,
         ref_arena: &'a Arena<&'a AstNode<'a>>,
     ) -> Result<Self, String> {
-        let root = AstNode::internal_new(&mut tree.walk(), source, lang_profile, arena)?;
+        let mut next_node_id = 1;
+        let root = AstNode::internal_new(
+            &mut tree.walk(),
+            source,
+            lang_profile,
+            arena,
+            &mut next_node_id,
+        )?;
         root.internal_precompute_root_dfs(ref_arena);
         Ok(Self { source, root })
     }
@@ -123,6 +130,7 @@ impl<'a> AstNode<'a> {
         global_source: &'a str,
         lang_profile: &'a LangProfile,
         arena: &'a Arena<Self>,
+        next_node_id: &mut usize,
     ) -> Result<&'a Self, String> {
         let mut children = Vec::new();
         let mut field_to_children: FxHashMap<&'a str, Vec<&'a Self>> = FxHashMap::default();
@@ -131,7 +139,8 @@ impl<'a> AstNode<'a> {
         if !atomic && cursor.goto_first_child() {
             let mut child_available = true;
             while child_available {
-                let child = Self::internal_new(cursor, global_source, lang_profile, arena)?;
+                let child =
+                    Self::internal_new(cursor, global_source, lang_profile, arena, next_node_id)?;
                 children.push(child);
                 if let Some(field_name) = cursor.field_name() {
                     field_to_children.entry(field_name).or_default().push(child);
@@ -178,12 +187,13 @@ impl<'a> AstNode<'a> {
                     grammar_name: "@virtual_line@",
                     field_name: None,
                     byte_range: start_position..start_position + trimmed.len(),
-                    id: 2 * start_position + 1, // start_position is known to be unique among virtual lines
+                    id: *next_node_id,
                     descendant_count: 1,
                     parent: UnsafeCell::new(None),
                     dfs: UnsafeCell::new(None),
                     lang_profile,
                 }));
+                *next_node_id += 1;
                 offset += line.len() + 1;
             }
         }
@@ -216,12 +226,13 @@ impl<'a> AstNode<'a> {
             field_name,
             // parse-specific fields not included in hash/isomorphism
             byte_range: range,
-            id: 2 * node.id(), // 2* to make it disjoint from the split lines we introduce above
+            id: *next_node_id,
             descendant_count,
             parent: UnsafeCell::new(None),
             dfs: UnsafeCell::new(None),
             lang_profile,
         });
+        *next_node_id += 1;
         result.internal_set_parent_on_children();
         Ok(result)
     }
