@@ -704,6 +704,33 @@ impl<'a> AstNode<'a> {
         )
         .collect()
     }
+
+    /// Checks if a tree has any signature conflicts in it
+    pub(crate) fn has_signature_conflicts(&self) -> bool {
+        let conflict_in_children = || {
+            self.children
+                .iter()
+                .any(|child| child.has_signature_conflicts())
+        };
+
+        let conflict_in_self = || {
+            self.children.len() >= 2
+                && self
+                    .lang_profile
+                    .get_commutative_parent(self.grammar_name)
+                    .is_some()
+                && !self
+                    .children
+                    .iter()
+                    .filter_map(|child| {
+                        self.lang_profile
+                            .extract_signature_from_original_node(child)
+                    })
+                    .all_unique()
+        };
+
+        conflict_in_self() || conflict_in_children()
+    }
 }
 
 /// We pre-compute hash values for all nodes,

@@ -1,6 +1,5 @@
 use std::{collections::HashSet, ffi::OsStr, path::Path};
 
-use itertools::Itertools;
 use tree_sitter::Language;
 
 use crate::{
@@ -131,27 +130,6 @@ impl LangProfile {
         self.signatures
             .iter()
             .find(|sig_def| sig_def.node_type == grammar_name)
-    }
-
-    /// Checks if a tree has any signature conflicts in it
-    pub(crate) fn has_signature_conflicts<'a>(&self, node: &'a AstNode<'a>) -> bool {
-        let conflict_in_children = || {
-            node.children
-                .iter()
-                .any(|child| self.has_signature_conflicts(child))
-        };
-
-        let conflict_in_self = || {
-            node.children.len() >= 2
-                && self.get_commutative_parent(node.grammar_name).is_some()
-                && !node
-                    .children
-                    .iter()
-                    .filter_map(|child| self.extract_signature_from_original_node(child))
-                    .all_unique()
-        };
-
-        conflict_in_self() || conflict_in_children()
     }
 
     /// Should this node type be treated as atomic?
@@ -318,13 +296,11 @@ mod tests {
     fn has_signature_conflicts() {
         let ctx = ctx();
 
-        let lang_profile = LangProfile::json();
-
         let with_conflicts = ctx.parse_json("[{\"a\":1, \"b\":2, \"a\":3}]").root();
         let without_conflicts = ctx.parse_json("{\"a\": [4], \"b\": [4]}").root();
 
-        assert!(lang_profile.has_signature_conflicts(with_conflicts));
-        assert!(!lang_profile.has_signature_conflicts(without_conflicts));
+        assert!(with_conflicts.has_signature_conflicts());
+        assert!(!without_conflicts.has_signature_conflicts());
     }
 
     #[test]
