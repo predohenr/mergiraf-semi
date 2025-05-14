@@ -70,6 +70,20 @@ impl<'a> AstNode<'a> {
         ref_arena: &'a Arena<&'a AstNode<'a>>,
     ) -> Result<&'a Self, String> {
         let mut next_node_id = 1;
+        let root = Self::parse_root(source, lang_profile, arena, &mut next_node_id)?;
+        root.internal_precompute_root_dfs(ref_arena);
+        Ok(root)
+    }
+
+    /// Internal method to parse a string to a tree,
+    /// without doing the DFS precomputation and starting
+    /// allocation of node ids at the supplied counter.
+    fn parse_root(
+        source: &'a str,
+        lang_profile: &'a LangProfile,
+        arena: &'a Arena<AstNode<'a>>,
+        next_node_id: &mut usize,
+    ) -> Result<&'a Self, String> {
         let mut parser = Parser::new();
         parser
             .set_language(&lang_profile.language)
@@ -77,15 +91,7 @@ impl<'a> AstNode<'a> {
         let tree = parser
             .parse(source, None)
             .expect("Parsing source code failed");
-        let root = Self::internal_new(
-            &mut tree.walk(),
-            source,
-            lang_profile,
-            arena,
-            &mut next_node_id,
-        )?;
-        root.internal_precompute_root_dfs(ref_arena);
-        Ok(root)
+        Self::internal_new(&mut tree.walk(), source, lang_profile, arena, next_node_id)
     }
 
     fn internal_new<'b>(
