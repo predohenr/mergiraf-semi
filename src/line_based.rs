@@ -1,4 +1,4 @@
-use crate::{MergeResult, ast::AstNode, ast::AstNode, pcs::Revision};
+use crate::{MergeResult, ast::AstNode, pcs::Revision};
 use diffy_imara::{Algorithm, ConflictStyle, MergeOptions};
 use typed_arena::Arena;
 
