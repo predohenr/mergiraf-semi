@@ -14,7 +14,7 @@ use either::Either;
 use itertools::Itertools;
 use nu_ansi_term::Color;
 use rustc_hash::FxHashMap;
-use tree_sitter::{Tree, TreeCursor};
+use tree_sitter::{Parser, Tree, TreeCursor};
 use typed_arena::Arena;
 
 use crate::{
@@ -62,9 +62,26 @@ pub struct AstNode<'a> {
 }
 
 impl<'a> AstNode<'a> {
+    /// Parse a string to a tree using the language supplied
+    pub fn parse(
+        source: &'a str,
+        lang_profile: &'a LangProfile,
+        arena: &'a Arena<AstNode<'a>>,
+        ref_arena: &'a Arena<&'a AstNode<'a>>,
+    ) -> Result<&'a Self, String> {
+        let mut parser = Parser::new();
+        parser
+            .set_language(&lang_profile.language)
+            .map_err(|err| format!("Error loading {} grammar: {}", lang_profile.name, err))?;
+        let tree = parser
+            .parse(source, None)
+            .expect("Parsing source code failed");
+        Self::new(&tree, source, lang_profile, arena, ref_arena)
+    }
+
     /// Create a new tree from a `tree_sitter` tree, the source code it was generated from,
     /// and an arena to allocate the nodes from.
-    pub fn new(
+    fn new(
         tree: &Tree,
         source: &'a str,
         lang_profile: &'a LangProfile,
