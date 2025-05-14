@@ -83,7 +83,7 @@ impl LangProfile {
     }
 
     /// Do all the children of this parent commute?
-    pub fn get_commutative_parent(&self, grammar_type: &str) -> Option<&CommutativeParent> {
+    pub(crate) fn get_commutative_parent(&self, grammar_type: &str) -> Option<&CommutativeParent> {
         self.commutative_parents
             .iter()
             .find(|cr| cr.parent_type == grammar_type)

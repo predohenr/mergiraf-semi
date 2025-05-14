@@ -360,6 +360,11 @@ impl<'a> AstNode<'a> {
             })
     }
 
+    /// The commutative merging settings associated with this node.
+    pub fn commutative_parent_definition(&self) -> Option<&CommutativeParent> {
+        self.lang_profile.get_commutative_parent(self.grammar_name)
+    }
+
     /// Checks whether a node is isomorphic to another,
     /// taking commutativity into account. This can be
     /// very expensive in the worst cases, so this is not
@@ -393,11 +398,7 @@ impl<'a> AstNode<'a> {
 
         // commutative nodes whose children are one-to-one isomorphic, but not in the same order
         let commutative_parents_with_unordered_isomorphic_children = || {
-            if self
-                .lang_profile
-                .get_commutative_parent(self.grammar_name)
-                .is_none()
-            {
+            if self.commutative_parent_definition().is_none() {
                 return false;
             }
             self.children.len() == other.children.len()
@@ -650,7 +651,7 @@ impl<'a> AstNode<'a> {
         parent: Option<&CommutativeParent>,
     ) -> String {
         let num_children = self.children.len();
-        let next_parent = self.lang_profile.get_commutative_parent(self.grammar_name);
+        let next_parent = self.commutative_parent_definition();
 
         let tree_sym = if last_child { "└" } else { "├" };
 
@@ -706,10 +707,7 @@ impl<'a> AstNode<'a> {
 
         let conflict_in_self = || {
             self.children.len() >= 2
-                && self
-                    .lang_profile
-                    .get_commutative_parent(self.grammar_name)
-                    .is_some()
+                && self.commutative_parent_definition().is_some()
                 && !self
                     .children
                     .iter()

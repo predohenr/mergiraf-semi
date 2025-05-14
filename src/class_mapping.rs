@@ -3,7 +3,12 @@ use std::{fmt::Display, hash::Hash};
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
-use crate::{ast::AstNode, lang_profile::LangProfile, matching::Matching, pcs::Revision};
+use crate::{
+    ast::AstNode,
+    lang_profile::{CommutativeParent, LangProfile},
+    matching::Matching,
+    pcs::Revision,
+};
 
 /// A node together with a marker of which revision it came from.
 #[derive(Debug, Copy, Clone, Eq)]
@@ -59,6 +64,11 @@ impl<'a> Leader<'a> {
     /// The language profile of this node, which is guaranteed to be the same for all representatives
     pub fn lang_profile(&self) -> &'a LangProfile {
         self.0.lang_profile()
+    }
+
+    /// The commutative parent definition associated with this node
+    pub fn commutative_parent_definition(&self) -> Option<&CommutativeParent> {
+        self.0.node.commutative_parent_definition()
     }
 }
 

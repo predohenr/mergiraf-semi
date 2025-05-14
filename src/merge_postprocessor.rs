@@ -27,9 +27,7 @@ impl<'a> MergedTree<'a> {
                     .into_iter()
                     .map(|element| element.post_process_for_duplicate_signatures(class_mapping))
                     .collect();
-                let commutative_parent = node
-                    .lang_profile()
-                    .get_commutative_parent(node.grammar_name());
+                let commutative_parent = node.commutative_parent_definition();
                 if let Some(commutative_parent) = commutative_parent {
                     let highlighted = highlight_duplicate_signatures(
                         node,

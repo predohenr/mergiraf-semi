@@ -260,10 +260,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     // TODO(if-let-chains): use them here
                     #[allow(clippy::collapsible_if)]
                     if let PCSNode::Node { node: leader, .. } = node {
-                        if let Some(commutative_parent) = self
-                            .lang_profile
-                            .get_commutative_parent(leader.grammar_name())
-                        {
+                        if let Some(commutative_parent) = leader.commutative_parent_definition() {
                             // knowing that the order of all elements of the conflict does not matter, solve the conflict
                             let solved_conflict = self.commutatively_merge_lists(
                                 &base,
@@ -554,10 +551,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             ));
         };
         // If the root happens to be commutative, we can merge all children accordingly.
-        if let Some(commutative_parent) = self
-            .lang_profile
-            .get_commutative_parent(node.grammar_name())
-        {
+        if let Some(commutative_parent) = node.commutative_parent_definition() {
             // TODO(if-let-chains): if let Some() && if let Ok() {...}
             let commutative_merge =
                 self.commutatively_merge_children(node, commutative_parent, visiting_state);
