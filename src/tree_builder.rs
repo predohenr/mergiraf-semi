@@ -10,7 +10,7 @@ use crate::{
     ast::AstNode,
     changeset::ChangeSet,
     class_mapping::{ClassMapping, Leader, RevNode, RevisionNESet, RevisionSet},
-    lang_profile::{CommutativeParent, LangProfile},
+    lang_profile::CommutativeParent,
     merged_tree::MergedTree,
     multimap::MultiMap,
     pcs::{PCSNode, Revision},
@@ -50,7 +50,6 @@ pub struct TreeBuilder<'a, 'b> {
     merged_successors: SuccessorMap<'a>,
     base_successors: SuccessorMap<'a>,
     class_mapping: &'b ClassMapping<'a>,
-    lang_profile: &'b LangProfile,
     settings: &'b DisplaySettings<'a>,
 }
 
@@ -75,14 +74,12 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         merged_changeset: &ChangeSet<'a>,
         base_changeset: &ChangeSet<'a>,
         class_mapping: &'b ClassMapping<'a>,
-        lang_profile: &'b LangProfile,
         settings: &'b DisplaySettings<'a>,
     ) -> Self {
         TreeBuilder {
             merged_successors: SuccessorMap::new(merged_changeset),
             base_successors: SuccessorMap::new(base_changeset),
             class_mapping,
-            lang_profile,
             settings,
         }
     }
@@ -1046,7 +1043,6 @@ mod tests {
     #[test]
     fn recover_exact_tree() {
         let ctx = ctx();
-        let lang_profile = LangProfile::json();
 
         let tree = ctx.parse_json("[1, [2, 3]]");
 
@@ -1060,15 +1056,9 @@ mod tests {
             let merged_changeset = &changeset;
             let base_changeset = &changeset;
             let class_mapping = &class_mapping;
-            let lang_profile = &lang_profile;
             // build the necessary context for the tree-gathering algorithm
-            let tree_gatherer = TreeBuilder::new(
-                merged_changeset,
-                base_changeset,
-                class_mapping,
-                lang_profile,
-                &settings,
-            );
+            let tree_gatherer =
+                TreeBuilder::new(merged_changeset, base_changeset, class_mapping, &settings);
             tree_gatherer.build_tree()
         };
 
@@ -1085,7 +1075,6 @@ mod tests {
     #[test]
     fn contains() {
         let ctx = ctx();
-        let lang_profile = LangProfile::json();
 
         let tree = ctx.parse_json("[1, [2, 3]]");
 
@@ -1099,15 +1088,9 @@ mod tests {
             let merged_changeset = &changeset;
             let base_changeset = &changeset;
             let class_mapping = &class_mapping;
-            let lang_profile = &lang_profile;
             // build the necessary context for the tree-gathering algorithm
-            let tree_gatherer = TreeBuilder::new(
-                merged_changeset,
-                base_changeset,
-                class_mapping,
-                lang_profile,
-                &settings,
-            );
+            let tree_gatherer =
+                TreeBuilder::new(merged_changeset, base_changeset, class_mapping, &settings);
             tree_gatherer.build_tree()
         }
         .expect("a successful merge was expected");

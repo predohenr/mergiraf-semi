@@ -6,7 +6,6 @@ use crate::{
     ast::Ast,
     changeset::ChangeSet,
     class_mapping::{ClassMapping, RevNode},
-    lang_profile::LangProfile,
     line_based::line_based_merge_parsed,
     matching::Matching,
     merged_tree::MergedTree,
@@ -41,7 +40,6 @@ pub fn three_way_merge<'a>(
     settings: &DisplaySettings<'a>,
     debug_dir: Option<&Path>,
 ) -> (MergedTree<'a>, ClassMapping<'a>) {
-    let lang_profile = base.root().lang_profile;
     // match all pairs of revisions
     let (base_left_matching, base_right_matching, left_right_matching) = generate_matchings(
         base,
@@ -72,7 +70,6 @@ pub fn three_way_merge<'a>(
         base,
         left,
         right,
-        lang_profile,
         &class_mapping,
         &base_changeset,
         &cleaned_changeset,
@@ -286,20 +283,13 @@ fn build_tree<'a>(
     base: &Ast<'a>,
     left: &Ast<'a>,
     right: &Ast<'a>,
-    lang_profile: &LangProfile,
     class_mapping: &ClassMapping<'a>,
     base_changeset: &ChangeSet<'a>,
     cleaned_changeset: &ChangeSet<'a>,
     settings: &DisplaySettings<'a>,
 ) -> MergedTree<'a> {
     let start: Instant = Instant::now();
-    let tree_builder = TreeBuilder::new(
-        cleaned_changeset,
-        base_changeset,
-        class_mapping,
-        lang_profile,
-        settings,
-    );
+    let tree_builder = TreeBuilder::new(cleaned_changeset, base_changeset, class_mapping, settings);
     let merged_tree = tree_builder.build_tree().unwrap_or_else(|_| {
         let line_based =
             line_based_merge_parsed(base.source(), left.source(), right.source(), settings);
