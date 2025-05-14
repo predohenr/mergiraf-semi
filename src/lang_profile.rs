@@ -4,8 +4,6 @@ use tree_sitter::Language;
 
 use crate::{
     ast::AstNode,
-    class_mapping::ClassMapping,
-    merged_tree::MergedTree,
     signature::{Signature, SignatureDefinition},
     supported_langs::SUPPORTED_LANGUAGES,
 };
@@ -105,25 +103,7 @@ impl LangProfile {
         Some(definition.extract_signature_from_original_node(node))
     }
 
-    /// Extracts a signature for the given node if we have a signature definition
-    /// for this type of nodes.
-    pub(crate) fn extract_signature_from_merged_node<'b, 'a: 'b>(
-        &self,
-        node: &'b MergedTree<'a>,
-        class_mapping: &ClassMapping<'a>,
-    ) -> Option<Signature<'b, 'a>> {
-        let grammar_name = match node {
-            MergedTree::ExactTree { node, .. }
-            | MergedTree::MixedTree { node, .. }
-            | MergedTree::LineBasedMerge { node, .. } => Some(node.grammar_name()),
-            MergedTree::Conflict { .. } | MergedTree::CommutativeChildSeparator { .. } => None,
-        }?;
-        let definition = self.find_signature_definition_by_grammar_name(grammar_name)?;
-        let signature = definition.extract_signature_from_merged_node(node, class_mapping);
-        Some(signature)
-    }
-
-    fn find_signature_definition_by_grammar_name(
+    pub(crate) fn find_signature_definition_by_grammar_name(
         &self,
         grammar_name: &str,
     ) -> Option<&SignatureDefinition> {

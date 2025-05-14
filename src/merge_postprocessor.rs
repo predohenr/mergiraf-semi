@@ -35,7 +35,6 @@ impl<'a> MergedTree<'a> {
                     let highlighted = highlight_duplicate_signatures(
                         node,
                         recursively_processed,
-                        lang_profile,
                         class_mapping,
                         commutative_parent,
                     );
@@ -56,14 +55,13 @@ impl<'a> MergedTree<'a> {
 fn highlight_duplicate_signatures<'a>(
     parent: Leader<'a>,
     elements: Vec<MergedTree<'a>>,
-    lang_profile: &LangProfile,
     class_mapping: &ClassMapping<'a>,
     commutative_parent: &CommutativeParent,
 ) -> Vec<MergedTree<'a>> {
     // compute signatures and index them
     let sigs: Vec<_> = elements
         .iter()
-        .map(|element| lang_profile.extract_signature_from_merged_node(element, class_mapping))
+        .map(|element| element.signature(class_mapping))
         .collect();
     let sig_to_indices = sigs
         .iter()
