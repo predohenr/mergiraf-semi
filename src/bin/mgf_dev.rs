@@ -124,8 +124,7 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
             let second_root = tree_second.root();
 
             if first_root.isomorphic_to(second_root)
-                || (*commutative
-                    && first_root.commutatively_isomorphic_to(second_root, lang_profile))
+                || (*commutative && first_root.commutatively_isomorphic_to(second_root))
             {
                 Ok(0)
             } else {

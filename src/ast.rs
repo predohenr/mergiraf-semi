@@ -368,11 +368,7 @@ impl<'a> AstNode<'a> {
     ///   optional separators at the end of a list).
     /// - we could accept duplicate elements (for instance,
     ///   duplicate Java imports on one side but not on the other)
-    pub fn commutatively_isomorphic_to(
-        &'a self,
-        other: &'a Self,
-        lang_profile: &LangProfile,
-    ) -> bool {
+    pub fn commutatively_isomorphic_to(&'a self, other: &'a Self) -> bool {
         if self.grammar_name != other.grammar_name {
             return false;
         }
@@ -389,12 +385,13 @@ impl<'a> AstNode<'a> {
             !self.children.is_empty()
                 && self.children.len() == other.children.len()
                 && zip(&self.children, &other.children)
-                    .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2, lang_profile))
+                    .all(|(n1, n2)| n1.commutatively_isomorphic_to(n2))
         };
 
         // commutative nodes whose children are one-to-one isomorphic, but not in the same order
         let commutative_parents_with_unordered_isomorphic_children = || {
-            if lang_profile
+            if self
+                .lang_profile
                 .get_commutative_parent(self.grammar_name)
                 .is_none()
             {
@@ -402,9 +399,10 @@ impl<'a> AstNode<'a> {
             }
             self.children.len() == other.children.len()
                 && self.children.iter().all(|child| {
-                    other.children.iter().any(|other_child| {
-                        child.commutatively_isomorphic_to(other_child, lang_profile)
-                    })
+                    other
+                        .children
+                        .iter()
+                        .any(|other_child| child.commutatively_isomorphic_to(other_child))
                 })
         };
 
@@ -1270,7 +1268,6 @@ mod tests {
     #[test]
     fn commutative_isomorphism() {
         let ctx = ctx();
-        let lang_profile = LangProfile::json();
         let obj_1 = ctx.parse_json("{\"foo\": 3, \"bar\": 4}").root();
         let obj_2 = ctx.parse_json("{\"bar\": 4, \"foo\": 3}").root();
         let obj_3 = ctx.parse_json("{\"bar\": 3, \"foo\": 4}").root();
@@ -1278,14 +1275,12 @@ mod tests {
         let array_1 = ctx.parse_json("[ 1, 2 ]").root();
         let array_2 = ctx.parse_json("[ 2, 1 ]").root();
 
-        assert!(obj_1.commutatively_isomorphic_to(obj_2, lang_profile));
-        assert!(!obj_1.commutatively_isomorphic_to(obj_3, lang_profile));
-        assert!(!obj_2.commutatively_isomorphic_to(obj_3, lang_profile));
-        assert!(obj_1.commutatively_isomorphic_to(obj_4, lang_profile));
-        assert!(!obj_1.commutatively_isomorphic_to(array_1, lang_profile));
-        assert!(!array_1.commutatively_isomorphic_to(array_2, lang_profile));
-
-        let lang_profile_java = LangProfile::java();
+        assert!(obj_1.commutatively_isomorphic_to(obj_2));
+        assert!(!obj_1.commutatively_isomorphic_to(obj_3));
+        assert!(!obj_2.commutatively_isomorphic_to(obj_3));
+        assert!(obj_1.commutatively_isomorphic_to(obj_4));
+        assert!(!obj_1.commutatively_isomorphic_to(array_1));
+        assert!(!array_1.commutatively_isomorphic_to(array_2));
 
         let method1 = ctx.parse_java("public final void main();").root();
         let method2 = ctx.parse_java("public final static void main();").root();
@@ -1293,6 +1288,6 @@ mod tests {
         // `public`, `final` and `static` are all commutative children of (function) `modifiers`,
         // but the second tree doesn't have `static`. A naive `zip` would only check the first two
         // children, see that they're equal, and incorrectly decide that the parents are equal as well
-        assert!(!method1.commutatively_isomorphic_to(method2, lang_profile_java));
+        assert!(!method1.commutatively_isomorphic_to(method2));
     }
 }
