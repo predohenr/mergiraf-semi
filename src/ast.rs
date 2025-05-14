@@ -81,15 +81,7 @@ impl<'a> Ast<'a> {
         arena: &'a Arena<AstNode<'a>>,
         ref_arena: &'a Arena<&'a AstNode<'a>>,
     ) -> Result<Self, String> {
-        let mut next_node_id = 1;
-        let root = AstNode::internal_new(
-            &mut tree.walk(),
-            source,
-            lang_profile,
-            arena,
-            &mut next_node_id,
-        )?;
-        root.internal_precompute_root_dfs(ref_arena);
+        let root = AstNode::new(tree, source, lang_profile, arena, ref_arena)?;
         Ok(Self { source, root })
     }
 
@@ -125,6 +117,27 @@ impl<'a> Ast<'a> {
 }
 
 impl<'a> AstNode<'a> {
+    /// Create a new tree from a `tree_sitter` tree, the source code it was generated from,
+    /// and an arena to allocate the nodes from.
+    pub fn new(
+        tree: &Tree,
+        source: &'a str,
+        lang_profile: &'a LangProfile,
+        arena: &'a Arena<AstNode<'a>>,
+        ref_arena: &'a Arena<&'a AstNode<'a>>,
+    ) -> Result<&'a Self, String> {
+        let mut next_node_id = 1;
+        let root = AstNode::internal_new(
+            &mut tree.walk(),
+            source,
+            lang_profile,
+            arena,
+            &mut next_node_id,
+        )?;
+        root.internal_precompute_root_dfs(ref_arena);
+        Ok(root)
+    }
+
     fn internal_new<'b>(
         cursor: &mut TreeCursor<'b>,
         global_source: &'a str,
