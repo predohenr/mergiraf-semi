@@ -105,14 +105,7 @@ pub fn tree_to_graph<'a, W: Write>(
 ) -> io::Result<HashSet<usize>> {
     let mut visited = HashSet::new();
     writeln!(writer, "  subgraph {prefix} {{")?;
-    add_node(
-        node.redundant_root(),
-        writer,
-        prefix,
-        matched,
-        exactly_matched,
-        &mut visited,
-    )?;
+    add_node(node, writer, prefix, matched, exactly_matched, &mut visited)?;
     writeln!(writer, "  }}")?;
     Ok(visited)
 }

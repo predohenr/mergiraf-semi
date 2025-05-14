@@ -120,7 +120,7 @@ pub fn structured_merge(
                 "merge discarded because rendered revision {revision} has a parsing error: {err}"
             )
         })?;
-        if !result_tree.isomorphic_to_source(tree.redundant_root(), *revision, &class_mapping) {
+        if !result_tree.isomorphic_to_source(tree, *revision, &class_mapping) {
             debug!(
                 "discarding merge because rendered revision {revision} isn't isomorphic to the merged tree"
             );

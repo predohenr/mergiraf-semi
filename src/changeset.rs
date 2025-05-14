@@ -36,7 +36,7 @@ impl<'a> ChangeSet<'a> {
         classmapping: &ClassMapping<'a>,
     ) {
         let root = self.add_node_recursively(
-            tree.redundant_root(),
+            tree,
             PCSNode::VirtualRoot,
             PCSNode::LeftMarker,
             revision,

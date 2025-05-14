@@ -314,11 +314,6 @@ impl<'a> AstNode<'a> {
             .expect("There must be at least one ancestor of any node: the node itself")
     }
 
-    // Temporarily added to ease the removal of Ast
-    pub fn redundant_root(&'a self) -> &'a Self {
-        self
-    }
-
     /// Whether this node is isomorphic to another.
     /// This doesn't take commutativity into account.
     pub fn isomorphic_to<'b>(&'a self, other: &'b AstNode<'b>) -> bool {
@@ -842,7 +837,7 @@ mod tests {
     fn children_by_field_names() {
         let ctx = ctx();
 
-        let root = ctx.parse_json("{\"foo\": 3}").redundant_root();
+        let root = ctx.parse_json("{\"foo\": 3}");
         let object = root[0];
         let pair = object[1];
         assert_eq!(root.children_by_field_name("non_existent"), None);
@@ -856,7 +851,7 @@ mod tests {
     fn children_by_field_names_with_modifiers() {
         let ctx = ctx();
 
-        let root = ctx.parse_java("public class MyCls {}").redundant_root();
+        let root = ctx.parse_java("public class MyCls {}");
         let class_declaration = root[0];
         assert_eq!(
             class_declaration.children_by_field_name("name"),
@@ -868,9 +863,7 @@ mod tests {
     fn atomic_nodes() {
         let ctx = ctx();
 
-        let root = ctx
-            .parse_java("import java.io.InputStream;")
-            .redundant_root();
+        let root = ctx.parse_java("import java.io.InputStream;");
         let import_statement = root[0];
         assert_eq!(import_statement.children.len(), 0);
     }
@@ -879,7 +872,7 @@ mod tests {
     fn trailing_newlines_are_stripped_from_nodes() {
         let ctx = ctx();
         let tree = ctx.parse_rust("  /// test\n  fn foo() {\n    ()\n  }\n");
-        let comment = tree.redundant_root().child(0).unwrap();
+        let comment = tree.child(0).unwrap();
         assert_eq!(comment.grammar_name, "line_comment");
         // tree-sitter-rust includes a newline at the end of the source for this node,
         // but we strip it when converting the tree to our own data structure (`AstNode`)
@@ -890,34 +883,16 @@ mod tests {
     fn hashing_does_not_depend_on_whitespace_but_on_content() {
         let ctx = ctx();
 
-        let hash_1 = &ctx
-            .parse_rust("fn x() -> i32 { 7 - 1 }")
-            .redundant_root()
-            .hash;
-        let hash_2 = &ctx
-            .parse_rust("fn x() -> i32 {\n 7-1 }")
-            .redundant_root()
-            .hash;
-        let hash_3 = &ctx
-            .parse_rust("fn x() -> i32 {\n 9-2 }")
-            .redundant_root()
-            .hash;
+        let hash_1 = &ctx.parse_rust("fn x() -> i32 { 7 - 1 }").hash;
+        let hash_2 = &ctx.parse_rust("fn x() -> i32 {\n 7-1 }").hash;
+        let hash_3 = &ctx.parse_rust("fn x() -> i32 {\n 9-2 }").hash;
 
         assert_eq!(hash_1, hash_2); // whitespace and indentation differences are insignificant
         assert_ne!(hash_2, hash_3);
 
-        let hash_4 = &ctx
-            .parse_rust("fn x() { \"some string\" }")
-            .redundant_root()
-            .hash;
-        let hash_5 = &ctx
-            .parse_rust("fn x() { \" some string\" }")
-            .redundant_root()
-            .hash;
-        let hash_6 = &ctx
-            .parse_rust("fn x() {   \"some string\" }")
-            .redundant_root()
-            .hash;
+        let hash_4 = &ctx.parse_rust("fn x() { \"some string\" }").hash;
+        let hash_5 = &ctx.parse_rust("fn x() { \" some string\" }").hash;
+        let hash_6 = &ctx.parse_rust("fn x() {   \"some string\" }").hash;
         assert_ne!(hash_4, hash_5); // whitespace inside of a string is significant
         assert_eq!(hash_4, hash_6);
     }
@@ -926,8 +901,8 @@ mod tests {
     fn isomorphism_is_not_just_hashing() {
         let ctx = ctx();
 
-        let node_1 = ctx.parse_rust("fn x() -> i32 { 7 - 1 }").redundant_root();
-        let node_2 = ctx.parse_rust("fn x() -> i32 { 8 - 1 }").redundant_root();
+        let node_1 = ctx.parse_rust("fn x() -> i32 { 7 - 1 }");
+        let node_2 = ctx.parse_rust("fn x() -> i32 { 8 - 1 }");
         let fake_hash_collision = AstNode {
             hash: node_1.hash,
             parent: UnsafeCell::new(None),
@@ -946,8 +921,8 @@ mod tests {
     fn isomorphism_for_different_languages() {
         let ctx = ctx();
 
-        let tree_python = ctx.parse_python("foo()").redundant_root();
-        let tree_java = ctx.parse_java("foo();").redundant_root();
+        let tree_python = ctx.parse_python("foo()");
+        let tree_java = ctx.parse_java("foo();");
         let arguments_python = tree_python[0][0][1];
         let arguments_java = tree_java[0][0][1];
 
@@ -967,7 +942,7 @@ mod tests {
     fn parents_are_accessible() {
         let ctx = ctx();
         let tree = ctx.parse_json("{\"foo\": 3}");
-        let root = tree.redundant_root();
+        let root = tree;
         let first_child = root.child(0).expect("AST node is missing a child");
         let second_child = first_child
             .child(0)
@@ -983,11 +958,7 @@ mod tests {
         let ctx = ctx();
         let tree = ctx.parse_json("{\"foo\": 3}");
 
-        let node_types = tree
-            .redundant_root()
-            .dfs()
-            .map(|n| n.grammar_name)
-            .collect_vec();
+        let node_types = tree.dfs().map(|n| n.grammar_name).collect_vec();
 
         assert_eq!(
             node_types,
@@ -1013,7 +984,7 @@ mod tests {
         let tree = ctx.parse_json("{\"foo\": 3}");
 
         // using the cached version
-        let mut nodes = tree.redundant_root().dfs();
+        let mut nodes = tree.dfs();
 
         for len in (0..=11).rev() {
             assert_eq!(nodes.len(), len);
@@ -1021,7 +992,7 @@ mod tests {
         }
 
         // using the manually calculated version
-        let mut nodes = tree.redundant_root().calculate_dfs();
+        let mut nodes = tree.calculate_dfs();
 
         for len in (0..=11).rev() {
             assert_eq!(nodes.len(), len);
@@ -1034,11 +1005,7 @@ mod tests {
         let ctx = ctx();
         let tree = ctx.parse_json("{\"foo\": 3}");
 
-        let node_types = tree
-            .redundant_root()
-            .postfix()
-            .map(|n| n.grammar_name)
-            .collect_vec();
+        let node_types = tree.postfix().map(|n| n.grammar_name).collect_vec();
 
         assert_eq!(
             node_types,
@@ -1064,14 +1031,12 @@ mod tests {
         let tree = ctx.parse_json("{\"foo\": 3, \"bar\": 4}");
 
         let arena = Arena::new();
-        let truncated = tree
-            .redundant_root()
-            .truncate(|node| node.grammar_name == "pair", &arena);
+        let truncated = tree.truncate(|node| node.grammar_name == "pair", &arena);
 
         let node_types = truncated.postfix().map(|n| n.grammar_name).collect_vec();
 
         let truncated_object = truncated.root()[0];
-        let original_object = tree.redundant_root()[0];
+        let original_object = tree[0];
         let truncated_first_pair = truncated_object[1];
         let original_first_pair = original_object[1];
 
@@ -1089,7 +1054,7 @@ mod tests {
         let ctx = ctx();
         let tree = ctx.parse_json("[1, 2,\n 3]");
 
-        let root = tree.redundant_root()[0];
+        let root = tree[0];
         let [bracket, one, comma, two, _, three] = root[0..=5] else {
             unreachable!()
         };
@@ -1106,7 +1071,7 @@ mod tests {
     fn preceding_whitespace_go() {
         let ctx = ctx();
         let tree = ctx.parse_go("import (\n    \"fmt\"\n    \"core\"\n)\n");
-        let root = tree.redundant_root()[0];
+        let root = tree[0];
         let import_list = root[1];
         let core = import_list[2];
         assert_eq!(core.source, "\"core\"");
@@ -1118,8 +1083,8 @@ mod tests {
     fn trailing_whitespace_toml() {
         let ctx = ctx();
         let tree = ctx.parse_toml("[foo]\na = 1\n\n[bar]\nb = 2");
-        let first_table = tree.redundant_root()[0];
-        let second_table = tree.redundant_root()[1];
+        let first_table = tree[0];
+        let second_table = tree[1];
         assert_eq!(first_table.source, "[foo]\na = 1");
         assert_eq!(first_table.trailing_whitespace(), None);
         assert_eq!(second_table.source, "[bar]\nb = 2");
@@ -1130,7 +1095,7 @@ mod tests {
     fn preceding_indentation_shift() {
         let ctx = ctx();
         let tree = ctx.parse_java("\nclass MyCls {\n    int attr;\n}");
-        let class_decl = tree.redundant_root()[0];
+        let class_decl = tree[0];
         let class_body = class_decl[2];
         let attr = class_body[1];
 
@@ -1141,7 +1106,7 @@ mod tests {
     fn preceding_indentation_shift_tabs() {
         let ctx = ctx();
         let tree = ctx.parse_java("class Outer {\n\tclass MyCls {\n\t\tint attr;\n\t}\n}\n");
-        let class_decl = tree.redundant_root()[0][2][1];
+        let class_decl = tree[0][2][1];
         let class_body = class_decl[2];
         let attr = class_body[1];
 
@@ -1152,7 +1117,7 @@ mod tests {
     fn preceding_indentation_shift_mixed_spaces_and_tabs() {
         let ctx = ctx();
         let tree = ctx.parse_java("class Outer {\n\tclass MyCls {\n        int attr;\n\t}\n}\n");
-        let class_decl = tree.redundant_root()[0][2][1];
+        let class_decl = tree[0][2][1];
         let class_body = class_decl[2];
         let attr = class_body[1];
 
@@ -1163,7 +1128,7 @@ mod tests {
     fn preceding_indentation_shift_mixed_tabs_and_spaces() {
         let ctx = ctx();
         let tree = ctx.parse_java("class Outer {\n    class MyCls {\n\t\tint attr;\n    }\n}\n");
-        let class_decl = tree.redundant_root()[0][2][1];
+        let class_decl = tree[0][2][1];
         let class_body = class_decl[2];
         let attr = class_body[1];
 
@@ -1174,7 +1139,7 @@ mod tests {
     fn reindent_yaml() {
         let ctx = ctx();
         let tree = ctx.parse_yaml("hello:\n  foo: 2\nbar: 4\n");
-        let block_node = tree.redundant_root()[0][0];
+        let block_node = tree[0][0];
         assert_eq!(block_node.grammar_name, "block_node");
         let value = block_node[0][0][2];
         assert_eq!(value.grammar_name, "block_node");
@@ -1188,7 +1153,7 @@ mod tests {
         let ctx = ctx();
         let tree = ctx.parse_json(" [ 1 , 2,\n 3]");
 
-        let root = tree.redundant_root()[0];
+        let root = tree[0];
         let [bracket, one, comma, two, comma_2] = root[0..=4] else {
             unreachable!()
         };
@@ -1218,7 +1183,7 @@ mod tests {
 "#,
         );
 
-        let root = &tree.redundant_root()[0];
+        let root = &tree[0];
         let entry_a = &root[1];
         let array = &entry_a[2];
 
@@ -1242,12 +1207,10 @@ mod tests {
     fn multiline_comments_are_isomorphic() {
         let ctx = ctx();
 
-        let comment_1 = ctx
-            .parse_java("/**\n * This is a comment\n * spanning on many lines\n*/")
-            .redundant_root()[0];
-        let comment_2 = ctx
-            .parse_java("  /**\n   * This is a comment\n   * spanning on many lines\n  */")
-            .redundant_root()[0];
+        let comment_1 =
+            ctx.parse_java("/**\n * This is a comment\n * spanning on many lines\n*/")[0];
+        let comment_2 =
+            ctx.parse_java("  /**\n   * This is a comment\n   * spanning on many lines\n  */")[0];
 
         assert!(comment_1.isomorphic_to(comment_2));
         assert_eq!(comment_1.children.len(), 4);
@@ -1285,7 +1248,7 @@ mod tests {
         let ctx = ctx();
         let tree = ctx.parse_json("{\"foo\": 3, \"bar\": 4}");
 
-        let ascii_tree = tree.redundant_root().ascii_tree();
+        let ascii_tree = tree.ascii_tree();
 
         let expected = "\
 \u{1b}[90m└\u{1b}[0mdocument
@@ -1315,14 +1278,12 @@ mod tests {
     #[test]
     fn commutative_isomorphism() {
         let ctx = ctx();
-        let obj_1 = ctx.parse_json("{\"foo\": 3, \"bar\": 4}").redundant_root();
-        let obj_2 = ctx.parse_json("{\"bar\": 4, \"foo\": 3}").redundant_root();
-        let obj_3 = ctx.parse_json("{\"bar\": 3, \"foo\": 4}").redundant_root();
-        let obj_4 = ctx
-            .parse_json("{\n  \"foo\": 3,\n  \"bar\": 4\n}")
-            .redundant_root();
-        let array_1 = ctx.parse_json("[ 1, 2 ]").redundant_root();
-        let array_2 = ctx.parse_json("[ 2, 1 ]").redundant_root();
+        let obj_1 = ctx.parse_json("{\"foo\": 3, \"bar\": 4}");
+        let obj_2 = ctx.parse_json("{\"bar\": 4, \"foo\": 3}");
+        let obj_3 = ctx.parse_json("{\"bar\": 3, \"foo\": 4}");
+        let obj_4 = ctx.parse_json("{\n  \"foo\": 3,\n  \"bar\": 4\n}");
+        let array_1 = ctx.parse_json("[ 1, 2 ]");
+        let array_2 = ctx.parse_json("[ 2, 1 ]");
 
         assert!(obj_1.commutatively_isomorphic_to(obj_2));
         assert!(!obj_1.commutatively_isomorphic_to(obj_3));
@@ -1331,10 +1292,8 @@ mod tests {
         assert!(!obj_1.commutatively_isomorphic_to(array_1));
         assert!(!array_1.commutatively_isomorphic_to(array_2));
 
-        let method1 = ctx.parse_java("public final void main();").redundant_root();
-        let method2 = ctx
-            .parse_java("public final static void main();")
-            .redundant_root();
+        let method1 = ctx.parse_java("public final void main();");
+        let method2 = ctx.parse_java("public final static void main();");
 
         // `public`, `final` and `static` are all commutative children of (function) `modifiers`,
         // but the second tree doesn't have `static`. A naive `zip` would only check the first two
@@ -1352,7 +1311,7 @@ line 2
 line 3";"#;
         let tree = ctx.parse_rust(src);
 
-        let root = tree.redundant_root();
+        let root = tree;
         assert_eq!(root.id, 13);
 
         let let_declaration = root[0];

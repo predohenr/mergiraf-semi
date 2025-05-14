@@ -56,13 +56,11 @@ impl TreeMatcher {
         debug!("top-down phase yielded {} matches", exact_matching.len());
 
         let arena = Arena::new();
-        let truncated_left = left
-            .redundant_root()
-            .truncate(|node| exact_matching.get_from_left(node).is_some(), &arena);
+        let truncated_left =
+            left.truncate(|node| exact_matching.get_from_left(node).is_some(), &arena);
 
-        let truncated_right = right
-            .redundant_root()
-            .truncate(|node| exact_matching.get_from_right(node).is_some(), &arena);
+        let truncated_right =
+            right.truncate(|node| exact_matching.get_from_right(node).is_some(), &arena);
         let mut truncated_matching: Matching = matching.translate(truncated_left, truncated_right);
 
         // Second pass for container mappings
@@ -70,8 +68,8 @@ impl TreeMatcher {
             self.bottom_up_pass(truncated_left, truncated_right, &mut truncated_matching);
         debug!("matching took {:?}", start.elapsed());
         let mut full = matching;
-        let container = container_matching.translate(left.redundant_root(), right.redundant_root());
-        let recovery = recovery_matches.translate(left.redundant_root(), right.redundant_root());
+        let container = container_matching.translate(left, right);
+        let recovery = recovery_matches.translate(left, right);
         full.add_matching(&container);
         full.add_matching(&recovery);
         DetailedMatching {
@@ -106,8 +104,8 @@ impl TreeMatcher {
 
         let mut l1 = PriorityList::new();
         let mut l2 = PriorityList::new();
-        l1.push(left.redundant_root());
-        l2.push(right.redundant_root());
+        l1.push(left);
+        l2.push(right);
         loop {
             let pm_1 = l1.peek_max().unwrap_or(-1);
             let pm_2 = l2.peek_max().unwrap_or(-1);

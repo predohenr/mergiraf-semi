@@ -228,12 +228,9 @@ mod tests {
         let mut matching = Matching::new();
         assert_eq!(matching.len(), 0);
 
-        matching.add(tree.redundant_root(), tree2.redundant_root());
+        matching.add(tree, tree2);
         assert_eq!(matching.len(), 1);
-        assert_eq!(
-            matching.as_ids().collect_vec(),
-            vec![(tree.redundant_root().id, tree2.redundant_root().id)]
-        );
+        assert_eq!(matching.as_ids().collect_vec(), vec![(tree.id, tree2.id)]);
     }
 
     #[test]
@@ -245,8 +242,8 @@ mod tests {
 
         let mut matching = Matching::new();
 
-        let array1 = tree1.redundant_root()[0];
-        let array2 = tree2.redundant_root()[0];
+        let array1 = tree1[0];
+        let array2 = tree2[0];
 
         let elem1 = array1[1];
         assert_eq!(elem1.source, "1");
@@ -270,7 +267,7 @@ mod tests {
     fn dice() {
         let ctx = ctx();
 
-        let root = ctx.parse_rust("fn t() { 3 }").redundant_root();
+        let root = ctx.parse_rust("fn t() { 3 }");
         let mut matching = Matching::new();
 
         assert_eq!(matching.dice(root, root), 0.0_f32);
