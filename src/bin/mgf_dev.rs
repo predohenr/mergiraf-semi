@@ -90,7 +90,7 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
             let tree = mergiraf::parse(&mut parser, &contents, lang_profile, &arena, &ref_arena)
                 .map_err(|err| format!("File has parse errors: {err}"))?;
 
-            print!("{}", tree.root().ascii_tree(lang_profile));
+            print!("{}", tree.root().ascii_tree());
             Ok(0)
         }
         Command::Compare {

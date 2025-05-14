@@ -636,24 +636,18 @@ impl<'a> AstNode<'a> {
     }
 
     /// Represents the node and its sub-structure in ASCII art
-    pub fn ascii_tree(&'a self, lang_profile: &LangProfile) -> String {
-        self.internal_ascii_tree(
-            &Color::DarkGray.prefix().to_string(),
-            true,
-            lang_profile,
-            None,
-        )
+    pub fn ascii_tree(&'a self) -> String {
+        self.internal_ascii_tree(&Color::DarkGray.prefix().to_string(), true, None)
     }
 
     fn internal_ascii_tree(
         &'a self,
         prefix: &str,
         last_child: bool,
-        lang_profile: &LangProfile,
         parent: Option<&CommutativeParent>,
     ) -> String {
         let num_children = self.children.len();
-        let next_parent = lang_profile.get_commutative_parent(self.grammar_name);
+        let next_parent = self.lang_profile.get_commutative_parent(self.grammar_name);
 
         let tree_sym = if last_child { "└" } else { "├" };
 
@@ -677,7 +671,7 @@ impl<'a> AstNode<'a> {
 
         let sig = (parent.is_some())
             .then(|| {
-                lang_profile
+                self.lang_profile
                     .extract_signature_from_original_node(self)
                     .map(|sig| format!(" {}", Color::LightCyan.paint(sig.to_string())))
             })
@@ -694,12 +688,7 @@ impl<'a> AstNode<'a> {
                 .filter(|(_, child)| child.grammar_name != "@virtual_line@")
                 .map(|(index, child)| {
                     let new_prefix = format!("{prefix}{} ", if last_child { " " } else { "│" });
-                    child.internal_ascii_tree(
-                        &new_prefix,
-                        index == num_children - 1,
-                        lang_profile,
-                        next_parent,
-                    )
+                    child.internal_ascii_tree(&new_prefix, index == num_children - 1, next_parent)
                 }),
         )
         .collect()
@@ -1263,9 +1252,8 @@ mod tests {
     fn print_as_ascii_art() {
         let ctx = ctx();
         let tree = ctx.parse_json("{\"foo\": 3, \"bar\": 4}");
-        let lang_profile = LangProfile::json();
 
-        let ascii_tree = tree.root().ascii_tree(lang_profile);
+        let ascii_tree = tree.root().ascii_tree();
 
         let expected = "\
 \u{1b}[90m└\u{1b}[0mdocument
