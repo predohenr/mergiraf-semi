@@ -124,20 +124,32 @@ impl<'a> AstNode<'a> {
             let content_capture_index = query
                 .capture_index_for_name("injection.content")
                 .expect("Injection query without an injection.content capture");
+            // The injection.language can be defined either as a capture (dynamically changing), with value defined by a node in the AST,
+            // or statically defined as a property (fixed by the injection query), in which case the capture below won't be defined.
+            let language_capture_index = query.capture_index_for_name("injection.language");
             let mut cursor = QueryCursor::new();
             let matches = cursor.matches(&query, tree.root_node(), source.as_bytes());
             matches.for_each(|m| {
                 let pattern_properties = query.property_settings(m.pattern_index);
-                let language = pattern_properties
-                    .iter()
-                    .find_map(|property| {
-                        if property.key == "injection.language".into() {
-                            Some(property.value.clone()?.to_string())
-                        } else {
-                            None
-                        }
-                    })
-                    .expect("No injection.language set"); // TODO also support captures
+                // first, check if the language is statically defined in this clause of the query as a property
+                let lang_property_value = pattern_properties.iter().find_map(|property| {
+                    if property.key == "injection.language".into() {
+                        Some(property.value.clone()?.to_string())
+                    } else {
+                        None
+                    }
+                });
+
+                let language = lang_property_value.unwrap_or_else(|| {
+                    // otherwise, look if the language is defined via a capture
+                    let lang_node = m
+                        .nodes_for_capture_index(language_capture_index.expect(
+                            "injection.language is set neither as a capture nor as a property",
+                        ))
+                        .next()
+                        .expect("injection.language capture didn't match any node");
+                    source[lang_node.byte_range()].to_owned()
+                });
                 m.nodes_for_capture_index(content_capture_index)
                     .for_each(|node| {
                         if let Some(injected_lang) = LangProfile::find_by_name(&language) {
