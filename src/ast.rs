@@ -176,7 +176,8 @@ impl<'a> AstNode<'a> {
         let atomic = lang_profile.is_atomic_node_type(node.grammar_name());
 
         // check if the current node is an injection
-        if let Some(&injection_lang) = node_id_to_injection_lang.get(&node.id()) {
+        let injection_lang = node_id_to_injection_lang.get(&node.id());
+        if let Some(&injection_lang) = injection_lang {
             let range = node.range();
             if let Ok(injected_root) = Self::parse_root(
                 global_source,
@@ -211,15 +212,18 @@ impl<'a> AstNode<'a> {
         // off treating this as whitespace between nodes, to keep track of indentation shifts
         let range = node.byte_range();
         let local_source = &global_source[range.start..range.end];
-        let (range, local_source) = if local_source.ends_with('\n') && node.parent().is_some() {
-            let trimmed_source = local_source.trim_end_matches('\n');
-            (
-                range.start..(range.end - local_source.len() + trimmed_source.len()),
-                trimmed_source,
-            )
-        } else {
-            (range, local_source)
-        };
+        let (range, local_source) =
+            // don't trim injections, because their children could expand beyond the node itself
+            if local_source.ends_with('\n') && node.parent().is_some() && injection_lang.is_none()
+            {
+                let trimmed_source = local_source.trim_end_matches('\n');
+                (
+                    range.start..(range.end - local_source.len() + trimmed_source.len()),
+                    trimmed_source,
+                )
+            } else {
+                (range, local_source)
+            };
         if node.is_error() {
             return Err(format!(
                 "parse error at {range:?}, starting with: {}",
