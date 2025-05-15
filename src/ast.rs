@@ -19,7 +19,7 @@ use typed_arena::Arena;
 
 use crate::{
     lang_profile::{CommutativeParent, LangProfile},
-    signature::Signature,
+    signature::{Signature, SignatureDefinition},
 };
 
 /// A syntax tree.
@@ -363,6 +363,12 @@ impl<'a> AstNode<'a> {
     /// The commutative merging settings associated with this node.
     pub fn commutative_parent_definition(&self) -> Option<&CommutativeParent> {
         self.lang_profile.get_commutative_parent(self.grammar_name)
+    }
+
+    /// The signature definition associated with this node.
+    pub fn signature_definition(&self) -> Option<&SignatureDefinition> {
+        self.lang_profile
+            .find_signature_definition_by_grammar_name(self.grammar_name)
     }
 
     /// Checks whether a node is isomorphic to another,
@@ -722,9 +728,7 @@ impl<'a> AstNode<'a> {
     /// Extracts a signature for this node if we have a signature definition
     /// for this type of nodes in the language profile.
     pub(crate) fn signature(&'a self) -> Option<Signature<'a, 'a>> {
-        let definition = self
-            .lang_profile
-            .find_signature_definition_by_grammar_name(self.grammar_name)?;
+        let definition = self.signature_definition()?;
         Some(definition.extract_signature_from_original_node(self))
     }
 }

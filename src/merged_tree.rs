@@ -837,9 +837,7 @@ impl<'a> MergedTree<'a> {
         let definition = match self {
             MergedTree::ExactTree { node, .. }
             | MergedTree::MixedTree { node, .. }
-            | MergedTree::LineBasedMerge { node, .. } => node
-                .lang_profile()
-                .find_signature_definition_by_grammar_name(node.grammar_name()),
+            | MergedTree::LineBasedMerge { node, .. } => node.signature_definition(),
             MergedTree::Conflict { .. } | MergedTree::CommutativeChildSeparator { .. } => None,
         }?;
         let signature = definition.extract_signature_from_merged_node(self, class_mapping);

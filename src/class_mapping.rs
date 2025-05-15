@@ -4,10 +4,8 @@ use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
 use crate::{
-    ast::AstNode,
-    lang_profile::{CommutativeParent, LangProfile},
-    matching::Matching,
-    pcs::Revision,
+    ast::AstNode, lang_profile::CommutativeParent, matching::Matching, pcs::Revision,
+    signature::SignatureDefinition,
 };
 
 /// A node together with a marker of which revision it came from.
@@ -40,10 +38,6 @@ impl<'a> RevNode<'a> {
             class_mapping.map_to_leader(RevNode::new(self.rev, descendant)) == *other
         })
     }
-
-    pub fn lang_profile(&self) -> &'a LangProfile {
-        self.node.lang_profile
-    }
 }
 
 impl<'a> Leader<'a> {
@@ -61,14 +55,14 @@ impl<'a> Leader<'a> {
         self.0.node.grammar_name
     }
 
-    /// The language profile of this node, which is guaranteed to be the same for all representatives
-    pub fn lang_profile(&self) -> &'a LangProfile {
-        self.0.lang_profile()
-    }
-
     /// The commutative parent definition associated with this node
     pub fn commutative_parent_definition(&self) -> Option<&CommutativeParent> {
         self.0.node.commutative_parent_definition()
+    }
+
+    /// The signature definition for nodes of this type, which is guaranteed to be the same for all representatives
+    pub fn signature_definition(&self) -> Option<&SignatureDefinition> {
+        self.0.node.signature_definition()
     }
 }
 
