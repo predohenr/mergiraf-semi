@@ -25,6 +25,13 @@ pub struct LangProfile {
     pub signatures: Vec<SignatureDefinition>,
 }
 
+impl PartialEq for LangProfile {
+    /// Language names are currently treated as unique identifiers
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
 impl LangProfile {
     /// Load a profile by language name.
     /// Alternate names or extensions are also considered.

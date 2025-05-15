@@ -37,7 +37,7 @@ impl<'tree> Matching<'tree> {
     /// Is it possible to add this pair while keeping the matching consistent?
     pub fn can_be_matched(&self, from: &AstNode<'tree>, to: &AstNode<'tree>) -> bool {
         from.grammar_name == to.grammar_name
-            && from.lang_profile.name == to.lang_profile.name // TODO rely on a better identifier, as there could be name collisions? Just pointer equality?
+            && from.lang_profile == to.lang_profile
             && !self.left_to_right.contains_key(from)
             && !self.right_to_left.contains_key(to)
             && (!from.is_leaf() || !to.is_leaf() || from.source == to.source) // TODO we could still accept to match them, but introduce content handling to merge them
