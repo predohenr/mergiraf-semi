@@ -746,6 +746,6 @@ mod test {
                 .iter()
                 .map(|profile| profile.name)
                 .all_unique()
-        )
+        );
     }
 }
