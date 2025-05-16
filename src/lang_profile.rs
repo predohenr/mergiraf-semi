@@ -307,13 +307,10 @@ impl CommutativeParent {
             // to the same group, in which case the separator is either that of
             // that specific group, or the default one for the commutative parent
             // as a fall-back.
-            self.children_groups.iter().find_map(|group| {
-                if group.node_types.is_superset(node_types) {
-                    group.separator.or(Some(self.separator))
-                } else {
-                    None
-                }
-            })
+            self.children_groups
+                .iter()
+                .find(|group| group.node_types.is_superset(node_types))
+                .map(|group| group.separator.unwrap_or(self.separator))
         }
     }
 
