@@ -66,8 +66,8 @@ impl<'a> AstNode<'a> {
     pub fn parse(
         source: &'a str,
         lang_profile: &'a LangProfile,
-        arena: &'a Arena<AstNode<'a>>,
-        ref_arena: &'a Arena<&'a AstNode<'a>>,
+        arena: &'a Arena<Self>,
+        ref_arena: &'a Arena<&'a Self>,
     ) -> Result<&'a Self, String> {
         let mut next_node_id = 1;
         let root = Self::parse_root(source, lang_profile, arena, &mut next_node_id)?;
@@ -81,7 +81,7 @@ impl<'a> AstNode<'a> {
     fn parse_root(
         source: &'a str,
         lang_profile: &'a LangProfile,
-        arena: &'a Arena<AstNode<'a>>,
+        arena: &'a Arena<Self>,
         next_node_id: &mut usize,
     ) -> Result<&'a Self, String> {
         let mut parser = Parser::new();
