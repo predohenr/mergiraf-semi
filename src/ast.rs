@@ -56,7 +56,7 @@ pub struct AstNode<'a> {
     pub field_name: Option<&'static str>,
     /// The range of bytes in the original source code that the source of this node spans
     pub byte_range: Range<usize>,
-    /// An internal node id returned by tree-sitter, guaranteed to be unique within the tree.
+    /// An internal node id, guaranteed to be unique within the tree.
     pub id: usize,
     /// A cached number of descendants
     descendant_count: usize,
