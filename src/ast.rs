@@ -68,8 +68,8 @@ impl<'a> AstNode<'a> {
         tree: &Tree,
         source: &'a str,
         lang_profile: &'a LangProfile,
-        arena: &'a Arena<AstNode<'a>>,
-        ref_arena: &'a Arena<&'a AstNode<'a>>,
+        arena: &'a Arena<Self>,
+        ref_arena: &'a Arena<&'a Self>,
     ) -> Result<&'a Self, String> {
         let mut next_node_id = 1;
         let root = AstNode::internal_new(
