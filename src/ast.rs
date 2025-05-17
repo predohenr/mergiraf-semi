@@ -1324,4 +1324,65 @@ mod tests {
         // children, see that they're equal, and incorrectly decide that the parents are equal as well
         assert!(!method1.commutatively_isomorphic_to(method2));
     }
+
+    #[test]
+    /// A stricter version of [`node_ids_all_unique`]
+    fn node_ids() {
+        let ctx = ctx();
+
+        let src = r#"let foo = "line 1
+line 2
+line 3";"#;
+        let tree = ctx.parse_rust(src);
+
+        let root = tree.root();
+        assert_eq!(root.id, 13);
+
+        let let_declaration = root[0];
+        assert_eq!(let_declaration.id, 12);
+
+        let [let_kw, foo, eq, str_literal, semicolon] = let_declaration[..] else {
+            unreachable!()
+        };
+        assert_eq!(let_kw.id, 1);
+        assert_eq!(foo.id, 2);
+        assert_eq!(eq.id, 3);
+        assert_eq!(str_literal.id, 10);
+        assert_eq!(semicolon.id, 11);
+
+        let [quote_open, lines, quote_close] = str_literal[..] else {
+            unreachable!()
+        };
+        assert_eq!(quote_open.id, 4);
+        assert_eq!(lines.id, 8);
+        assert_eq!(quote_close.id, 9);
+
+        let [line1, line2, line3] = lines[..] else {
+            unreachable!()
+        };
+        assert_eq!(line1.source, "line 1");
+        assert_eq!(line1.id, 5);
+        assert_eq!(line2.source, "line 2");
+        assert_eq!(line2.id, 6);
+        assert_eq!(line3.source, "line 3");
+        assert_eq!(line3.id, 7);
+    }
+
+    #[test]
+    fn node_ids_all_unique() {
+        let ctx = ctx();
+
+        let src = r#"let foo = "line 1
+line 2
+line 3";"#;
+        let tree = ctx.parse_rust(src);
+
+        let ids = tree.dfs().map(|n| n.id).collect_vec();
+
+        assert!(ids.iter().all_unique());
+
+        // all the available ids (0-len) are used, i.e. none are skipped
+        // not strictly necessary, but nice to have
+        assert_eq!(*ids.iter().max().unwrap(), ids.len());
+    }
 }
