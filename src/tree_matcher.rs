@@ -514,7 +514,7 @@ mod tests {
             use_rted: true,
         };
 
-        let detailed_matching = matcher.match_trees(&t1, &t2, None);
+        let detailed_matching = matcher.match_trees(t1, t2, None);
 
         assert_eq!(detailed_matching.exact.len(), 13);
         assert_eq!(detailed_matching.container.len(), 4);
@@ -538,7 +538,7 @@ mod tests {
             use_rted: true,
         };
 
-        let matching = matcher.match_trees(&t1, &t2, None);
+        let matching = matcher.match_trees(t1, t2, None);
 
         assert_eq!(matching.exact.len(), 21);
         assert_eq!(matching.container.len(), 6);
@@ -562,7 +562,7 @@ mod tests {
             use_rted: false,
         };
 
-        let matching = matcher.match_trees(&t1, &t2, None);
+        let matching = matcher.match_trees(t1, t2, None);
 
         assert_eq!(matching.exact.len(), 21);
         assert_eq!(matching.container.len(), 6);
@@ -584,7 +584,7 @@ mod tests {
             use_rted: true,
         };
 
-        let matching = matcher.match_trees(&left, &right, None);
+        let matching = matcher.match_trees(left, right, None);
 
         assert_eq!(matching.exact.len(), 4);
         assert_eq!(matching.container.len(), 2);
@@ -605,7 +605,7 @@ mod tests {
             max_recovery_size: 100,
             use_rted: true,
         };
-        let matching = matcher.match_trees(&left, &right, None);
+        let matching = matcher.match_trees(left, right, None);
 
         assert_eq!(matching.exact.len(), 0);
         assert_eq!(matching.container.len(), 1);

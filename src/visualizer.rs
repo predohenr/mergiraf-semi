@@ -183,7 +183,7 @@ mod tests {
         let parsed_right = ctx.parse_json("{\"foo\": 4}");
         let matching = DetailedMatching::default();
 
-        matching_to_graph(&target_path, &parsed_left, &parsed_right, &matching).unwrap();
+        matching_to_graph(&target_path, parsed_left, parsed_right, &matching).unwrap();
 
         let contents =
             fs::read_to_string(&target_path).expect("Could not read the generated graph.dot file");

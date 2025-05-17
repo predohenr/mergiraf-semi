@@ -338,9 +338,9 @@ mod tests {
         let settings = DisplaySettings::default();
 
         let (merged_tree, classmapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -366,9 +366,9 @@ mod tests {
         let settings = DisplaySettings::default_compact();
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -404,9 +404,9 @@ mod tests {
         let settings = DisplaySettings::default_compact();
 
         let (result_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -442,9 +442,9 @@ mod tests {
         let settings = DisplaySettings::default_compact();
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -480,9 +480,9 @@ mod tests {
         let settings = DisplaySettings::default();
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -518,9 +518,9 @@ mod tests {
         let settings = DisplaySettings::default();
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -545,9 +545,9 @@ mod tests {
         let settings = DisplaySettings::default();
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -572,9 +572,9 @@ mod tests {
         let settings = DisplaySettings::default();
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -599,9 +599,9 @@ mod tests {
         let settings = DisplaySettings::default();
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -645,9 +645,9 @@ mod tests {
         let settings = DisplaySettings::default();
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,
@@ -729,9 +729,9 @@ fn baz() {
         };
 
         let (merged_tree, class_mapping) = three_way_merge(
-            &base,
-            &left,
-            &right,
+            base,
+            left,
+            right,
             None,
             &primary_matcher,
             &auxiliary_matcher,

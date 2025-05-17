@@ -1038,7 +1038,7 @@ struct MyType {
         let parsed_right = ctx.parse_rust(&right_rev);
 
         let matching =
-            parsed.generate_matching(Revision::Left, Revision::Right, &parsed_left, &parsed_right);
+            parsed.generate_matching(Revision::Left, Revision::Right, parsed_left, parsed_right);
 
         let mytype_left = parsed_left[0][1];
         let mytype_right = parsed_right[0][1];
@@ -1084,7 +1084,7 @@ struct MyType {
         assert_eq!(binding_set_base.byte_range, binding_left.byte_range);
 
         let matching =
-            parsed.generate_matching(Revision::Base, Revision::Left, &parsed_base, &parsed_left);
+            parsed.generate_matching(Revision::Base, Revision::Left, parsed_base, parsed_left);
 
         // the two nodes are not matched despite having the same range
         assert!(matching.get_from_left(binding_set_base).is_none());

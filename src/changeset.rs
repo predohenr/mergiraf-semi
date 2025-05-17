@@ -194,7 +194,7 @@ mod tests {
 
         let classmapping = ClassMapping::new();
         let mut changeset = ChangeSet::new();
-        changeset.add_tree(&tree, Revision::Base, &classmapping);
+        changeset.add_tree(tree, Revision::Base, &classmapping);
 
         let as_strings = changeset
             .iter()
@@ -241,7 +241,7 @@ mod tests {
 
         let classmapping = ClassMapping::new();
         let mut changeset = ChangeSet::new();
-        changeset.add_tree(&tree, Revision::Base, &classmapping);
+        changeset.add_tree(tree, Revision::Base, &classmapping);
 
         let empty_conflicts: Vec<&PCS> = vec![];
         for pcs in changeset.iter() {
@@ -261,7 +261,7 @@ mod tests {
 
         let classmapping = ClassMapping::new();
         let mut changeset = ChangeSet::new();
-        changeset.add_tree(&tree, Revision::Base, &classmapping);
+        changeset.add_tree(tree, Revision::Base, &classmapping);
 
         let tmp_dir = tempdir().expect("failed to create a temp dir");
 

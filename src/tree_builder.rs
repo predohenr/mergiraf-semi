@@ -1048,7 +1048,7 @@ mod tests {
 
         let class_mapping = ClassMapping::new();
         let mut changeset = ChangeSet::new();
-        changeset.add_tree(&tree, Revision::Base, &class_mapping);
+        changeset.add_tree(tree, Revision::Base, &class_mapping);
 
         let settings = DisplaySettings::default();
 
@@ -1080,7 +1080,7 @@ mod tests {
 
         let class_mapping = ClassMapping::new();
         let mut changeset = ChangeSet::new();
-        changeset.add_tree(&tree, Revision::Base, &class_mapping);
+        changeset.add_tree(tree, Revision::Base, &class_mapping);
 
         let settings = DisplaySettings::default();
 
