@@ -226,6 +226,11 @@ impl<'a> AstNode<'a> {
         process_node(self, result, &mut i);
     }
 
+    /// The region of source code associated with this node
+    pub fn source(&self) -> &'a str {
+        self.source
+    }
+
     /// The height of the subtree under that node
     pub fn height(&self) -> i32 {
         self.children
