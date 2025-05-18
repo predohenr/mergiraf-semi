@@ -126,8 +126,7 @@ pub fn languages(gitattributes: bool) -> String {
         } else {
             let _ = writeln!(
                 res,
-                "{} ({})",
-                lang_profile.name,
+                "{lang_profile} ({})",
                 lang_profile
                     .extensions
                     .iter()

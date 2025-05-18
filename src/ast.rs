@@ -87,7 +87,7 @@ impl<'a> AstNode<'a> {
         let mut parser = Parser::new();
         parser
             .set_language(&lang_profile.language)
-            .map_err(|err| format!("Error loading {} grammar: {}", lang_profile.name, err))?;
+            .map_err(|err| format!("Error loading {lang_profile} grammar: {err}"))?;
         let tree = parser
             .parse(source, None)
             .expect("Parsing source code failed");
