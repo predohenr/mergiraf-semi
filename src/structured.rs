@@ -49,7 +49,6 @@ pub fn structured_merge(
     let start = Instant::now();
     let tree_base = AstNode::parse(contents_base, lang_profile, &arena, &ref_arena);
     let tree_left = AstNode::parse(contents_left, lang_profile, &arena, &ref_arena);
-    #[rustfmt::skip]
     let tree_right = AstNode::parse(contents_right, lang_profile, &arena, &ref_arena);
     debug!("parsing all three files took {:?}", start.elapsed());
 
