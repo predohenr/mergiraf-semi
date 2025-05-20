@@ -6,7 +6,6 @@ use std::{
     hash::{Hash, Hasher},
     iter::zip,
     ops::Range,
-    usize,
 };
 #[cfg(test)]
 use std::{ops::Index, slice::SliceIndex};
@@ -95,7 +94,7 @@ impl<'a> AstNode<'a> {
         if let Some(range) = range {
             parser
                 .set_included_ranges(&[range])
-                .map_err(|err| format!("Error while restricting the parser to a range: {}", err))?;
+                .map_err(|err| format!("Error while restricting the parser to a range: {err}"))?;
         }
         let tree = parser
             .parse(source, None)
