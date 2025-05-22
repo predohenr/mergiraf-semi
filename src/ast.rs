@@ -133,8 +133,8 @@ impl<'a> AstNode<'a> {
             let pattern_properties = query.property_settings(m.pattern_index);
             // first, check if the language is statically defined in this clause of the query as a property
             let lang_property_value = pattern_properties.iter().find_map(|property| {
-                if property.key == "injection.language".into() {
-                    Some(property.value.clone()?.to_string())
+                if &*property.key == "injection.language" {
+                    property.value.as_deref()
                 } else {
                     None
                 }
@@ -142,15 +142,15 @@ impl<'a> AstNode<'a> {
 
             let language = lang_property_value.unwrap_or_else(|| {
                 // otherwise, look if the language is defined via a capture
-                let lang_node =
-                    m.nodes_for_capture_index(language_capture_index.expect(
-                        "injection.language is set neither as a capture nor as a property",
-                    ))
+                let capture_index = language_capture_index
+                    .expect("injection.language is set neither as a capture nor as a property");
+                let lang_node = m
+                    .nodes_for_capture_index(capture_index)
                     .next()
                     .expect("injection.language capture didn't match any node");
-                source[lang_node.byte_range()].to_owned()
+                &source[lang_node.byte_range()]
             });
-            if let Some(injected_lang) = LangProfile::find_by_name(&language) {
+            if let Some(injected_lang) = LangProfile::find_by_name(language) {
                 node_id_to_injection_lang.extend(
                     m.nodes_for_capture_index(content_capture_index)
                         .map(|node| (node.id(), injected_lang)),
