@@ -39,6 +39,7 @@ tree-sitter-ruby = "0.23.1"
 tree-sitter-properties = "0.3.0"
 tree-sitter-md = "0.3.2"
 tree-sitter-hcl = "1.1.0"
+tree-sitter-ini = { git = "https://github.com/justinmk/tree-sitter-ini", rev = "32b31863f222bf22eb43b07d4e9be8017e36fb31" }
 regex = "1.11.1"
 itertools = "0.14.0"
 tree-sitter-nix = "0.0.2"
