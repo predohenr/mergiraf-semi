@@ -809,8 +809,7 @@ mod test {
             if let Some(injection) = lang_profile.injections {
                 assert!(
                     !injection.trim().is_empty(),
-                    "Injection query for language {} set as an empty string, use None instead",
-                    lang_profile.name
+                    "Injection query for language {lang_profile} set as an empty string, use None instead"
                 );
             }
         }
