@@ -150,12 +150,12 @@ impl<'a> AstNode<'a> {
                     .expect("injection.language capture didn't match any node");
                 source[lang_node.byte_range()].to_owned()
             });
-            m.nodes_for_capture_index(content_capture_index)
-                .for_each(|node| {
-                    if let Some(injected_lang) = LangProfile::find_by_name(&language) {
-                        node_id_to_injection_lang.insert(node.id(), injected_lang);
-                    }
-                });
+            if let Some(injected_lang) = LangProfile::find_by_name(&language) {
+                node_id_to_injection_lang.extend(
+                    m.nodes_for_capture_index(content_capture_index)
+                        .map(|node| (node.id(), injected_lang)),
+                );
+            }
         });
         node_id_to_injection_lang
     }
