@@ -398,8 +398,8 @@ impl TreeMatcher {
                         matching.add(left_node.node, right_node.node);
                         recovery_matching.add(left_node.node, right_node.node);
                         Self::convert_tree_edits_to_matches(
-                            left_node.children.as_slice(),
-                            right_node.children.as_slice(),
+                            &left_node.children,
+                            &right_node.children,
                             child_edits,
                             recovery_matching,
                             matching,
