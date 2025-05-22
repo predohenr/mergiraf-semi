@@ -155,7 +155,7 @@ impl<'a> AstNode<'a> {
                     m.nodes_for_capture_index(content_capture_index)
                         .map(|node| (node.id(), injected_lang)),
                 );
-            }
+            } // if we can't find a fitting language, then leave the injection contents unparsed, without failing the overarching parsing
         });
         node_id_to_injection_lang
     }
