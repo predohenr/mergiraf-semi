@@ -47,12 +47,12 @@ $ git config --global merge.mergiraf.driver 'mergiraf merge --git %O %A %B -s %S
 $ git config --global core.attributesfile ~/.gitattributes
 ```
 
-Then, you also need to specify for which sorts of files this merge driver should be used. Add the following lines to your global `~/.gitattributes` file:
+Then, add the following line to your global `~/.gitattributes` file:
 ```
 * merge=mergiraf
 ```
 
-If you would like to enable Mergiraf for select languages, you can add them individually, such as with:
+If you would like to enable Mergiraf for select languages, you can add them individually instead, such as with:
 ```
 *.py merge=mergiraf
 *.java merge=mergiraf
