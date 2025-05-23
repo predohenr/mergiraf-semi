@@ -212,7 +212,8 @@ impl<'a> AstNode<'a> {
         let range = node.byte_range();
         let local_source = &global_source[range.start..range.end];
         let (range, local_source) =
-            // don't trim injections, because their children could expand beyond the node itself
+            // don't trim injections, because their children could expand beyond the node itself.
+            // See examples/markdown/failing/nested_injections which panics if we remove the condition on injections
             if local_source.ends_with('\n') && node.parent().is_some() && injection_lang.is_none()
             {
                 let trimmed_source = local_source.trim_end_matches('\n');
