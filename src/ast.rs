@@ -594,6 +594,20 @@ impl<'a> AstNode<'a> {
         _truncate(self, &predicate, arena)
     }
 
+    /// Any part of the source between the start of this node and
+    /// the start of its first child (if any). There generally isn't any,
+    /// but it can be present as leading whitespace at the root of a document
+    /// for instance.
+    pub fn leading_source(&'a self) -> Option<&'a str> {
+        let first_child = self.children.first()?;
+        let offset = first_child.byte_range.start - self.byte_range.start;
+        if offset > 0 {
+            Some(&self.source[..offset])
+        } else {
+            None
+        }
+    }
+
     /// Any whitespace that precedes this node.
     /// This will be None if the node doesn't have a predecessor,
     /// otherwise it's the whitespace between its predecessor and itself.
@@ -1185,6 +1199,14 @@ mod tests {
             node_types,
             vec!["{", "pair", ",", "pair", "}", "object", "document"]
         );
+    }
+
+    #[test]
+    fn leading_source() {
+        let ctx = ctx();
+        let tree = ctx.parse_rust("\n let x = 1;\n");
+        assert_eq!(tree.byte_range.start, 0);
+        assert_eq!(tree.leading_source(), Some("\n "));
     }
 
     #[test]
