@@ -74,10 +74,10 @@ fn integration_failing(#[files("examples/*/failing/*")] test_dir: PathBuf) {
         None,
     );
 
-    let actual = merge_result.contents.trim();
+    let actual = merge_result.contents.trim_end();
 
-    let expected_currently = contents_expected_currently.trim();
-    let expected_ideally = contents_expected_ideally.trim();
+    let expected_currently = contents_expected_currently.trim_end();
+    let expected_ideally = contents_expected_ideally.trim_end();
 
     let result = if expected_currently == expected_ideally {
         FailingTestResult::NowCorrect
@@ -140,10 +140,10 @@ please examine the new output and update ExpectedCurrently.{ext} if it looks oka
         None,
     );
 
-    let actual_compact = merge_result.contents.trim();
+    let actual_compact = merge_result.contents.trim_end();
 
-    let expected_compact_currently = contents_expected_compact_currently.trim();
-    let expected_compact_ideally = contents_expected_compact_ideally.trim();
+    let expected_compact_currently = contents_expected_compact_currently.trim_end();
+    let expected_compact_ideally = contents_expected_compact_ideally.trim_end();
 
     let result_compact = if expected_compact_currently == expected_compact_ideally {
         FailingTestResult::NowCorrect
