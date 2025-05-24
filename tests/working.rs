@@ -37,8 +37,8 @@ fn compare_against_merge(
         None,
     );
 
-    let expected = contents_expected.trim();
-    let actual = merge_result.contents.trim();
+    let expected = contents_expected.trim_end();
+    let actual = merge_result.contents.trim_end();
     if expected != actual {
         let patch = create_patch(expected, actual);
         let f = PatchFormatter::new().with_color();
