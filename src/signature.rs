@@ -175,9 +175,11 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                         let mut hasher = crate::fxhasher();
                         self.hash(&mut hasher);
                         let hash_a = hasher.finish();
+
                         hasher = crate::fxhasher();
                         other.hash(&mut hasher);
                         let hash_b = hasher.finish();
+
                         hash_a == hash_b
                     }
                 }
