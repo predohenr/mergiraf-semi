@@ -246,7 +246,7 @@ impl<'a> AstNode<'a> {
             } else {
                 range_for_root.clone()
             }
-        } else if local_source.ends_with('\n') {
+        } else if local_source.ends_with('\n') && node.parent().is_some() {
             let trimmed_source = local_source.trim_end_matches('\n');
             let new_end = max(
                 range.end - local_source.len() + trimmed_source.len(),
