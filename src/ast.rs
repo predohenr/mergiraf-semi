@@ -180,6 +180,7 @@ impl<'a> AstNode<'a> {
         let field_name = cursor.field_name();
         let node = cursor.node();
         let atomic = lang_profile.is_atomic_node_type(node.grammar_name());
+        let mut last_child_end = node.byte_range().start;
 
         // check if the current node is an injection
         let injection_lang = node_id_to_injection_lang.get(&node.id());
@@ -193,6 +194,7 @@ impl<'a> AstNode<'a> {
                 next_node_id,
             ) {
                 children.push(injected_root);
+                last_child_end = injected_root.byte_range.end;
             } // if the parsing of the injection fails, keep the injection node as a leaf but don't abort the entire parsing
         } else if !atomic && cursor.goto_first_child() {
             let mut child_available = true;
@@ -210,6 +212,15 @@ impl<'a> AstNode<'a> {
                 if let Some(field_name) = cursor.field_name() {
                     field_to_children.entry(field_name).or_default().push(child);
                 }
+                debug_assert!(
+                    child.byte_range.start >= last_child_end,
+                    "Child starts earlier than its previous sibling ends"
+                );
+                debug_assert!(
+                    child.byte_range.end <= node.byte_range().end,
+                    "Child expands further than its parent"
+                );
+                last_child_end = child.byte_range.end;
                 child_available = cursor.goto_next_sibling();
             }
             cursor.goto_parent();
@@ -243,7 +254,11 @@ impl<'a> AstNode<'a> {
             && injection_lang.is_none()
         {
             let trimmed_source = local_source.trim_end_matches('\n');
-            range.start..(range.end - local_source.len() + trimmed_source.len())
+            let new_end = max(
+                range.end - local_source.len() + trimmed_source.len(),
+                last_child_end,
+            );
+            range.start..new_end
         } else {
             range
         };
