@@ -220,7 +220,7 @@ impl<'a> AstNode<'a> {
         let range = node.byte_range();
         let local_source = &global_source[range.start..range.end];
         let (range, local_source) = if let Some(range_for_root) = range_for_root {
-            if children.is_empty() {
+            if node.child_count() == 0 {
                 // This is a root with no children, that is to say an empty source.
                 // If we were to use `range_for_root` here too, then that would mean
                 // that two different source files with a different amount of whitespace
