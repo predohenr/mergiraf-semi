@@ -248,9 +248,16 @@ impl<'a> AstNode<'a> {
                     node_id_to_injection_lang,
                     None,
                 )?;
-                children.push(child);
-                if let Some(field_name) = cursor.field_name() {
-                    field_to_children.entry(field_name).or_default().push(child);
+                if child.byte_range.start >= range.start && child.byte_range.end <= range.end {
+                    children.push(child);
+                    if let Some(field_name) = cursor.field_name() {
+                        field_to_children.entry(field_name).or_default().push(child);
+                    }
+                } else {
+                    debug_assert_eq!(
+                        child.source, "",
+                        "A non-empty child falls out of the parent's range"
+                    );
                 }
                 child_available = cursor.goto_next_sibling();
             }
