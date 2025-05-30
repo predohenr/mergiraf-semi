@@ -1550,4 +1550,29 @@ line 3";"#;
         assert_eq!(script_element[1].lang_profile.name, "HTML");
         assert_eq!(script_element[1].children.len(), 0);
     }
+
+    #[test]
+    fn parse_empty_child_out_of_trimmed_parent() {
+        let ctx = ctx();
+        // Parsing this source with the tree-sitter-md 0.3.2 grammar
+        // gives an empty "block_continuation" node as a child of the
+        // "paragraph" node, after the trailing newline in it.
+        // Because we trim the newline at the end of the paragraph node,
+        // the child ends up falling outside of the new computed range,
+        // which violates the assumption that the ranges of all children
+        // fall into the range of their parent.
+        let source = r#"
+A list:
+- Hello
+
+"#;
+        let markdown = ctx.parse_markdown(source);
+
+        let paragraph = markdown[0][1][0][1];
+        assert_eq!(paragraph.grammar_name, "paragraph");
+        assert_eq!(paragraph.children.len(), 2);
+        assert_eq!(paragraph[0].grammar_name, "paragraph_repeat1");
+        assert_eq!(paragraph[1].grammar_name, "block_continuation");
+        assert_eq!(paragraph[1].preceding_whitespace(), Some("\n"));
+    }
 }
