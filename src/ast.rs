@@ -180,40 +180,7 @@ impl<'a> AstNode<'a> {
         let field_name = cursor.field_name();
         let node = cursor.node();
         let atomic = lang_profile.is_atomic_node_type(node.grammar_name());
-
-        // check if the current node is an injection
         let injection_lang = node_id_to_injection_lang.get(&node.id());
-        if let Some(&injection_lang) = injection_lang {
-            let range = node.range();
-            if let Ok(injected_root) = Self::parse_root(
-                global_source,
-                Some(range),
-                injection_lang,
-                arena,
-                next_node_id,
-            ) {
-                children.push(injected_root);
-            } // if the parsing of the injection fails, keep the injection node as a leaf but don't abort the entire parsing
-        } else if !atomic && cursor.goto_first_child() {
-            let mut child_available = true;
-            while child_available {
-                let child = Self::internal_new(
-                    cursor,
-                    global_source,
-                    lang_profile,
-                    arena,
-                    next_node_id,
-                    node_id_to_injection_lang,
-                    None,
-                )?;
-                children.push(child);
-                if let Some(field_name) = cursor.field_name() {
-                    field_to_children.entry(field_name).or_default().push(child);
-                }
-                child_available = cursor.goto_next_sibling();
-            }
-            cursor.goto_parent();
-        }
 
         // Strip any trailing newlines from the node's source, because we're better
         // off treating this as whitespace between nodes, to keep track of indentation shifts
@@ -255,6 +222,39 @@ impl<'a> AstNode<'a> {
                 "parse error at {range:?}, starting with: {}",
                 &local_source[..min(32, local_source.len())]
             ));
+        }
+
+        // Recursively parse the node in the injection language if any
+        if let Some(&injection_lang) = injection_lang {
+            let range = node.range();
+            if let Ok(injected_root) = Self::parse_root(
+                global_source,
+                Some(range),
+                injection_lang,
+                arena,
+                next_node_id,
+            ) {
+                children.push(injected_root);
+            } // if the parsing of the injection fails, keep the injection node as a leaf but don't abort the entire parsing
+        } else if !atomic && cursor.goto_first_child() {
+            let mut child_available = true;
+            while child_available {
+                let child = Self::internal_new(
+                    cursor,
+                    global_source,
+                    lang_profile,
+                    arena,
+                    next_node_id,
+                    node_id_to_injection_lang,
+                    None,
+                )?;
+                children.push(child);
+                if let Some(field_name) = cursor.field_name() {
+                    field_to_children.entry(field_name).or_default().push(child);
+                }
+                child_available = cursor.goto_next_sibling();
+            }
+            cursor.goto_parent();
         }
 
         // if this is a leaf that spans multiple lines, create one child per line,
