@@ -246,13 +246,7 @@ impl<'a> AstNode<'a> {
             } else {
                 range_for_root.clone()
             }
-        }
-        // don't trim injections, because their children could expand beyond the node itself.
-        // See examples/markdown/failing/nested_injections which panics if we remove the condition on injections
-        else if local_source.ends_with('\n')
-            && node.parent().is_some()
-            && injection_lang.is_none()
-        {
+        } else if local_source.ends_with('\n') {
             let trimmed_source = local_source.trim_end_matches('\n');
             let new_end = max(
                 range.end - local_source.len() + trimmed_source.len(),
