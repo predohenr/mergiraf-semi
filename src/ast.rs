@@ -219,7 +219,7 @@ impl<'a> AstNode<'a> {
         // off treating this as whitespace between nodes, to keep track of indentation shifts
         let range = node.byte_range();
         let local_source = &global_source[range.start..range.end];
-        let (range, local_source) = if let Some(range_for_root) = range_for_root {
+        let range = if let Some(range_for_root) = range_for_root {
             if children.is_empty() {
                 // This is a root with no children, that is to say an empty source.
                 // If we were to use `range_for_root` here too, then that would mean
@@ -231,9 +231,9 @@ impl<'a> AstNode<'a> {
                 // This is rather bad. So to avoid that, we allow for one exception to the rule,
                 // meaning that we won't preserve whitespace when one side to merge is empty,
                 // which should be okay.
-                (0..0, "")
+                0..0
             } else {
-                (range_for_root.clone(), &global_source[range_for_root])
+                range_for_root.clone()
             }
         }
         // don't trim injections, because their children could expand beyond the node itself.
@@ -243,13 +243,11 @@ impl<'a> AstNode<'a> {
             && injection_lang.is_none()
         {
             let trimmed_source = local_source.trim_end_matches('\n');
-            (
-                range.start..(range.end - local_source.len() + trimmed_source.len()),
-                trimmed_source,
-            )
+            range.start..(range.end - local_source.len() + trimmed_source.len())
         } else {
-            (range, local_source)
+            range
         };
+        let local_source = &global_source[range.start..range.end];
         if node.is_error() {
             return Err(format!(
                 "parse error at {range:?}, starting with: {}",
