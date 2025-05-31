@@ -411,7 +411,7 @@ impl<'a> AstNode<'a> {
                 process_node(child, result, i);
             }
             let end = *i;
-            unsafe { (*node.dfs.get()) = Some(&result[start..end]) };
+            unsafe { *node.dfs.get() = Some(&result[start..end]) };
         }
 
         let mut i = 0;
