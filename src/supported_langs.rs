@@ -378,6 +378,7 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
                     .restricted_to_groups(&[&["setting"]]),
             ],
             signatures: vec![signature("setting", vec![vec![ChildType("setting_name")]])],
+            injections: None,
         },
         LangProfile {
             name: "Javascript",
