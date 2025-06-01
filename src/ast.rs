@@ -248,6 +248,11 @@ impl<'a> AstNode<'a> {
             }
         } else if local_source.ends_with('\n') && node.parent().is_some() {
             let trimmed_source = local_source.trim_end_matches('\n');
+            // The range's end is shifted back by as many newlines we can remove
+            // at the end, but may not end before the end of its last child,
+            // to maintain the compatibility between the tree structure and the ranges.
+            // (Some children can have an empty source and so their own trimming
+            // wouldn't keep them contained.)
             let new_end = max(
                 range.end - local_source.len() + trimmed_source.len(),
                 last_child_end,
