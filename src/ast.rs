@@ -175,12 +175,13 @@ impl<'a> AstNode<'a> {
         node_id_to_injection_lang: &FxHashMap<usize, &'static LangProfile>,
         range_for_root: Option<Range<usize>>,
     ) -> Result<&'a Self, String> {
-        let mut children = Vec::new();
-        let mut field_to_children: FxHashMap<&'a str, Vec<&'a Self>> = FxHashMap::default();
-        let mut last_child_end = node.byte_range().start;
         let field_name = cursor.field_name();
         let node = cursor.node();
         let atomic = lang_profile.is_atomic_node_type(node.grammar_name());
+
+        let mut children = Vec::new();
+        let mut field_to_children: FxHashMap<&'a str, Vec<&'a Self>> = FxHashMap::default();
+        let mut last_child_end = node.byte_range().start;
 
         // check if the current node is an injection
         let injection_lang = node_id_to_injection_lang.get(&node.id());
