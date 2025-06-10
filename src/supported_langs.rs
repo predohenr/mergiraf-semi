@@ -853,7 +853,12 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
                 CommutativeParent::new("record", "{", ",\n", "}")
                     .restricted_to_groups(&[&["field_update"]]),
             ],
-            signatures: vec![],
+            signatures: vec![
+                signature("field_update", vec![vec![Field("field")]]),
+                signature("field", vec![vec![Field("name")]]),
+                signature("import_name", vec![vec![]]),
+                signature("signature", vec![vec![Field("name")]]),
+            ],
             injections: None,
         },
     ]
