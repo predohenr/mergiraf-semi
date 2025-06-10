@@ -74,7 +74,8 @@ pub fn resolve_merge_cascading<'a>(
         Err(FallbackMergeError::GitError(err)) => {
             debug!("Error while extracting original revisions from Git: {err}");
             warn!(
-                "Couldn't retrieve the original revisions from Git. This limits Mergiraf's ability to solve certain types of conflicts."
+                "Couldn't retrieve the original revisions from Git. This \
+                limits Mergiraf's ability to solve certain types of conflicts."
             );
         }
     }
