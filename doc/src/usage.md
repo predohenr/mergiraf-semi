@@ -71,7 +71,7 @@ An [example repository](https://codeberg.org/mergiraf/example-repo) is available
 ```console
 $ git clone https://codeberg.org/mergiraf/example-repo
 $ cd example-repo
-$ git merge other-branch
+$ git merge origin/other-branch
 ```
 
 For [Jujutsu](#interactive-use-with-jujutsu) users:
