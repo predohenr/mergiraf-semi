@@ -82,6 +82,15 @@ $ jj new main other-branch@origin
 $ jj resolve --tool mergiraf
 ```
 
+Each file demonstrates one or more of the conflict types handled by Mergiraf, described in more detail in the [next chapter](conflicts.md):
+* `Example.java` - resolved [independent addition and removal][independent-changes] and [move of edited code](conflicts.md#moving-edited-elements)
+* `Example.jsx` - resolved [changes to independent syntax elements](conflicts.md#changes-to-independent-syntax-elements)
+* `Example.rs` - resolved [independent additions][independent-changes] and move of edited code
+* `Example.yaml` - resolved move of edited code
+* `Example.json` - conflict created due to [conflicting signatures](conflicts.md#line-based-merges)
+
+[independent-changes]: conflicts.md#neighbouring-insertions-and-deletions-of-elements-whose-order-does-not-matter
+
 #### Reviewing Mergiraf's work
 
 When Git invokes Mergiraf to merge a file, it can either:
