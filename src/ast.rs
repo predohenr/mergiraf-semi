@@ -799,7 +799,7 @@ impl<'a> AstNode<'a> {
             Default::default()
         };
 
-        let commutative = if (next_parent.is_some()) {
+        let commutative = if next_parent.is_some() {
             Color::LightPurple.paint(" Commutative").to_string()
         } else {
             Default::default()
