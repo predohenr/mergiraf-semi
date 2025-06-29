@@ -57,4 +57,4 @@ jobs:
       - name: Login on crates.io
         run: echo "${{ secrets.CRATES_IO_API_TOKEN }}" | cargo login
       - name: Publish on crates.io
-        run: cargo publish --allow-dirty
+        run: cargo publish
