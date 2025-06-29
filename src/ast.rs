@@ -292,7 +292,9 @@ impl<'a> AstNode<'a> {
                     id: *next_node_id,
                     descendant_count: 1,
                     parent: UnsafeCell::new(None),
-                    commutative_parent: None, // FIXME: set the actual value
+                    // `@virtual_line@` isn't an actual grammar type, so it cannot be present in
+                    // the grammar and thus can't have a commutative parent defined
+                    commutative_parent: None,
                     dfs: UnsafeCell::new(None),
                     lang_profile,
                 }));
