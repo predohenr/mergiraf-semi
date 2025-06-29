@@ -69,8 +69,21 @@ impl LangProfile {
     where
         P: AsRef<Path>,
     {
-        let filename = filename.as_ref();
-        Self::_detect_from_filename(filename)
+        fn inner(filename: &Path) -> Option<&'static LangProfile> {
+            // TODO make something more advanced like in difftastic
+            // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
+            let extension = filename.extension()?;
+            SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
+                lang_profile
+                    .extensions
+                    .iter()
+                    .copied()
+                    // NOTE: the comparison should be case-insensitive, see
+                    // https://rust-lang.github.io/rust-clippy/master/index.html#case_sensitive_file_extension_comparisons
+                    .any(|ext| extension.eq_ignore_ascii_case(OsStr::new(ext)))
+            })
+        }
+        inner(filename.as_ref())
     }
 
     /// Loads a language either by name or by detecting it from a filename
