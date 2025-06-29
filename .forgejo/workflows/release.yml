@@ -1,6 +1,6 @@
 on:
   push:
-    tags: '*'
+    tags: 'v*'
 jobs:
   release:
     runs-on: my-ubuntu-22.04
