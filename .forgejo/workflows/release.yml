@@ -36,6 +36,7 @@ jobs:
         run: |
           mkdir target/release_artifacts
           touch target/release_artifacts/empty.txt
+          # store the release notes into $RELEASE_NOTES
           {
             echo 'RELEASE_NOTES<<EOF'
             git-cliff --latest
@@ -51,7 +52,8 @@ jobs:
           tag: "${{ github.ref_name }}"
           sha: "${{ github.sha }}"
           release-dir: ./target/release_artifacts
-          release-notes: ${{ env.RELEASE_NOTES }} 
+          # read the release notes from $RELEASE_NOTES
+          release-notes: ${{ env.RELEASE_NOTES }}
           override: true
       - name: Login on crates.io
         run: echo "${{ secrets.CRATES_IO_API_TOKEN }}" | cargo login
