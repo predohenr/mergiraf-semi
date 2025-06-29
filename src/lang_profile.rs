@@ -244,7 +244,7 @@ impl CommutativeParent {
     pub(crate) fn parent_type(&self) -> &str {
         match self.parent_type {
             ParentType::ByGrammarName(name) => name,
-            ParentType::ByQuery(_) => panic!("you shouldn't be displaying this"),
+            ParentType::ByQuery(query) => query,
         }
     }
 
