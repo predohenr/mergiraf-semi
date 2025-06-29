@@ -105,6 +105,13 @@ impl LangProfile {
         })
     }
 
+    /// Do all the children of this parent commute?
+    pub(crate) fn get_commutative_parent(&self, grammar_type: &str) -> Option<&CommutativeParent> {
+        self.commutative_parents
+            .iter()
+            .find(|cr| cr.parent_type == ParentType::ByGrammarName(grammar_type))
+    }
+
     pub(crate) fn find_signature_definition_by_grammar_name(
         &self,
         grammar_name: &str,
@@ -122,16 +129,16 @@ impl LangProfile {
 
 // TODO: add docs
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum ParentType {
-    ByGrammarName(&'static str),
-    ByQuery(&'static str),
+enum ParentType<'a> {
+    ByGrammarName(&'a str),
+    ByQuery(&'a str),
 }
 
 /// Specification for a commutative parent in a given language.
 #[derive(Debug, Clone)]
 pub struct CommutativeParent {
     // the type of the root node
-    parent_type: ParentType,
+    parent_type: ParentType<'static>,
     // any separator that needs to be inserted between the children.
     // It can be overridden by specifying separators in each children group.
     separator: &'static str,

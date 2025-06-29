@@ -322,9 +322,6 @@ impl<'a> AstNode<'a> {
             .map(|child| child.descendant_count)
             .sum::<usize>();
 
-        // FIXME: set the actual value
-        let commutative_parent = None;
-
         let result = arena.alloc(Self {
             hash: hasher.finish(),
             children,
@@ -337,7 +334,7 @@ impl<'a> AstNode<'a> {
             id: *next_node_id,
             descendant_count,
             parent: UnsafeCell::new(None),
-            commutative_parent,
+            commutative_parent: lang_profile.get_commutative_parent(grammar_name),
             dfs: UnsafeCell::new(None),
             lang_profile,
         });
