@@ -137,16 +137,16 @@ enum ParentType<'a> {
 /// Specification for a commutative parent in a given language.
 #[derive(Debug, Clone)]
 pub struct CommutativeParent {
-    // the type of the root node
+    /// the type of the root node
     parent_type: ParentType<'static>,
-    // any separator that needs to be inserted between the children.
-    // It can be overridden by specifying separators in each children group.
+    /// any separator that needs to be inserted between the children.
+    /// It can be overridden by specifying separators in each children group.
     separator: &'static str,
-    // any left delimiter that can come before all children
+    /// any left delimiter that can come before all children
     pub left_delim: Option<&'static str>,
-    // any right delimiter that can come after all children
+    /// any right delimiter that can come after all children
     pub right_delim: Option<&'static str>,
-    // any restrictions on which types of children are allowed to commute together. If empty, all children can commute together.
+    /// any restrictions on which types of children are allowed to commute together. If empty, all children can commute together.
     pub children_groups: Vec<ChildrenGroup>,
 }
 
