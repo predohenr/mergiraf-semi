@@ -36,7 +36,6 @@ jobs:
         run: |
           mkdir target/release_artifacts
           touch target/release_artifacts/empty.txt
-          cat release_notes.txt
           {
             echo 'RELEASE_NOTES<<EOF'
             git-cliff --latest
