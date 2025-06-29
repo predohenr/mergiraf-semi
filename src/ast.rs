@@ -604,7 +604,6 @@ impl<'a> AstNode<'a> {
                 field_to_children,
                 byte_range: node.byte_range.clone(),
                 parent: UnsafeCell::new(None),
-                commutative_parent: None, // FIXME: set the actual value
                 dfs: UnsafeCell::new(None),
                 ..*node
             });
