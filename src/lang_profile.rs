@@ -120,11 +120,18 @@ impl LangProfile {
     }
 }
 
+// TODO: add docs
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum ParentType {
+    ByGrammarName(&'static str),
+    ByQuery(&'static str),
+}
+
 /// Specification for a commutative parent in a given language.
 #[derive(Debug, Clone)]
 pub struct CommutativeParent {
     // the type of the root node
-    pub parent_type: &'static str,
+    parent_type: ParentType,
     // any separator that needs to be inserted between the children.
     // It can be overridden by specifying separators in each children group.
     separator: &'static str,
@@ -140,7 +147,7 @@ impl CommutativeParent {
     /// Short-hand function to declare a commutative parent without any delimiters.
     pub(crate) fn without_delimiters(root_type: &'static str, separator: &'static str) -> Self {
         Self {
-            parent_type: root_type,
+            parent_type: ParentType::ByGrammarName(root_type),
             separator,
             left_delim: None,
             right_delim: None,
@@ -156,7 +163,7 @@ impl CommutativeParent {
         right_delim: &'static str,
     ) -> Self {
         Self {
-            parent_type,
+            parent_type: ParentType::ByGrammarName(parent_type),
             separator,
             left_delim: Some(left_delim),
             right_delim: Some(right_delim),
@@ -171,7 +178,7 @@ impl CommutativeParent {
         separator: &'static str,
     ) -> Self {
         Self {
-            parent_type,
+            parent_type: ParentType::ByGrammarName(parent_type),
             separator,
             left_delim: Some(left_delim),
             right_delim: None,
@@ -184,6 +191,23 @@ impl CommutativeParent {
         Self {
             children_groups: groups.iter().copied().map(ChildrenGroup::new).collect(),
             ..self
+        }
+    }
+
+    // TODO: add docs
+    #[expect(dead_code)]
+    pub(crate) fn from_query(
+        query: &'static str,
+        left_delim: &'static str,
+        separator: &'static str,
+        right_delim: &'static str,
+    ) -> Self {
+        Self {
+            parent_type: ParentType::ByQuery(query),
+            separator,
+            left_delim: Some(left_delim),
+            right_delim: Some(right_delim),
+            children_groups: Vec::new(),
         }
     }
 
@@ -206,6 +230,14 @@ impl CommutativeParent {
         Self {
             children_groups,
             ..self
+        }
+    }
+
+    // TODO: add docs
+    pub(crate) fn parent_type(&self) -> &str {
+        match self.parent_type {
+            ParentType::ByGrammarName(name) => name,
+            ParentType::ByQuery(_) => panic!("you shouldn't be displaying this"),
         }
     }
 
