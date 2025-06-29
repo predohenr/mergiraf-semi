@@ -1074,7 +1074,7 @@ mod tests {
         let fake_hash_collision = AstNode {
             hash: node_1.hash,
             parent: UnsafeCell::new(None),
-            commutative_parent: None, // FIXME: set the actual value
+            commutative_parent: node_2.commutative_parent,
             dfs: UnsafeCell::new(None),
             children: node_2.children.to_owned(),
             field_to_children: FxHashMap::default(),
