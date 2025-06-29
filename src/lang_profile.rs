@@ -65,9 +65,9 @@ impl LangProfile {
     }
 
     /// Detects the language of a file based on its filename
-    pub fn detect_from_filename<P>(filename: &P) -> Option<&'static Self>
+    pub fn detect_from_filename<P>(filename: P) -> Option<&'static Self>
     where
-        P: AsRef<Path> + ?Sized,
+        P: AsRef<Path>,
     {
         let filename = filename.as_ref();
         Self::_detect_from_filename(filename)
@@ -75,12 +75,13 @@ impl LangProfile {
 
     /// Loads a language either by name or by detecting it from a filename
     pub fn find_by_filename_or_name<P>(
-        filename: &P,
+        filename: P,
         language_name: Option<&str>,
     ) -> Result<&'static Self, String>
     where
-        P: AsRef<Path> + ?Sized,
+        P: AsRef<Path>,
     {
+        let filename = filename.as_ref();
         if let Some(lang_name) = language_name {
             Self::find_by_name(lang_name)
                 .ok_or_else(|| format!("Specified language '{lang_name}' could not be found"))
@@ -88,7 +89,7 @@ impl LangProfile {
             Self::detect_from_filename(filename).ok_or_else(|| {
                 format!(
                     "Could not find a supported language for {}",
-                    filename.as_ref().display()
+                    filename.display()
                 )
             })
         }
