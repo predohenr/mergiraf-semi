@@ -55,7 +55,7 @@ pub struct AstNode<'a> {
     /// The parent of this node, if any.
     parent: UnsafeCell<Option<&'a Self>>,
     // TODO: add docs
-    commutative_parent: UnsafeCell<Option<&'a CommutativeParent>>,
+    commutative_parent: Option<&'a CommutativeParent>,
     /// As the DFS of a child is a subslice of the DFS of its parent, we compute the entire DFS of
     /// the root once and slice all child DFS into this slice.
     /// This is computed right after construction and then never written to again.
@@ -292,7 +292,7 @@ impl<'a> AstNode<'a> {
                     id: *next_node_id,
                     descendant_count: 1,
                     parent: UnsafeCell::new(None),
-                    commutative_parent: UnsafeCell::new(None),
+                    commutative_parent: None, // FIXME: set the actual value
                     dfs: UnsafeCell::new(None),
                     lang_profile,
                 }));
@@ -320,6 +320,9 @@ impl<'a> AstNode<'a> {
             .map(|child| child.descendant_count)
             .sum::<usize>();
 
+        // FIXME: set the actual value
+        let commutative_parent = None;
+
         let result = arena.alloc(Self {
             hash: hasher.finish(),
             children,
@@ -332,13 +335,12 @@ impl<'a> AstNode<'a> {
             id: *next_node_id,
             descendant_count,
             parent: UnsafeCell::new(None),
-            commutative_parent: UnsafeCell::new(None),
+            commutative_parent,
             dfs: UnsafeCell::new(None),
             lang_profile,
         });
         *next_node_id += 1;
         result.internal_set_parent_on_children();
-        result.internal_set_commutative_parent();
         Ok(result)
     }
 
@@ -346,11 +348,6 @@ impl<'a> AstNode<'a> {
         for child in &self.children {
             unsafe { *child.parent.get() = Some(self) }
         }
-    }
-
-    fn internal_set_commutative_parent(&'a self) {
-        // FIXME: set the actual parent
-        unsafe { *self.commutative_parent.get() = None }
     }
 
     fn internal_precompute_root_dfs(&'a self, ref_arena: &'a Arena<&'a Self>) {
@@ -480,8 +477,7 @@ impl<'a> AstNode<'a> {
 
     /// The commutative merging settings associated with this node.
     pub fn commutative_parent_definition(&self) -> Option<&CommutativeParent> {
-        // SAFETY: not written to after construction
-        unsafe { *self.commutative_parent.get() }
+        self.commutative_parent
     }
 
     /// The signature definition associated with this node.
@@ -609,12 +605,11 @@ impl<'a> AstNode<'a> {
                 field_to_children,
                 byte_range: node.byte_range.clone(),
                 parent: UnsafeCell::new(None),
-                commutative_parent: UnsafeCell::new(None),
+                commutative_parent: None, // FIXME: set the actual value
                 dfs: UnsafeCell::new(None),
                 ..*node
             });
             result.internal_set_parent_on_children();
-            result.internal_set_commutative_parent();
             result
         }
         _truncate(self, &predicate, arena)
@@ -1079,7 +1074,7 @@ mod tests {
         let fake_hash_collision = AstNode {
             hash: node_1.hash,
             parent: UnsafeCell::new(None),
-            commutative_parent: UnsafeCell::new(None),
+            commutative_parent: None, // FIXME: set the actual value
             dfs: UnsafeCell::new(None),
             children: node_2.children.to_owned(),
             field_to_children: FxHashMap::default(),
