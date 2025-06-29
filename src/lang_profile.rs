@@ -105,13 +105,6 @@ impl LangProfile {
         })
     }
 
-    /// Do all the children of this parent commute?
-    pub(crate) fn get_commutative_parent(&self, grammar_type: &str) -> Option<&CommutativeParent> {
-        self.commutative_parents
-            .iter()
-            .find(|cr| cr.parent_type == grammar_type)
-    }
-
     pub(crate) fn find_signature_definition_by_grammar_name(
         &self,
         grammar_name: &str,

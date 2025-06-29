@@ -480,7 +480,8 @@ impl<'a> AstNode<'a> {
 
     /// The commutative merging settings associated with this node.
     pub fn commutative_parent_definition(&self) -> Option<&CommutativeParent> {
-        self.lang_profile.get_commutative_parent(self.grammar_name)
+        // SAFETY: not written to after construction
+        unsafe { *self.commutative_parent.get() }
     }
 
     /// The signature definition associated with this node.
