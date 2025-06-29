@@ -54,7 +54,7 @@ pub struct AstNode<'a> {
     descendant_count: usize,
     /// The parent of this node, if any.
     parent: UnsafeCell<Option<&'a Self>>,
-    // TODO: add docs
+    /// The commutative merging settings associated with this node.
     commutative_parent: Option<&'a CommutativeParent>,
     /// As the DFS of a child is a subslice of the DFS of its parent, we compute the entire DFS of
     /// the root once and slice all child DFS into this slice.

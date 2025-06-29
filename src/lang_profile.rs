@@ -127,10 +127,29 @@ impl LangProfile {
     }
 }
 
-// TODO: add docs
+/// Ways to specify the type of the parent node in a [`CommutativeParent`]
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum ParentType<'a> {
+    /// Specified using the grammar node defined in the grammar
+    ///
+    /// This is used when a node is a commutative parent independent of the context, e.g. for sets
     ByGrammarName(&'a str),
+    /// Specified using a tree-sitter query:
+    ///
+    /// ```tree-sitter
+    /// (expression_statement (assignment
+    ///   left: (identifier) @variable (#eq? @variable "__all__")
+    ///   right: (list) @commutative
+    /// ))
+    /// ```
+    ///
+    /// This allows designating a node as a commutative parent only in certain contexts.
+    ///
+    /// For example, Python lists aren't commutative in general (the order matters for iteration,
+    /// indexing etc.), but they can be seen as commutative in an [`__all__` declaration][1] -- and
+    /// the query above encodes exactly this latter case
+    ///
+    /// [1]: https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
     ByQuery(&'a str),
 }
 
@@ -201,7 +220,10 @@ impl CommutativeParent {
         }
     }
 
-    // TODO: add docs
+    /// Short-hand function to create a commutative parent with delimiters and separator, with the
+    /// parent node specified using a tree-sitter query
+    ///
+    /// See [`ParentType::ByQuery`] for more information
     #[expect(dead_code)]
     pub(crate) fn from_query(
         query: &'static str,
@@ -240,7 +262,7 @@ impl CommutativeParent {
         }
     }
 
-    // TODO: add docs
+    /// the type of the root node
     pub(crate) fn parent_type(&self) -> &str {
         match self.parent_type {
             ParentType::ByGrammarName(name) => name,
