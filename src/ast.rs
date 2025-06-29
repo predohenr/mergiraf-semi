@@ -301,9 +301,11 @@ impl<'a> AstNode<'a> {
             }
         }
 
+        let grammar_name = node.grammar_name();
+
         // pre-compute a hash value that is invariant under isomorphism
         let mut hasher = crate::fxhasher();
-        node.grammar_name().hash(&mut hasher);
+        grammar_name.hash(&mut hasher);
         lang_profile.hash(&mut hasher);
         if children.is_empty() {
             local_source.hash(&mut hasher);
@@ -328,7 +330,7 @@ impl<'a> AstNode<'a> {
             children,
             field_to_children,
             source: local_source,
-            grammar_name: node.grammar_name(),
+            grammar_name,
             field_name,
             // parse-specific fields not included in hash/isomorphism
             byte_range: range,
