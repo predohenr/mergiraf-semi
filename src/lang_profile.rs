@@ -244,8 +244,7 @@ impl CommutativeParent {
     ) -> Self {
         debug_assert!(
             query.contains("@commutative"),
-            "A '@commutative' capture is needed to identify which of the captured nodes is commutative, in query '{:?}'",
-            query
+            "A '@commutative' capture is needed to identify which of the captured nodes is commutative, in query '{query:?}'",
         );
         Self {
             parent_type: ParentType::ByQuery(query),
