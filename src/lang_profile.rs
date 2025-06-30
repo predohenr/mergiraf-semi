@@ -236,7 +236,6 @@ impl CommutativeParent {
     /// parent node specified using a tree-sitter query
     ///
     /// See [`ParentType::ByQuery`] for more information
-    #[expect(dead_code)]
     pub(crate) fn from_query(
         query: &'static str,
         left_delim: &'static str,

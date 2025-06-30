@@ -1642,4 +1642,20 @@ A list:
         assert_eq!(paragraph[1].grammar_name, "block_continuation");
         assert_eq!(paragraph[1].preceding_whitespace(), Some("\n"));
     }
+
+    #[test]
+    fn commutative_parent_via_query() {
+        let ctx = ctx();
+        let python = ctx.parse_python("__all__ = [ 'foo', 'bar' ]\nother = [ 1, 2 ]\n");
+
+        let first_list = python[0][0][2];
+        let second_list = python[1][0][2];
+        assert_eq!(first_list.grammar_name, "list");
+        assert_eq!(second_list.grammar_name, "list");
+
+        // the __all__ assignment is captured by the query defining the commutative parent
+        assert!(first_list.commutative_parent_definition().is_some());
+        // the other list isn't captured, so it's not associated to any commutative parent
+        assert!(second_list.commutative_parent_definition().is_none());
+    }
 }
