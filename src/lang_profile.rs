@@ -242,6 +242,11 @@ impl CommutativeParent {
         separator: &'static str,
         right_delim: &'static str,
     ) -> Self {
+        debug_assert!(
+            query.contains("@commutative"),
+            "A '@commutative' capture is needed to identify which of the captured nodes is commutative, in query '{:?}'",
+            query
+        );
         Self {
             parent_type: ParentType::ByQuery(query),
             separator,
