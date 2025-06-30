@@ -1,5 +1,6 @@
 use std::{collections::HashSet, ffi::OsStr, fmt::Display, hash::Hash, path::Path};
 
+use itertools::Itertools;
 use tree_sitter::Language;
 
 use crate::{signature::SignatureDefinition, supported_langs::SUPPORTED_LANGUAGES};
@@ -129,7 +130,7 @@ impl LangProfile {
 
 /// Ways to specify the type of the parent node in a [`CommutativeParent`]
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum ParentType<'a> {
+pub(crate) enum ParentType<'a> {
     /// Specified using the grammar node defined in the grammar
     ///
     /// This is used when a node is a commutative parent independent of the context, e.g. for sets
@@ -151,6 +152,17 @@ enum ParentType<'a> {
     ///
     /// [1]: https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
     ByQuery(&'a str),
+}
+
+impl Display for ParentType<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ByGrammarName(name) => write!(f, "specified by grammar name: {name}"),
+            // flatten the query to one line, since our logger doesn't handle multiline messages
+            // too well
+            Self::ByQuery(query) => write!(f, "specified by query: {}", query.lines().format(" ")),
+        }
+    }
 }
 
 /// Specification for a commutative parent in a given language.
@@ -263,11 +275,8 @@ impl CommutativeParent {
     }
 
     /// the type of the root node
-    pub(crate) fn parent_type(&self) -> &str {
-        match self.parent_type {
-            ParentType::ByGrammarName(name) => name,
-            ParentType::ByQuery(query) => query,
-        }
+    pub(crate) fn parent_type(&self) -> &ParentType {
+        &self.parent_type
     }
 
     /// Can children with the supplied types commute together?
