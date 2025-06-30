@@ -20,7 +20,7 @@ use tree_sitter::{
 use typed_arena::Arena;
 
 use crate::{
-    lang_profile::{CommutativeParent, LangProfile},
+    lang_profile::{CommutativeParent, LangProfile, ParentType},
     signature::{Signature, SignatureDefinition},
 };
 
@@ -116,6 +116,37 @@ impl<'a> AstNode<'a> {
             &node_id_to_injection_lang,
             Some(range_for_root),
         )
+    }
+
+    /// Locate all nodes which are marked as commutative via a tree-sitter query.
+    /// This returns a map from node ids to the their commutative parent definition.
+    fn locate_commutative_parents_by_query<'b>(
+        tree: &Tree,
+        source: &'a str,
+        lang_profile: &'b LangProfile,
+    ) -> FxHashMap<usize, &'b CommutativeParent> {
+        let mut node_id_to_commutative_parent = FxHashMap::default();
+        // For each commutative parent that is defined by a tree-sitter query
+        for commutative_parent in &lang_profile.commutative_parents {
+            if let ParentType::ByQuery(query_str) = commutative_parent.parent_type() {
+                // Execute this query over the tree
+                let query = Query::new(&lang_profile.language, query_str)
+                    .expect("Invalid commutative parent query");
+                let commutative_capture_index = query
+                    .capture_index_for_name("commutative")
+                    .expect("Commutative parent query without a '@commutative' capture");
+                let mut cursor = QueryCursor::new();
+                let matches = cursor.matches(&query, tree.root_node(), source.as_bytes());
+                // For each match, mark the captured node(s) as commutative
+                matches.for_each(|m| {
+                    node_id_to_commutative_parent.extend(
+                        m.nodes_for_capture_index(commutative_capture_index)
+                            .map(|node| (node.id(), commutative_parent)),
+                    );
+                });
+            }
+        }
+        node_id_to_commutative_parent
     }
 
     /// Locate nodes which need re-parsing in a different language
