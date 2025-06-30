@@ -373,7 +373,9 @@ impl<'a> AstNode<'a> {
             id: *next_node_id,
             descendant_count,
             parent: UnsafeCell::new(None),
-            commutative_parent: lang_profile.get_commutative_parent(grammar_name),
+            commutative_parent: lang_profile
+                .get_commutative_parent(grammar_name)
+                .or_else(|| node_id_to_commutative_parent.get(&node.id()).copied()),
             dfs: UnsafeCell::new(None),
             lang_profile,
         });
