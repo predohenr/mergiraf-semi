@@ -330,7 +330,7 @@ impl CommutativeParent {
 
     /// The separator for children in this group, trimmed from leading and trailing whitespace.
     /// To obtain the separator to be inserted between two commutatively merged elements,
-    /// use `child_separator` instead.
+    /// use [`Self::child_separator`] instead.
     pub(crate) fn trimmed_separator(&self) -> &'static str {
         self.separator.trim()
     }
