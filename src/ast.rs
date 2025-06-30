@@ -102,6 +102,8 @@ impl<'a> AstNode<'a> {
             .parse(source, None)
             .expect("Parsing source code failed");
         let node_id_to_injection_lang = Self::locate_injections(&tree, source, lang_profile);
+        let node_id_to_commutative_parent =
+            Self::locate_commutative_parents_by_query(&tree, source, lang_profile);
         let range_for_root = if let Some(range) = range {
             range.start_byte..range.end_byte
         } else {
@@ -114,6 +116,7 @@ impl<'a> AstNode<'a> {
             arena,
             next_node_id,
             &node_id_to_injection_lang,
+            &node_id_to_commutative_parent,
             Some(range_for_root),
         )
     }
@@ -199,6 +202,7 @@ impl<'a> AstNode<'a> {
         node_id_to_injection_lang
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn internal_new<'b>(
         cursor: &mut TreeCursor<'b>,
         global_source: &'a str,
@@ -206,6 +210,7 @@ impl<'a> AstNode<'a> {
         arena: &'a Arena<Self>,
         next_node_id: &mut usize,
         node_id_to_injection_lang: &FxHashMap<usize, &'static LangProfile>,
+        node_id_to_commutative_parent: &FxHashMap<usize, &'a CommutativeParent>,
         range_for_root: Option<Range<usize>>,
     ) -> Result<&'a Self, String> {
         let field_name = cursor.field_name();
@@ -240,6 +245,7 @@ impl<'a> AstNode<'a> {
                     arena,
                     next_node_id,
                     node_id_to_injection_lang,
+                    node_id_to_commutative_parent,
                     None,
                 )?;
                 children.push(child);
