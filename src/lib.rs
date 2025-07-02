@@ -121,17 +121,14 @@ pub fn languages(gitattributes: bool) -> String {
     let mut res = String::new();
     for lang_profile in &*SUPPORTED_LANGUAGES {
         if gitattributes {
-            for extension in &lang_profile.extensions {
-                let _ = writeln!(res, "*.{extension} merge=mergiraf");
+            for criterion in &lang_profile.criteria {
+                let _ = writeln!(res, "{criterion} merge=mergiraf");
             }
         } else {
             let _ = writeln!(
                 res,
                 "{lang_profile} ({})",
-                lang_profile
-                    .extensions
-                    .iter()
-                    .format_with(", ", |ext, f| f(&format_args!("*.{ext}")))
+                lang_profile.criteria.iter().join(", ")
             );
         }
     }

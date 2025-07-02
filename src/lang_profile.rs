@@ -18,7 +18,7 @@ pub struct LangProfile {
     /// alternate names for the language
     pub alternate_names: &'static [&'static str],
     /// the file extensions of files in this language
-    pub extensions: Vec<&'static str>,
+    pub criteria: Vec<FileCriterion>,
     /// `tree_sitter` parser
     pub language: Language,
     /// list of node types which should be treated as leaves (atomic parts of the syntax tree)
@@ -58,8 +58,16 @@ impl LangProfile {
     pub fn find_by_name(name: &str) -> Option<&'static Self> {
         SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
             lang_profile.name.eq_ignore_ascii_case(name)
-                || (lang_profile.alternate_names.iter())
-                    .chain(&lang_profile.extensions)
+                || lang_profile
+                    .alternate_names
+                    .iter()
+                    .copied()
+                    .chain(
+                        lang_profile
+                            .criteria
+                            .iter()
+                            .map(FileCriterion::as_alternate_name),
+                    )
                     .any(|aname| aname.eq_ignore_ascii_case(name))
         })
     }
@@ -99,10 +107,9 @@ impl LangProfile {
         // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
         SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
             lang_profile
-                .extensions
+                .criteria
                 .iter()
-                .copied()
-                .any(|ext| FileCriterion::ByExt(ext).matches(filename))
+                .any(|criterion| criterion.matches(filename))
         })
     }
 
