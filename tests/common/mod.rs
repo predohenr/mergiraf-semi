@@ -62,8 +62,7 @@ pub(crate) fn detect_test_suffix(test_dir: &Path) -> String {
 pub(crate) fn language_override_for_test(test_dir: &Path) -> Option<&'static str> {
     let contents = read_to_string(test_dir.join("language")).ok()?;
     let language_name = contents.trim();
-    let lang_profile = LangProfile::find_by_name(&language_name).expect(&format!(
-        "Invalid identifier in 'language' file: '{language_name:?}'"
-    ));
+    let lang_profile = LangProfile::find_by_name(language_name)
+        .unwrap_or_else(|| panic!("Invalid identifier in 'language' file: '{language_name:?}'"));
     Some(lang_profile.name)
 }
