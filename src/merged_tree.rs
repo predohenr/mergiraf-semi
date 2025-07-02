@@ -77,7 +77,7 @@ enum PreviousSibling<'a> {
 
 impl<'a> MergedTree<'a> {
     /// Creates a new exact tree, taking care of the pre-computation of the hash
-    pub(crate) fn new_exact(
+    pub fn new_exact(
         node: Leader<'a>,
         revisions: RevisionNESet,
         class_mapping: &ClassMapping<'a>,
@@ -93,7 +93,7 @@ impl<'a> MergedTree<'a> {
     }
 
     /// Creates a new mixed tree, taking care of the pre-computation of the hash
-    pub(crate) fn new_mixed(node: Leader<'a>, children: Vec<Self>) -> Self {
+    pub fn new_mixed(node: Leader<'a>, children: Vec<Self>) -> Self {
         // NOTE: we allow creating a mixed tree without children, because trying to do otherwise
         // turned out to be very much not worth it: https://codeberg.org/mergiraf/mergiraf/pulls/326
         let mut hasher = crate::fxhasher();
@@ -445,7 +445,6 @@ impl<'a> MergedTree<'a> {
         merged_text
     }
 
-    #[cfg(test)]
     /// Pretty-prints the result tree into its final output. Exciting!
     pub fn pretty_print<'u: 'a>(
         &'u self,
