@@ -20,6 +20,7 @@ pub mod attempts;
 pub mod bug_reporter;
 pub(crate) mod changeset;
 pub(crate) mod class_mapping;
+pub mod file_criterion;
 pub(crate) mod git;
 pub mod lang_profile;
 pub mod line_based;

@@ -1,9 +1,12 @@
-use std::{collections::HashSet, ffi::OsStr, fmt::Display, hash::Hash, path::Path};
+use std::{collections::HashSet, fmt::Display, hash::Hash, path::Path};
 
 use itertools::Itertools;
 use tree_sitter::Language;
 
-use crate::{signature::SignatureDefinition, supported_langs::SUPPORTED_LANGUAGES};
+use crate::{
+    file_criterion::FileCriterion, signature::SignatureDefinition,
+    supported_langs::SUPPORTED_LANGUAGES,
+};
 
 /// Language-dependent settings to influence how merging is done.
 /// All those settings are declarative (except for the tree-sitter parser, which is
@@ -94,15 +97,12 @@ impl LangProfile {
     fn _detect_from_filename(filename: &Path) -> Option<&'static Self> {
         // TODO make something more advanced like in difftastic
         // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
-        let extension = filename.extension()?;
         SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
             lang_profile
                 .extensions
                 .iter()
                 .copied()
-                // NOTE: the comparison should be case-insensitive, see
-                // https://rust-lang.github.io/rust-clippy/master/index.html#case_sensitive_file_extension_comparisons
-                .any(|ext| extension.eq_ignore_ascii_case(OsStr::new(ext)))
+                .any(|ext| FileCriterion::ByExt(ext).matches(filename))
         })
     }
 
