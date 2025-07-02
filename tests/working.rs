@@ -10,6 +10,8 @@ use rstest::rstest;
 mod common;
 use common::detect_test_suffix;
 
+use crate::common::language_override_for_test;
+
 fn compare_against_merge(
     test_dir: &Path,
     fname_base: &'static Path,
@@ -34,7 +36,7 @@ fn compare_against_merge(
         None,
         None,
         Duration::from_millis(0),
-        None,
+        language_override_for_test(test_dir),
     );
 
     let expected = contents_expected;

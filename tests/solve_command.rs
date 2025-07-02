@@ -10,6 +10,8 @@ use rstest::rstest;
 mod common;
 use common::{detect_test_suffix, run_git, write_file_from_rev};
 
+use crate::common::language_override_for_test;
+
 /// End-to-end test for the "mergiraf solve" command
 #[rstest]
 #[case("merge")]
@@ -95,7 +97,7 @@ fn solve_command(#[case] conflict_style: &str) {
         DisplaySettings::default(),
         None,
         repo_dir,
-        None,
+        language_override_for_test(test_dir),
     )
     .expect("solving the conflicts returned an error");
 
