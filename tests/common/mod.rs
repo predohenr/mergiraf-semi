@@ -1,11 +1,12 @@
 #![allow(dead_code, reason = "the functions do get used in integration tests")]
 
 use core::str;
-use std::fs::{self, read_dir};
+use std::fs::{self, read_dir, read_to_string};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use itertools::Itertools;
+use mergiraf::lang_profile::LangProfile;
 
 pub(crate) fn run_git(args: &[&str], repo_dir: &Path) {
     let command_str = format!("git {}", args.iter().format(" "));
@@ -54,4 +55,15 @@ pub(crate) fn detect_test_suffix(test_dir: &Path) -> String {
         })
         .map(|ext| format!(".{ext}"))
         .unwrap_or_else(|| "".to_owned())
+}
+
+/// Returns the language name specified in a test case (if any).
+/// This is the contents of the `language` file in the test directory.
+pub(crate) fn language_override_for_test(test_dir: &Path) -> Option<&'static str> {
+    let contents = read_to_string(test_dir.join("language")).ok()?;
+    let language_name = contents.trim();
+    let lang_profile = LangProfile::find_by_name(&language_name).expect(&format!(
+        "Invalid identifier in 'language' file: '{language_name:?}'"
+    ));
+    Some(lang_profile.name)
 }

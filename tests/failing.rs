@@ -10,6 +10,8 @@ use rstest::rstest;
 mod common;
 use common::detect_test_suffix;
 
+use crate::common::language_override_for_test;
+
 #[derive(Clone, Copy)]
 enum FailingTestResult {
     /// test failed in the expected manner
@@ -71,7 +73,7 @@ fn integration_failing(#[files("examples/*/failing/*")] test_dir: PathBuf) {
         None,
         None,
         Duration::from_millis(0),
-        None,
+        language_override_for_test(&test_dir),
     );
 
     let actual = &merge_result.contents;
