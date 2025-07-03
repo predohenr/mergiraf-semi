@@ -26,8 +26,6 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: "${{runner.os}} Rust ${{steps.rust-toolchain.outputs.cachekey}} lock ${{ hashFiles('**/Cargo.lock') }}"
-      - name: Play with git cliff
-        run: cargo binstall git-cliff --version 2.9.1 && git-cliff --latest
       - name: Format
         run: cargo fmt --all -- --check
       - name: Lint
