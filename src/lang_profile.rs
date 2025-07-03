@@ -16,6 +16,8 @@ pub struct LangProfile {
     pub alternate_names: &'static [&'static str],
     /// the file extensions of files in this language
     pub extensions: Vec<&'static str>,
+    /// the full file names that this language should be used for
+    pub file_names: Vec<&'static str>,
     /// `tree_sitter` parser
     pub language: Language,
     /// list of node types which should be treated as leaves (atomic parts of the syntax tree)
