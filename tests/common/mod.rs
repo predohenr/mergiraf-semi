@@ -39,7 +39,7 @@ pub(crate) fn write_file_from_rev(
 
 /// Detect the suffix (including period) used by the revision files in a test case,
 /// if any. Test files without extensions should declare the language to use in
-/// a separate `language` directory and just use bare `Base`, `Left` and `Right`
+/// a separate `language` file and just use bare `Base`, `Left` and `Right`
 /// revision files (and similarly for expected outputs).
 pub(crate) fn detect_test_suffix(test_dir: &Path) -> String {
     read_dir(test_dir)
