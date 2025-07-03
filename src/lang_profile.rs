@@ -59,6 +59,7 @@ impl LangProfile {
             lang_profile.name.eq_ignore_ascii_case(name)
                 || (lang_profile.alternate_names.iter())
                     .chain(&lang_profile.extensions)
+                    .chain(&lang_profile.file_names)
                     .any(|aname| aname.eq_ignore_ascii_case(name))
         })
     }
@@ -93,18 +94,22 @@ impl LangProfile {
         }
     }
 
-    fn _detect_from_filename(filename: &Path) -> Option<&'static Self> {
+    fn _detect_from_filename(path: &Path) -> Option<&'static Self> {
         // TODO make something more advanced like in difftastic
         // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
-        let extension = filename.extension()?;
+        let extension = path.extension()?;
+        let name = path.file_name()?;
         SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
             lang_profile
                 .extensions
                 .iter()
-                .copied()
                 // NOTE: the comparison should be case-insensitive, see
                 // https://rust-lang.github.io/rust-clippy/master/index.html#case_sensitive_file_extension_comparisons
                 .any(|ext| extension.eq_ignore_ascii_case(OsStr::new(ext)))
+                || lang_profile
+                    .file_names
+                    .iter()
+                    .any(|file_name| name == OsStr::new(file_name))
         })
     }
 
@@ -369,6 +374,10 @@ mod tests {
     fn find_by_name() {
         assert_eq!(LangProfile::find_by_name("JSON").unwrap().name, "JSON");
         assert_eq!(LangProfile::find_by_name("Json").unwrap().name, "JSON");
+        assert_eq!(
+            LangProfile::find_by_name("Pipfile.lock").unwrap().name,
+            "JSON"
+        );
         assert_eq!(LangProfile::find_by_name("python").unwrap().name, "Python");
         assert_eq!(LangProfile::find_by_name("py").unwrap().name, "Python");
         assert_eq!(
@@ -403,6 +412,12 @@ mod tests {
         assert!(
             LangProfile::find_by_filename_or_name("file.unknown_extension", None).is_err(),
             "Looking up language by unknown extension should fail"
+        );
+        assert_eq!(
+            LangProfile::find_by_filename_or_name("Pipfile.lock", None)
+                .unwrap()
+                .name,
+            "JSON"
         );
     }
 }

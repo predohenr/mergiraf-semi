@@ -123,6 +123,9 @@ pub fn languages(gitattributes: bool) -> String {
             for extension in &lang_profile.extensions {
                 let _ = writeln!(res, "*.{extension} merge=mergiraf");
             }
+            for file_name in &lang_profile.file_names {
+                let _ = writeln!(res, "{file_name} merge=mergiraf");
+            }
         } else {
             let _ = writeln!(
                 res,
@@ -172,5 +175,6 @@ mod test {
     fn languages_gitattributes() {
         let gitattributes_config = languages(true);
         assert!(gitattributes_config.contains("*.rs merge=mergiraf"));
+        assert!(gitattributes_config.contains("Pipfile.lock merge=mergiraf"));
     }
 }
