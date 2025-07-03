@@ -50,11 +50,10 @@ pub(crate) fn detect_test_suffix(test_dir: &Path) -> String {
                 .file_name()
                 .into_string()
                 .expect("Unable to read filename in test directory")
-                .strip_prefix("Base.")
+                .strip_prefix("Base")
                 .map(String::from)
         })
-        .map(|ext| format!(".{ext}"))
-        .unwrap_or_else(|| "".to_owned())
+        .expect("Could not find a Base* file in the test directory")
 }
 
 /// Returns the language name specified in a test case (if any).
