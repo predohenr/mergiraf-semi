@@ -423,7 +423,7 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             name: "JSON",
             alternate_names: &[],
             extensions: vec!["json"],
-            file_names: vec!["Pipfile.lock"],
+            file_names: vec![],
             language: tree_sitter_json::LANGUAGE.into(),
             atomic_nodes: vec![],
             commutative_parents: vec![

@@ -374,10 +374,6 @@ mod tests {
     fn find_by_name() {
         assert_eq!(LangProfile::find_by_name("JSON").unwrap().name, "JSON");
         assert_eq!(LangProfile::find_by_name("Json").unwrap().name, "JSON");
-        assert_eq!(
-            LangProfile::find_by_name("Pipfile.lock").unwrap().name,
-            "JSON"
-        );
         assert_eq!(LangProfile::find_by_name("python").unwrap().name, "Python");
         assert_eq!(LangProfile::find_by_name("py").unwrap().name, "Python");
         assert_eq!(
@@ -412,12 +408,6 @@ mod tests {
         assert!(
             LangProfile::find_by_filename_or_name("file.unknown_extension", None).is_err(),
             "Looking up language by unknown extension should fail"
-        );
-        assert_eq!(
-            LangProfile::find_by_filename_or_name("Pipfile.lock", None)
-                .unwrap()
-                .name,
-            "JSON"
         );
     }
 }

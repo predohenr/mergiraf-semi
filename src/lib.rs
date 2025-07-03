@@ -175,6 +175,5 @@ mod test {
     fn languages_gitattributes() {
         let gitattributes_config = languages(true);
         assert!(gitattributes_config.contains("*.rs merge=mergiraf"));
-        assert!(gitattributes_config.contains("Pipfile.lock merge=mergiraf"));
     }
 }
