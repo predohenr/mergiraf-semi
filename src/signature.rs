@@ -289,7 +289,7 @@ impl SignatureDefinition {
         self.extract_internal(AstNodeEquiv::Original(node), &ClassMapping::new())
     }
 
-    /// Extracts a signature for the supplied original node
+    /// Extracts a signature for the supplied merged node
     pub(crate) fn extract_signature_from_merged_node<'a, 'b: 'a>(
         &self,
         node: &'a MergedTree<'b>,
