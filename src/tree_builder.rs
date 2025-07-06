@@ -382,16 +382,14 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         }
                     }
                 }
-                if !common_revisions.is_empty() &&
+                if let Some(common_revisions) = common_revisions.as_nonempty() &&
                     // if one of the left/right revisions is doing a reformatting, we make sure it's included in the merged result
                     (!self.class_mapping.is_reformatting(revnode, Revision::Left) || common_revisions.contains(Revision::Left)) &&
                     (!self.class_mapping.is_reformatting(revnode, Revision::Right) || common_revisions.contains(Revision::Right))
                 {
                     Ok(MergedTree::new_exact(
                         revnode,
-                        common_revisions
-                            .as_nonempty()
-                            .expect("Unexpected empty set (checked above)"),
+                        common_revisions,
                         self.class_mapping,
                     ))
                 } else {
