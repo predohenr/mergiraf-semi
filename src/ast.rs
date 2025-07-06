@@ -833,9 +833,11 @@ impl<'a> AstNode<'a> {
 
         let tree_sym = if last_child { "└" } else { "├" };
 
-        let key = (self.field_name)
-            .map(|key| format!("{key}: "))
-            .unwrap_or_default();
+        let key = if let Some(key) = self.field_name {
+            format!("{key}: ")
+        } else {
+            Default::default()
+        };
 
         let grammar_name = if self.source != self.grammar_name {
             self.grammar_name
