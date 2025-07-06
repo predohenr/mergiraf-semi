@@ -255,9 +255,9 @@ impl<'a> ClassMapping<'a> {
     /// the source (the unindented sources are different as strings but the trees are
     /// isomorphic)
     pub fn is_reformatting(&self, leader: Leader<'a>, revision: Revision) -> bool {
-        let base_source = self.node_at_rev(leader, Revision::Base);
-        let rev_source = self.node_at_rev(leader, revision);
-        if let (Some(base), Some(rev)) = (base_source, rev_source) {
+        if let Some(base) = self.node_at_rev(leader, Revision::Base)
+            && let Some(rev) = self.node_at_rev(leader, revision)
+        {
             base.hash == rev.hash && base.unindented_source() != rev.unindented_source()
         } else {
             false
