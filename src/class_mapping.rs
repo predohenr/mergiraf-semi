@@ -128,10 +128,17 @@ impl<'a> ClassMapping<'a> {
         for (right_node, left_node) in matching.iter_right_to_left() {
             let left_rev_node = RevNode::new(from_rev, left_node);
             let right_rev_node = RevNode::new(to_rev, right_node);
-            // TODO: use if-let-chains when they become stable
-            if (from_rev == Revision::Left && to_rev == Revision::Right)
-                && matches!((self.map.get(&left_rev_node), self.map.get(&right_rev_node)),
-                (Some(Leader(RevNode { rev: Revision::Base, node: left_leader })), Some(Leader(RevNode { rev: Revision::Base, node: right_leader }))) if left_leader != right_leader)
+            if from_rev == Revision::Left
+                && to_rev == Revision::Right
+                && let Some(Leader(RevNode {
+                    rev: Revision::Base,
+                    node: left_leader,
+                })) = self.map.get(&left_rev_node)
+                && let Some(Leader(RevNode {
+                    rev: Revision::Base,
+                    node: right_leader,
+                })) = self.map.get(&right_rev_node)
+                && left_leader != right_leader
             {
                 // Adding this matching would render the class mapping inconsistent, as the nodes are
                 // already matched to distinct base nodes. So ignore this matching.
