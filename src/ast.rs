@@ -833,13 +833,15 @@ impl<'a> AstNode<'a> {
 
         let tree_sym = if last_child { "└" } else { "├" };
 
+        let escape_whitespace = |string: &str| string.replace('\n', "\\n").replace('\t', "\\t");
+
         let key = if let Some(key) = self.field_name {
             format!("{key}: ")
         } else {
             String::new()
         };
 
-        let escaped_grammar_name = self.grammar_name.replace('\n', "\\n");
+        let escaped_grammar_name = escape_whitespace(self.grammar_name);
         let grammar_name = if self.source != self.grammar_name {
             escaped_grammar_name
         } else {
@@ -847,7 +849,7 @@ impl<'a> AstNode<'a> {
         };
 
         let source = if num_children == 0 && self.source != self.grammar_name {
-            format!(" {}", Color::Red.paint(self.source.replace('\n', "\\n")))
+            format!(" {}", Color::Red.paint(escape_whitespace(self.source)))
         } else {
             String::new()
         };
