@@ -701,51 +701,6 @@ turn right please!
         }
 
         #[test]
-        fn diffy_imara() {
-            let source = "\
-my_struct_t instance = {
-<<<<<<< LEFT
-    .foo = 3,
-    .bar = 2,
-||||||| BASE
-    .foo = 3,
-=======
->>>>>>> RIGHT
-};
-";
-
-            let parsed = parse(source);
-
-            let expected_parse = ParsedMerge::new(vec![
-                MergedChunk::Resolved {
-                    offset: 0,
-                    contents: "my_struct_t instance = {\n",
-                },
-                MergedChunk::Conflict {
-                    left: Some("    .foo = 3,\n    .bar = 2,\n"),
-                    base: Some("    .foo = 3,\n"),
-                    right: None,
-                    left_name: Some("LEFT"),
-                    base_name: Some("BASE"),
-                    right_name: Some("RIGHT"),
-                },
-                MergedChunk::Resolved {
-                    offset: 115,
-                    contents: "};\n",
-                },
-            ]);
-
-            assert_eq!(parsed, expected_parse);
-            assert_eq!(parsed.conflict_count(), 1);
-            assert_eq!(parsed.conflict_mass(), 42);
-
-            // render the parsed conflict and check it's equal to the source
-            let rendered = parsed.render(&DisplaySettings::default());
-
-            assert_eq!(rendered, source);
-        }
-
-        #[test]
         fn diff2() {
             let source = "\
 my_struct_t instance = {
@@ -1190,6 +1145,51 @@ right
 
             // w_wo_w should be symmetrical to w_w_wo
         }
+    }
+
+    #[test]
+    fn diffy_imara() {
+        let source = "\
+my_struct_t instance = {
+<<<<<<< LEFT
+    .foo = 3,
+    .bar = 2,
+||||||| BASE
+    .foo = 3,
+=======
+>>>>>>> RIGHT
+};
+";
+
+        let parsed = parse(source);
+
+        let expected_parse = ParsedMerge::new(vec![
+            MergedChunk::Resolved {
+                offset: 0,
+                contents: "my_struct_t instance = {\n",
+            },
+            MergedChunk::Conflict {
+                left: Some("    .foo = 3,\n    .bar = 2,\n"),
+                base: Some("    .foo = 3,\n"),
+                right: None,
+                left_name: Some("LEFT"),
+                base_name: Some("BASE"),
+                right_name: Some("RIGHT"),
+            },
+            MergedChunk::Resolved {
+                offset: 115,
+                contents: "};\n",
+            },
+        ]);
+
+        assert_eq!(parsed, expected_parse);
+        assert_eq!(parsed.conflict_count(), 1);
+        assert_eq!(parsed.conflict_mass(), 42);
+
+        // render the parsed conflict and check it's equal to the source
+        let rendered = parsed.render(&DisplaySettings::default());
+
+        assert_eq!(rendered, source);
     }
 
     mod matching {
