@@ -1264,9 +1264,12 @@ right
         // w_wo_w should be symmetrical to w_w_wo
     }
 
-    #[test]
-    fn add_revision_names_to_settings() {
-        let source = "\
+    mod add_revision_names {
+        use super::*;
+
+        #[test]
+        fn it_works() {
+            let source = "\
 <<<<<<< my_left
 let's go to the left!
 ||||||| my_base
@@ -1276,27 +1279,27 @@ turn right please!
 >>>>>>> my_right
 rest of file
 ";
-        let parsed = parse(source);
+            let parsed = parse(source);
 
-        let initial_settings = DisplaySettings::default();
+            let initial_settings = DisplaySettings::default();
 
-        let mut enriched_settings = initial_settings.clone();
-        enriched_settings.add_revision_names(&parsed);
+            let mut enriched_settings = initial_settings.clone();
+            enriched_settings.add_revision_names(&parsed);
 
-        assert_eq!(
-            enriched_settings,
-            DisplaySettings {
-                left_revision_name: Some(Cow::Borrowed("my_left")),
-                base_revision_name: Some(Cow::Borrowed("my_base")),
-                right_revision_name: Some(Cow::Borrowed("my_right")),
-                ..initial_settings
-            }
-        );
-    }
+            assert_eq!(
+                enriched_settings,
+                DisplaySettings {
+                    left_revision_name: Some(Cow::Borrowed("my_left")),
+                    base_revision_name: Some(Cow::Borrowed("my_base")),
+                    right_revision_name: Some(Cow::Borrowed("my_right")),
+                    ..initial_settings
+                }
+            );
+        }
 
-    #[test]
-    fn add_revision_names_to_settings_no_names() {
-        let source = "\
+        #[test]
+        fn no_names() {
+            let source = "\
 <<<<<<<
 let's go to the left!
 |||||||
@@ -1306,29 +1309,30 @@ turn right please!
 >>>>>>>
 rest of file
 ";
-        let parsed = parse(source);
+            let parsed = parse(source);
 
-        let initial_settings = DisplaySettings::default();
+            let initial_settings = DisplaySettings::default();
 
-        let mut enriched_settings = initial_settings.clone();
-        enriched_settings.add_revision_names(&parsed);
+            let mut enriched_settings = initial_settings.clone();
+            enriched_settings.add_revision_names(&parsed);
 
-        assert_eq!(enriched_settings, initial_settings);
-    }
+            assert_eq!(enriched_settings, initial_settings);
+        }
 
-    #[test]
-    fn add_revision_names_to_settings_no_conflict() {
-        let source = "\
+        #[test]
+        fn no_conflict() {
+            let source = "\
 start of file
 rest of file
 ";
-        let parsed = parse(source);
+            let parsed = parse(source);
 
-        let initial_settings = DisplaySettings::default();
+            let initial_settings = DisplaySettings::default();
 
-        let mut enriched_settings = initial_settings.clone();
-        enriched_settings.add_revision_names(&parsed);
+            let mut enriched_settings = initial_settings.clone();
+            enriched_settings.add_revision_names(&parsed);
 
-        assert_eq!(enriched_settings, initial_settings);
+            assert_eq!(enriched_settings, initial_settings);
+        }
     }
 }
