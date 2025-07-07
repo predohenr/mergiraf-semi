@@ -1045,10 +1045,13 @@ turn right please!
         }
     }
 
-    #[test]
-    fn matching() {
-        let ctx = ctx();
-        let source = "\
+    mod matching {
+        use super::*;
+
+        #[test]
+        fn it_works() {
+            let ctx = ctx();
+            let source = "\
 struct MyType {
     field: bool,
 <<<<<<< LEFT
@@ -1061,32 +1064,36 @@ struct MyType {
 };
 ";
 
-        let parsed = parse(source);
+            let parsed = parse(source);
 
-        let left_rev = parsed.reconstruct_revision(Revision::Left);
-        let right_rev = parsed.reconstruct_revision(Revision::Right);
+            let left_rev = parsed.reconstruct_revision(Revision::Left);
+            let right_rev = parsed.reconstruct_revision(Revision::Right);
 
-        let parsed_left = ctx.parse_rust(&left_rev);
-        let parsed_right = ctx.parse_rust(&right_rev);
+            let parsed_left = ctx.parse_rust(&left_rev);
+            let parsed_right = ctx.parse_rust(&right_rev);
 
-        let matching =
-            parsed.generate_matching(Revision::Left, Revision::Right, parsed_left, parsed_right);
+            let matching = parsed.generate_matching(
+                Revision::Left,
+                Revision::Right,
+                parsed_left,
+                parsed_right,
+            );
 
-        let mytype_left = parsed_left[0][1];
-        let mytype_right = parsed_right[0][1];
-        let closing_bracket_left = parsed_left[0][2][7];
-        let closing_bracket_right = parsed_right[0][2][3];
+            let mytype_left = parsed_left[0][1];
+            let mytype_right = parsed_right[0][1];
+            let closing_bracket_left = parsed_left[0][2][7];
+            let closing_bracket_right = parsed_right[0][2][3];
 
-        assert!(matching.are_matched(mytype_left, mytype_right));
-        assert!(matching.are_matched(closing_bracket_left, closing_bracket_right));
+            assert!(matching.are_matched(mytype_left, mytype_right));
+            assert!(matching.are_matched(closing_bracket_left, closing_bracket_right));
 
-        assert_eq!(matching.len(), 7);
-    }
+            assert_eq!(matching.len(), 7);
+        }
 
-    #[test]
-    fn identical_ranges_but_different_grammar_names() {
-        let ctx = ctx();
-        let source = "\
+        #[test]
+        fn identical_ranges_but_different_grammar_names() {
+            let ctx = ctx();
+            let source = "\
 {
 }:
 
@@ -1101,27 +1108,28 @@ struct MyType {
 }
 ";
 
-        let parsed = parse(source);
+            let parsed = parse(source);
 
-        let base_rev = parsed.reconstruct_revision(Revision::Base);
-        let left_rev = parsed.reconstruct_revision(Revision::Left);
+            let base_rev = parsed.reconstruct_revision(Revision::Base);
+            let left_rev = parsed.reconstruct_revision(Revision::Left);
 
-        let parsed_base = ctx.parse_nix(&base_rev);
-        let parsed_left = ctx.parse_nix(&left_rev);
+            let parsed_base = ctx.parse_nix(&base_rev);
+            let parsed_left = ctx.parse_nix(&left_rev);
 
-        let binding_set_base = parsed_base[0][2][1];
-        assert_eq!(binding_set_base.grammar_name, "binding_set");
-        let binding_left = parsed_left[0][2][1][0];
-        assert_eq!(binding_left.grammar_name, "binding");
-        // two nodes of different types have the same range
-        assert_eq!(binding_set_base.byte_range, binding_left.byte_range);
+            let binding_set_base = parsed_base[0][2][1];
+            assert_eq!(binding_set_base.grammar_name, "binding_set");
+            let binding_left = parsed_left[0][2][1][0];
+            assert_eq!(binding_left.grammar_name, "binding");
+            // two nodes of different types have the same range
+            assert_eq!(binding_set_base.byte_range, binding_left.byte_range);
 
-        let matching =
-            parsed.generate_matching(Revision::Base, Revision::Left, parsed_base, parsed_left);
+            let matching =
+                parsed.generate_matching(Revision::Base, Revision::Left, parsed_base, parsed_left);
 
-        // the two nodes are not matched despite having the same range
-        assert!(matching.get_from_left(binding_set_base).is_none());
-        assert!(matching.get_from_right(binding_left).is_none());
+            // the two nodes are not matched despite having the same range
+            assert!(matching.get_from_left(binding_set_base).is_none());
+            assert!(matching.get_from_right(binding_left).is_none());
+        }
     }
 
     #[test]
