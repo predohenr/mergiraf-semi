@@ -839,10 +839,11 @@ impl<'a> AstNode<'a> {
             String::new()
         };
 
+        let escaped_grammar_name = self.grammar_name.replace('\n', "\\n");
         let grammar_name = if self.source != self.grammar_name {
-            self.grammar_name
+            escaped_grammar_name
         } else {
-            &Color::Red.paint(self.grammar_name).to_string()
+            Color::Red.paint(escaped_grammar_name).to_string()
         };
 
         let source = if num_children == 0 && self.source != self.grammar_name {
