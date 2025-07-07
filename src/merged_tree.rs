@@ -395,7 +395,7 @@ impl<'a> MergedTree<'a> {
                         }
                     })
                     .filter(|child| {
-                        // filter out nodes which wouldn't be present in a parsed tree,
+                        // filter out nodes which wouldn't be present in a parsed tree
                         // so as not to create a mismatch in the number of children
                         match child {
                             MergedChild::Merged(MergedTree::CommutativeChildSeparator {
@@ -403,12 +403,27 @@ impl<'a> MergedTree<'a> {
                             }) => !separator.trim().is_empty(),
                             MergedChild::Merged(MergedTree::MixedTree { children, .. }) => {
                                 !children.is_empty()
+                            },
+                            MergedChild::Original(child) => {
+                                !child.source.is_empty()
+                            },
+                            MergedChild::Merged(MergedTree::ExactTree { node, revisions, .. }) => {
+                                let node = class_mapping.node_at_rev(*node, revisions.any()).expect(
+                                    "inconsistency between revision set of ExactTree and the class mapping",
+                                );
+                                !node.source.is_empty()
                             }
                             _ => true,
                         }
                     });
+                // also filter empty nodes from the newly parsed tree, for consistency with above
+                let filtered_other_children = other_node
+                    .children
+                    .iter()
+                    .filter(|child| !child.source.is_empty());
+
                 children_at_rev
-                    .zip_longest(&other_node.children)
+                    .zip_longest(filtered_other_children)
                     .all(|pair| {
                         if let EitherOrBoth::Both(child, other_child) = pair {
                             match child {
