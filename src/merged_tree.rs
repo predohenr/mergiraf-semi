@@ -409,18 +409,16 @@ impl<'a> MergedTree<'a> {
                     });
                 children_at_rev
                     .zip_longest(&other_node.children)
-                    .all(|pair| {
-                        if let EitherOrBoth::Both(child, other_child) = pair {
-                            match child {
-                                MergedChild::Merged(merged_tree) => merged_tree
-                                    .isomorphic_to_source(other_child, revision, class_mapping),
-                                MergedChild::Original(ast_node) => {
-                                    ast_node.isomorphic_to(other_child)
-                                }
-                            }
-                        } else {
-                            false
-                        }
+                    .all(|pair| match pair {
+                        EitherOrBoth::Both(child, other_child) => match child {
+                            MergedChild::Merged(merged_tree) => merged_tree.isomorphic_to_source(
+                                other_child,
+                                revision,
+                                class_mapping,
+                            ),
+                            MergedChild::Original(ast_node) => ast_node.isomorphic_to(other_child),
+                        },
+                        _ => false,
                     })
             }
             MergedTree::LineBasedMerge { .. } => {
