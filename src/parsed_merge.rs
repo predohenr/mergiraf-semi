@@ -790,7 +790,7 @@ right line
             conflict_with_4,
             &DisplaySettings {
                 conflict_marker_size: Some(4),
-                ..DisplaySettings::default()
+                ..Default::default()
             },
         )
         .expect("could not parse a conflict with `conflict_marker_size=4`");
@@ -810,7 +810,7 @@ right line
             conflict_with_9,
             &DisplaySettings {
                 conflict_marker_size: Some(9),
-                ..DisplaySettings::default()
+                ..Default::default()
             },
         )
         .expect("could not parse a conflict with `conflict_marker_size=9`");
@@ -1140,7 +1140,7 @@ struct MyType {
 
         let rendered_with_4 = merge.render(&DisplaySettings {
             conflict_marker_size: Some(4),
-            ..DisplaySettings::default()
+            ..Default::default()
         });
         let expected_with_4 = "\
 resolved line
@@ -1156,7 +1156,7 @@ right line
 
         let rendered_with_9 = merge.render(&DisplaySettings {
             conflict_marker_size: Some(9),
-            ..DisplaySettings::default()
+            ..Default::default()
         });
         let expected_with_9 = "\
 resolved line
