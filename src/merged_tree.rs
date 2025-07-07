@@ -398,14 +398,14 @@ impl<'a> MergedTree<'a> {
                         // filter out nodes which wouldn't be present in a parsed tree
                         // so as not to create a mismatch in the number of children
                         match child {
+                            MergedChild::Original(child) => {
+                                !child.source.is_empty()
+                            },
                             MergedChild::Merged(MergedTree::CommutativeChildSeparator {
                                 separator,
                             }) => !separator.trim().is_empty(),
                             MergedChild::Merged(MergedTree::MixedTree { children, .. }) => {
                                 !children.is_empty()
-                            },
-                            MergedChild::Original(child) => {
-                                !child.source.is_empty()
                             },
                             MergedChild::Merged(MergedTree::ExactTree { node, revisions, .. }) => {
                                 let node = class_mapping.node_at_rev(*node, revisions.any()).expect(
