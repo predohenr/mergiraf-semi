@@ -1132,28 +1132,30 @@ struct MyType {
         }
     }
 
-    #[test]
-    fn render_non_standard_conflict_marker_size() {
-        let merge = ParsedMerge::new(vec![
-            MergedChunk::Resolved {
-                offset: 0,
-                contents: "resolved line\n",
-            },
-            MergedChunk::Conflict {
-                left_name: None,
-                left: Some("left line\n"),
-                base: Some("base line\n"),
-                right: Some("right line\n"),
-                right_name: None,
-                base_name: None,
-            },
-        ]);
+    mod render {
+        use super::*;
+        #[test]
+        fn non_standard_conflict_marker_size() {
+            let merge = ParsedMerge::new(vec![
+                MergedChunk::Resolved {
+                    offset: 0,
+                    contents: "resolved line\n",
+                },
+                MergedChunk::Conflict {
+                    left_name: None,
+                    left: Some("left line\n"),
+                    base: Some("base line\n"),
+                    right: Some("right line\n"),
+                    right_name: None,
+                    base_name: None,
+                },
+            ]);
 
-        let rendered_with_4 = merge.render(&DisplaySettings {
-            conflict_marker_size: Some(4),
-            ..Default::default()
-        });
-        let expected_with_4 = "\
+            let rendered_with_4 = merge.render(&DisplaySettings {
+                conflict_marker_size: Some(4),
+                ..Default::default()
+            });
+            let expected_with_4 = "\
 resolved line
 <<<< LEFT
 left line
@@ -1163,13 +1165,13 @@ base line
 right line
 >>>> RIGHT
 ";
-        assert_eq!(rendered_with_4, expected_with_4);
+            assert_eq!(rendered_with_4, expected_with_4);
 
-        let rendered_with_9 = merge.render(&DisplaySettings {
-            conflict_marker_size: Some(9),
-            ..Default::default()
-        });
-        let expected_with_9 = "\
+            let rendered_with_9 = merge.render(&DisplaySettings {
+                conflict_marker_size: Some(9),
+                ..Default::default()
+            });
+            let expected_with_9 = "\
 resolved line
 <<<<<<<<< LEFT
 left line
@@ -1179,38 +1181,38 @@ base line
 right line
 >>>>>>>>> RIGHT
 ";
-        assert_eq!(rendered_with_9, expected_with_9);
-    }
-
-    #[test]
-    fn render_no_final_newline() {
-        // meanings of the used shortenings:
-        // - wo              - without final newline
-        // - w               - with final newline
-        // - expected_w_wo_w - expected from base_w, left_wo, right_w
-
-        let base_wo = "base";
-        let base_w = "base\n";
-
-        let left_wo = "left";
-        let left_w = "left\n";
-
-        let right_wo = "right";
-        let right_w = "right\n";
-
-        fn chunk(base: &str, left: &str, right: &str) -> String {
-            ParsedMerge::new(vec![MergedChunk::Conflict {
-                left: Some(left),
-                base: Some(base),
-                right: Some(right),
-                left_name: None,
-                base_name: None,
-                right_name: None,
-            }])
-            .render(&DisplaySettings::default())
+            assert_eq!(rendered_with_9, expected_with_9);
         }
 
-        let expected_wo_wo_wo = "\
+        #[test]
+        fn no_final_newline() {
+            // meanings of the used shortenings:
+            // - wo              - without final newline
+            // - w               - with final newline
+            // - expected_w_wo_w - expected from base_w, left_wo, right_w
+
+            let base_wo = "base";
+            let base_w = "base\n";
+
+            let left_wo = "left";
+            let left_w = "left\n";
+
+            let right_wo = "right";
+            let right_w = "right\n";
+
+            fn chunk(base: &str, left: &str, right: &str) -> String {
+                ParsedMerge::new(vec![MergedChunk::Conflict {
+                    left: Some(left),
+                    base: Some(base),
+                    right: Some(right),
+                    left_name: None,
+                    base_name: None,
+                    right_name: None,
+                }])
+                .render(&DisplaySettings::default())
+            }
+
+            let expected_wo_wo_wo = "\
 <<<<<<< LEFT
 left
 ||||||| BASE
@@ -1218,10 +1220,10 @@ base
 =======
 right
 >>>>>>> RIGHT";
-        let rendered = chunk(base_wo, left_wo, right_wo);
-        assert_eq!(rendered, expected_wo_wo_wo);
+            let rendered = chunk(base_wo, left_wo, right_wo);
+            assert_eq!(rendered, expected_wo_wo_wo);
 
-        let expected_wo_w_wo = "\
+            let expected_wo_w_wo = "\
 <<<<<<< LEFT
 left
 
@@ -1230,12 +1232,12 @@ base
 =======
 right
 >>>>>>> RIGHT";
-        let rendered = chunk(base_wo, left_w, right_wo);
-        assert_eq!(rendered, expected_wo_w_wo);
+            let rendered = chunk(base_wo, left_w, right_wo);
+            assert_eq!(rendered, expected_wo_w_wo);
 
-        // wo_wo_w case should be symmetrical to wo_w_wo
+            // wo_wo_w case should be symmetrical to wo_w_wo
 
-        let expected_wo_w_w = "\
+            let expected_wo_w_w = "\
 <<<<<<< LEFT
 left
 
@@ -1245,10 +1247,10 @@ base
 right
 
 >>>>>>> RIGHT";
-        let rendered = chunk(base_wo, left_w, right_w);
-        assert_eq!(rendered, expected_wo_w_w);
+            let rendered = chunk(base_wo, left_w, right_w);
+            assert_eq!(rendered, expected_wo_w_w);
 
-        let expected_w_wo_wo = "\
+            let expected_w_wo_wo = "\
 <<<<<<< LEFT
 left
 ||||||| BASE
@@ -1257,10 +1259,10 @@ base
 =======
 right
 >>>>>>> RIGHT";
-        let rendered = chunk(base_w, left_wo, right_wo);
-        assert_eq!(rendered, expected_w_wo_wo);
+            let rendered = chunk(base_w, left_wo, right_wo);
+            assert_eq!(rendered, expected_w_wo_wo);
 
-        let expected_w_w_wo = "\
+            let expected_w_w_wo = "\
 <<<<<<< LEFT
 left
 
@@ -1270,10 +1272,11 @@ base
 =======
 right
 >>>>>>> RIGHT";
-        let rendered_w_w_wo = chunk(base_w, left_w, right_wo);
-        assert_eq!(rendered_w_w_wo, expected_w_w_wo);
+            let rendered_w_w_wo = chunk(base_w, left_w, right_wo);
+            assert_eq!(rendered_w_w_wo, expected_w_w_wo);
 
-        // w_wo_w should be symmetrical to w_w_wo
+            // w_wo_w should be symmetrical to w_w_wo
+        }
     }
 
     mod add_revision_names {
