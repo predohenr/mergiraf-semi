@@ -488,8 +488,13 @@ mod tests {
 
     use super::*;
 
+    #[track_caller]
+    fn parse(source: &str) -> ParsedMerge {
+        ParsedMerge::parse(source, &DisplaySettings::default()).expect("unexpected parse error")
+    }
+
     #[test]
-    fn parse() {
+    fn it_works() {
         let source = "
 we reached a junction.
 <<<<<<< left
@@ -501,8 +506,7 @@ turn right please!
 >>>>>>>
 rest of file
 ";
-        let parsed = ParsedMerge::parse(source, &DisplaySettings::default())
-            .expect("unexpected parse error");
+        let parsed = parse(source);
 
         let expected_parse = ParsedMerge::new(vec![
             MergedChunk::Resolved {
@@ -617,8 +621,7 @@ turn right please!
 >>>>>>>
 rest of file
 ";
-        let parsed = ParsedMerge::parse(source, &DisplaySettings::default())
-            .expect("unexpected parse error");
+        let parsed = parse(source);
 
         let expected_parse = ParsedMerge::new(vec![
             MergedChunk::Conflict {
@@ -662,8 +665,7 @@ where should we go?
 turn right please!
 >>>>>>>
 ";
-        let parsed = ParsedMerge::parse(source, &DisplaySettings::default())
-            .expect("unexpected parse error");
+        let parsed = parse(source);
 
         let expected_parse = ParsedMerge::new(vec![
             MergedChunk::Resolved {
@@ -709,8 +711,7 @@ my_struct_t instance = {
 };
 ";
 
-        let parsed =
-            ParsedMerge::parse(source, &DisplaySettings::default()).expect("could not parse!");
+        let parsed = parse(source);
 
         let expected_parse = ParsedMerge::new(vec![
             MergedChunk::Resolved {
@@ -927,8 +928,7 @@ use os;
 >>>>>>> RIGHT
 ";
 
-        let parsed =
-            ParsedMerge::parse(source, &DisplaySettings::default()).expect("could not parse!");
+        let parsed = parse(source);
 
         let unwanted_non_lazy = ParsedMerge::new(vec![MergedChunk::Conflict {
             left_name: Some("LEFT"),
@@ -984,8 +984,8 @@ use io;
 =======
 use os;
 >>>>>>> RIGHT";
-        let parsed =
-            ParsedMerge::parse(source, &DisplaySettings::default()).expect("could not parse!");
+
+        let parsed = parse(source);
 
         let expected = ParsedMerge::new(vec![
             MergedChunk::Conflict {
@@ -1021,8 +1021,7 @@ turn right please!
 >>>>>>>
 ";
 
-        let parsed =
-            ParsedMerge::parse(source, &DisplaySettings::default()).expect("could not parse!");
+        let parsed = parse(source);
 
         let unwanted_wo_final_newline = ParsedMerge::new(vec![
             MergedChunk::Conflict {
@@ -1057,8 +1056,8 @@ struct MyType {
 >>>>>>> RIGHT
 };
 ";
-        let parsed =
-            ParsedMerge::parse(source, &DisplaySettings::default()).expect("could not parse!");
+
+        let parsed = parse(source);
 
         let left_rev = parsed.reconstruct_revision(Revision::Left);
         let right_rev = parsed.reconstruct_revision(Revision::Right);
@@ -1097,8 +1096,8 @@ struct MyType {
 >>>>>>> RIGHT
 }
 ";
-        let parsed =
-            ParsedMerge::parse(source, &DisplaySettings::default()).expect("could not parse!");
+
+        let parsed = parse(source);
 
         let base_rev = parsed.reconstruct_revision(Revision::Base);
         let left_rev = parsed.reconstruct_revision(Revision::Left);
@@ -1277,8 +1276,7 @@ turn right please!
 >>>>>>> my_right
 rest of file
 ";
-        let parsed = ParsedMerge::parse(source, &DisplaySettings::default())
-            .expect("unexpected parse error");
+        let parsed = parse(source);
 
         let initial_settings = DisplaySettings::default();
 
@@ -1308,8 +1306,7 @@ turn right please!
 >>>>>>>
 rest of file
 ";
-        let parsed = ParsedMerge::parse(source, &DisplaySettings::default())
-            .expect("unexpected parse error");
+        let parsed = parse(source);
 
         let initial_settings = DisplaySettings::default();
 
@@ -1325,8 +1322,7 @@ rest of file
 start of file
 rest of file
 ";
-        let parsed = ParsedMerge::parse(source, &DisplaySettings::default())
-            .expect("unexpected parse error");
+        let parsed = parse(source);
 
         let initial_settings = DisplaySettings::default();
 
