@@ -1148,7 +1148,7 @@ right
     }
 
     #[test]
-    fn diffy_imara() {
+    fn parse_then_render_is_identity() {
         let source = "\
 my_struct_t instance = {
 <<<<<<< LEFT
