@@ -132,16 +132,15 @@ pub fn languages(gitattributes: bool) -> String {
             let _ = writeln!(
                 res,
                 "{lang_profile} ({}{}{})",
-                lang_profile
-                    .extensions
+                extensions
                     .iter()
                     .format_with(", ", |ext, f| f(&format_args!("*.{ext}"))),
-                if lang_profile.extensions.is_empty() || lang_profile.file_names.is_empty() {
+                if extensions.is_empty() || file_names.is_empty() {
                     ""
                 } else {
                     ", "
                 },
-                lang_profile.file_names.iter().format(", "),
+                file_names.iter().format(", "),
             );
         }
     }
