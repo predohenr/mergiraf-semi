@@ -73,14 +73,20 @@ impl LangProfile {
             // TODO make something more advanced like in difftastic
             // https://github.com/Wilfred/difftastic/blob/master/src/parse/tree_sitter_parser.rs
             let extension = filename.extension()?;
+            let name = filename.file_name()?;
             SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
-                lang_profile
+                (lang_profile
                     .extensions
                     .iter()
                     .copied()
                     // NOTE: the comparison should be case-insensitive, see
                     // https://rust-lang.github.io/rust-clippy/master/index.html#case_sensitive_file_extension_comparisons
-                    .any(|ext| extension.eq_ignore_ascii_case(OsStr::new(ext)))
+                    .any(|ext| extension.eq_ignore_ascii_case(OsStr::new(ext))))
+                    || (lang_profile
+                        .file_names
+                        .iter()
+                        .copied()
+                        .any(|ref_name| name == ref_name))
             })
         }
         inner(filename.as_ref())
@@ -410,6 +416,24 @@ mod tests {
                 .unwrap()
                 .name,
             "JSON"
+        );
+        assert!(
+            LangProfile::find_by_filename_or_name("java", None).is_err()
+        );
+        assert_eq!(
+            LangProfile::find_by_filename_or_name("go.mod", None)
+                .unwrap()
+                .name,
+            "go.mod"
+        );
+        assert_eq!(
+            LangProfile::find_by_filename_or_name("file", Some("go.mod"))
+                .unwrap()
+                .name,
+            "go.mod"
+        );
+        assert!(
+            LangProfile::find_by_filename_or_name("test.go.mod", None).is_err()
         );
         assert!(
             LangProfile::find_by_filename_or_name("file.json", Some("non-existent language"),)
