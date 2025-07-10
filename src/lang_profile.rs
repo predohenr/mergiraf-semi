@@ -75,18 +75,18 @@ impl LangProfile {
             let extension = filename.extension()?;
             let name = filename.file_name()?;
             SUPPORTED_LANGUAGES.iter().find(|lang_profile| {
-                (lang_profile
+                lang_profile
                     .extensions
                     .iter()
                     .copied()
                     // NOTE: the comparison should be case-insensitive, see
                     // https://rust-lang.github.io/rust-clippy/master/index.html#case_sensitive_file_extension_comparisons
-                    .any(|ext| extension.eq_ignore_ascii_case(OsStr::new(ext))))
-                    || (lang_profile
+                    .any(|ext| extension.eq_ignore_ascii_case(OsStr::new(ext)))
+                    || lang_profile
                         .file_names
                         .iter()
                         .copied()
-                        .any(|ref_name| name == ref_name))
+                        .any(|ref_name| name == ref_name)
             })
         }
         inner(filename.as_ref())
