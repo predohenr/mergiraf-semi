@@ -133,7 +133,9 @@ pub fn languages(gitattributes: bool) -> String {
                 lang_profile
                     .extensions
                     .iter()
-                    .format_with(", ", |ext, f| f(&format_args!("*.{ext}")))
+                    .map(|ext| format!("*.{ext}"))
+                    .chain(lang_profile.file_names.iter().map(ToString::to_string))
+                    .format_with(", ", |ext, f| f(&format_args!("{ext}")))
             );
         }
     }
@@ -169,11 +171,13 @@ mod test {
     fn languages_plain() {
         let plain_text = languages(false);
         assert!(plain_text.contains("Rust (*.rs)"));
+        assert!(plain_text.contains("go.mod (go.mod)"));
     }
 
     #[test]
     fn languages_gitattributes() {
         let gitattributes_config = languages(true);
         assert!(gitattributes_config.contains("*.rs merge=mergiraf"));
+        assert!(gitattributes_config.contains("go.mod merge=mergiraf"));
     }
 }
