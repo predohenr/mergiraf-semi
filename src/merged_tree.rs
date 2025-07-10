@@ -19,6 +19,7 @@ use crate::{
     signature::Signature,
 };
 
+mod postprocess;
 mod print;
 
 /// A merged tree, which can contain a mixture of elements from the original trees,
