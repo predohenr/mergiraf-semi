@@ -119,23 +119,29 @@ fn fxhasher() -> rustc_hash::FxHasher {
 pub fn languages(gitattributes: bool) -> String {
     let mut res = String::new();
     for lang_profile in &*SUPPORTED_LANGUAGES {
+        let extensions = &lang_profile.extensions;
+        let file_names = &lang_profile.file_names;
         if gitattributes {
-            for extension in &lang_profile.extensions {
+            for extension in extensions {
                 let _ = writeln!(res, "*.{extension} merge=mergiraf");
             }
-            for file_name in &lang_profile.file_names {
+            for file_name in file_names {
                 let _ = writeln!(res, "{file_name} merge=mergiraf");
             }
         } else {
             let _ = writeln!(
                 res,
-                "{lang_profile} ({})",
+                "{lang_profile} ({}{}{})",
                 lang_profile
                     .extensions
                     .iter()
-                    .map(|ext| format!("*.{ext}"))
-                    .chain(lang_profile.file_names.iter().map(ToString::to_string))
-                    .format_with(", ", |ext, f| f(&format_args!("{ext}")))
+                    .format_with(", ", |ext, f| f(&format_args!("*.{ext}"))),
+                if lang_profile.extensions.is_empty() || lang_profile.file_names.is_empty() {
+                    ""
+                } else {
+                    ", "
+                },
+                lang_profile.file_names.iter().format(", "),
             );
         }
     }
