@@ -417,9 +417,7 @@ mod tests {
                 .name,
             "JSON"
         );
-        assert!(
-            LangProfile::find_by_filename_or_name("java", None).is_err()
-        );
+        assert!(LangProfile::find_by_filename_or_name("java", None).is_err());
         assert_eq!(
             LangProfile::find_by_filename_or_name("go.mod", None)
                 .unwrap()
@@ -432,9 +430,7 @@ mod tests {
                 .name,
             "go.mod"
         );
-        assert!(
-            LangProfile::find_by_filename_or_name("test.go.mod", None).is_err()
-        );
+        assert!(LangProfile::find_by_filename_or_name("test.go.mod", None).is_err());
         assert!(
             LangProfile::find_by_filename_or_name("file.json", Some("non-existent language"),)
                 .is_err(),
