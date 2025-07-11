@@ -665,16 +665,16 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         // in which case they should be kept
         let mut removed_visiting_state = visiting_state.clone();
         let right_removed_content: Vec<_> = right_removed
-            .iter()
+            .into_iter()
             .map(|revnode| {
                 let subtree = self.build_subtree(
                     PCSNode::Node {
-                        revisions: self.class_mapping.revision_set(**revnode),
-                        node: **revnode,
+                        revisions: self.class_mapping.revision_set(*revnode),
+                        node: *revnode,
                     },
                     &mut removed_visiting_state,
                 )?;
-                Ok((**revnode, subtree))
+                Ok((*revnode, subtree))
             })
             .collect::<Result<_, String>>()?;
         let right_removed_and_not_modified: HashSet<_> = right_removed_content
@@ -706,12 +706,12 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
         // build the result tree for each element of the result
         let merged_content: Vec<MergedTree<'a>> = merged
-            .iter()
+            .into_iter()
             .map(|revnode| {
                 self.build_subtree(
                     PCSNode::Node {
-                        revisions: self.class_mapping.revision_set(**revnode),
-                        node: **revnode,
+                        revisions: self.class_mapping.revision_set(*revnode),
+                        node: *revnode,
                     },
                     visiting_state,
                 )
