@@ -667,8 +667,8 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         debug!("{pad}right_added: {}", right_added.iter().format(", "));
 
         // then, compute the symmetric difference between the base and right lists
-        let right_removed: HashSet<&Leader<'_>> = base_leaders
-            .iter()
+        let right_removed: HashSet<Leader<'_>> = base_leaders
+            .into_iter()
             .filter(|x| !right_leaders.contains(x))
             .collect();
         debug!("{pad}right_removed: {}", right_removed.iter().format(", "));
@@ -680,12 +680,12 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|revnode| {
                 let subtree = self.build_subtree(
                     PCSNode::Node {
-                        revisions: self.class_mapping.revision_set(*revnode),
-                        node: *revnode,
+                        revisions: self.class_mapping.revision_set(revnode),
+                        node: revnode,
                     },
                     &mut removed_visiting_state,
                 )?;
-                Ok((*revnode, subtree))
+                Ok((revnode, subtree))
             })
             .collect::<Result<_, String>>()?;
         let right_removed_and_not_modified: HashSet<_> = right_removed_content
