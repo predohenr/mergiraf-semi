@@ -171,13 +171,13 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             node: leader,
         } = node
         {
-            if revisions.is_full() && self.class_mapping.is_isomorphic_in_all_revisions(leader) {
+            if revisions.is_full() && self.class_mapping.is_isomorphic_in_all_revisions(&leader) {
                 // If one of the sides is doing a reformatting, make sure we pick this side for pretty printing,
                 // so that we preserve the new formatting.
-                let final_revisions = if self.class_mapping.is_reformatting(leader, Revision::Left)
+                let final_revisions = if self.class_mapping.is_reformatting(&leader, Revision::Left)
                 {
                     RevisionNESet::singleton(Revision::Left)
-                } else if self.class_mapping.is_reformatting(leader, Revision::Right) {
+                } else if self.class_mapping.is_reformatting(&leader, Revision::Right) {
                     RevisionNESet::singleton(Revision::Right)
                 } else {
                     revisions
@@ -380,7 +380,9 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 if !common_revisions.is_empty() {
                     let children_revnodes = Some(children_revnodes);
                     for common_rev in common_revisions.iter() {
-                        let at_rev = self.class_mapping.children_at_revision(revnode, common_rev);
+                        let at_rev = self
+                            .class_mapping
+                            .children_at_revision(&revnode, common_rev);
                         // Check if the list of children is the same at that revision
                         if at_rev != children_revnodes {
                             common_revisions.remove(common_rev);
@@ -389,8 +391,8 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 }
                 if let Some(common_revisions) = common_revisions.as_nonempty() &&
                     // if one of the left/right revisions is doing a reformatting, we make sure it's included in the merged result
-                    (!self.class_mapping.is_reformatting(revnode, Revision::Left) || common_revisions.contains(Revision::Left)) &&
-                    (!self.class_mapping.is_reformatting(revnode, Revision::Right) || common_revisions.contains(Revision::Right))
+                    (!self.class_mapping.is_reformatting(&revnode, Revision::Left) || common_revisions.contains(Revision::Left)) &&
+                    (!self.class_mapping.is_reformatting(&revnode, Revision::Right) || common_revisions.contains(Revision::Right))
                 {
                     Ok(MergedTree::new_exact(
                         revnode,
@@ -512,7 +514,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     return Ok((all_successors, result));
                 }
                 PCSNode::Node { node, .. } => {
-                    let representative = self.class_mapping.node_at_rev(node, revision)
+                    let representative = self.class_mapping.node_at_rev(&node, revision)
                         .expect("extract_conflict_side: gathering a class leader which doesn't have a representative in the revision");
                     result.push(representative);
                     if !seen_nodes.insert(candidate) {
@@ -541,7 +543,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         // If the root happens to be commutative, we can merge all children accordingly.
         if let Some(commutative_parent) = node.commutative_parent_definition()
             && let Ok(commutative_merge) =
-                self.commutatively_merge_children(node, commutative_parent, visiting_state)
+                self.commutatively_merge_children(&node, commutative_parent, visiting_state)
         {
             Ok(MergedTree::new_mixed(node, commutative_merge))
         } else {
@@ -680,7 +682,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|revnode| {
                 let subtree = self.build_subtree(
                     PCSNode::Node {
-                        revisions: self.class_mapping.revision_set(revnode),
+                        revisions: self.class_mapping.revision_set(&revnode),
                         node: revnode,
                     },
                     &mut removed_visiting_state,
@@ -710,7 +712,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|revnode| {
                 self.build_subtree(
                     PCSNode::Node {
-                        revisions: self.class_mapping.revision_set(*revnode),
+                        revisions: self.class_mapping.revision_set(revnode),
                         node: *revnode,
                     },
                     visiting_state,
@@ -781,7 +783,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         if let Some(left_delim) = left_delim {
             with_separators.push(MergedTree::new_exact(
                 left_delim,
-                self.class_mapping.revision_set(left_delim),
+                self.class_mapping.revision_set(&left_delim),
                 self.class_mapping,
             ));
         }
@@ -800,7 +802,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         if let Some(right_delim) = right_delim {
             with_separators.push(MergedTree::new_exact(
                 right_delim,
-                self.class_mapping.revision_set(right_delim),
+                self.class_mapping.revision_set(&right_delim),
                 self.class_mapping,
             ));
         }
@@ -812,7 +814,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
     /// This extracts the longest prefix and suffix of both sides to avoid re-ordering begin and end markers.
     fn commutatively_merge_children(
         &self,
-        leader: Leader<'a>,
+        leader: &Leader<'a>,
         commutative_parent: &CommutativeParent,
         visiting_state: &mut VisitingState<'a>,
     ) -> Result<Vec<MergedTree<'a>>, String> {
@@ -856,7 +858,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .iter()
             .map(|rn| {
                 self.class_mapping
-                    .node_at_rev(*rn, Revision::Base)
+                    .node_at_rev(rn, Revision::Base)
                     .expect("inconsistent class mapping for base children of commutative parent")
             })
             .collect_vec();
@@ -864,7 +866,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .iter()
             .map(|rn| {
                 self.class_mapping
-                    .node_at_rev(*rn, Revision::Left)
+                    .node_at_rev(rn, Revision::Left)
                     .expect("inconsistent class mapping for left children of commutative parent")
             })
             .collect_vec();
@@ -872,7 +874,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .iter()
             .map(|rn| {
                 self.class_mapping
-                    .node_at_rev(*rn, Revision::Right)
+                    .node_at_rev(rn, Revision::Right)
                     .expect("inconsistent class mapping for right children of commutative parent")
             })
             .collect_vec();
@@ -889,7 +891,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|revnode| {
                 self.build_subtree(
                     PCSNode::Node {
-                        revisions: self.class_mapping.revision_set(*revnode),
+                        revisions: self.class_mapping.revision_set(revnode),
                         node: *revnode,
                     },
                     visiting_state,
@@ -901,7 +903,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|revnode| {
                 self.build_subtree(
                     PCSNode::Node {
-                        revisions: self.class_mapping.revision_set(*revnode),
+                        revisions: self.class_mapping.revision_set(revnode),
                         node: *revnode,
                     },
                     visiting_state,
@@ -950,7 +952,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             MergedTree::ExactTree { node, .. } => {
                 match self
                     .class_mapping
-                    .children_at_revision(*node, modifying_revision)
+                    .children_at_revision(node, modifying_revision)
                 {
                     Some(children_revnodes) => {
                         let children = children_revnodes
@@ -975,17 +977,17 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 }
             }
             MergedTree::MixedTree { node, children, .. } => {
-                let available_in_revs = self.class_mapping.revision_set(*node);
+                let available_in_revs = self.class_mapping.revision_set(node);
                 // compare the list of children on the base and modified revisions,
                 // to determine if any change happened at this level.
                 // If the children are not available for either revisions (because the node isn't mapped to this revision)
                 // then we give up: we cannot find a covering of the modifications in that case.
                 let children_base = self
                     .class_mapping
-                    .children_at_revision(*node, Revision::Base)?;
+                    .children_at_revision(node, Revision::Base)?;
                 let children_modified = self
                     .class_mapping
-                    .children_at_revision(*node, modifying_revision)?;
+                    .children_at_revision(node, modifying_revision)?;
                 if children_base == children_modified {
                     // the change didn't happen at this level
                     let children_covers: Option<Vec<HashSet<Leader<'a>>>> = children
