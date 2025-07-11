@@ -695,7 +695,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .iter()
             .filter(|x| !base_leaders.contains(x) && !left_added.contains(x))
             .collect();
-        debug!("{pad}right_added: {}", right_removed.iter().format(", "));
+        debug!("{pad}right_added: {}", right_added.iter().format(", "));
 
         // apply this symmetric difference to the left list
         let merged: Vec<_> = left_leaders
