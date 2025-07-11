@@ -655,6 +655,17 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         // NOTE: trimmed_sep is still consistent with raw_separator per the assumption that the two
         // kinds of separators are equal up to leading and trailing whitespace
 
+        let left_added: HashSet<_> = left_leaders
+            .iter()
+            .filter(|x| !base_leaders.contains(x))
+            .collect();
+        debug!("{pad}left_added: {}", left_added.iter().format(", "));
+        let right_added: Vec<_> = right_leaders
+            .iter()
+            .filter(|x| !base_leaders.contains(x) && !left_added.contains(x))
+            .collect();
+        debug!("{pad}right_added: {}", right_added.iter().format(", "));
+
         // then, compute the symmetric difference between the base and right lists
         let right_removed: HashSet<&Leader<'_>> = base_leaders
             .iter()
@@ -685,17 +696,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             })
             .map(|(revnode, _)| revnode)
             .collect();
-
-        let left_added: HashSet<_> = left_leaders
-            .iter()
-            .filter(|x| !base_leaders.contains(x))
-            .collect();
-        debug!("{pad}left_added: {}", left_added.iter().format(", "));
-        let right_added: Vec<_> = right_leaders
-            .iter()
-            .filter(|x| !base_leaders.contains(x) && !left_added.contains(x))
-            .collect();
-        debug!("{pad}right_added: {}", right_added.iter().format(", "));
 
         // apply this symmetric difference to the left list
         let merged: Vec<_> = left_leaders
