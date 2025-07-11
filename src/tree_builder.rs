@@ -689,7 +689,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             })
             .collect::<Result<_, String>>()?;
         let right_removed_and_not_modified: HashSet<_> = right_removed_content
-            .iter()
+            .into_iter()
             .filter(|(_, result_tree)| match result_tree {
                 MergedTree::ExactTree { revisions, .. } => revisions.contains(Revision::Base),
                 _ => false,
