@@ -339,15 +339,7 @@ impl RevisionSet {
     /// Returns any revision contained in the set,
     /// by order of preference Left -> Right -> Base
     pub fn any(self) -> Option<Revision> {
-        if self.left {
-            Some(Revision::Left)
-        } else if self.right {
-            Some(Revision::Right)
-        } else if self.base {
-            Some(Revision::Base)
-        } else {
-            None
-        }
+        self.iter().next()
     }
 
     pub fn is_empty(self) -> bool {
