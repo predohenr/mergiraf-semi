@@ -1,4 +1,4 @@
-use std::{fmt::Display, hash::Hash};
+use std::{fmt::Display, hash::Hash, ops::Deref};
 
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
@@ -407,6 +407,16 @@ impl Display for RevisionSet {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct RevisionNESet(RevisionSet);
 
+// do NOT implement `DerefMut` as well, since that would allow removing revisions, resulting in a
+// possibly-no-longer-non-empty revision set
+impl Deref for RevisionNESet {
+    type Target = RevisionSet;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl RevisionNESet {
     /// Forget non-emptiness
     pub fn set(self) -> RevisionSet {
@@ -430,26 +440,12 @@ impl RevisionNESet {
         Self(self.0.with(revision))
     }
 
-    /// Does this set of revisions contain the given revision?
-    pub fn contains(self, revision: Revision) -> bool {
-        self.0.contains(revision)
-    }
-
-    /// Set intersection
-    pub fn intersection(self, other: RevisionSet) -> RevisionSet {
-        self.0.intersection(other)
-    }
-
     /// Returns any revision contained in the set,
     /// by order of preference Left -> Right -> Base
     pub fn any(self) -> Revision {
         self.0
             .any()
             .expect("RevisionNonEmptySet is actually empty, oops")
-    }
-
-    pub fn is_full(self) -> bool {
-        self.0.is_full()
     }
 }
 
