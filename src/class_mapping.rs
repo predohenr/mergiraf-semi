@@ -432,7 +432,7 @@ impl RevisionNESet {
 
     /// Adds a revision to the set by modifying it
     pub fn add(&mut self, revision: Revision) {
-        self.0.set(revision, true);
+        self.0.add(revision);
     }
 
     /// Adds a revision to the set by taking ownership
