@@ -1,4 +1,4 @@
-use std::{fmt::Display, hash::Hash, ops::Deref};
+use std::{fmt::Display, hash::Hash, iter, ops::Deref};
 
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
@@ -369,17 +369,10 @@ impl RevisionSet {
 
     /// Iterates on the revisions contained in this set (returned in decreasing priority)
     pub fn iter(self) -> impl Iterator<Item = Revision> {
-        let mut vector = Vec::new();
-        if self.left {
-            vector.push(Revision::Left);
-        }
-        if self.right {
-            vector.push(Revision::Right);
-        }
-        if self.base {
-            vector.push(Revision::Base);
-        }
-        vector.into_iter()
+        iter::empty()
+            .chain(self.left.then_some(Revision::Left))
+            .chain(self.right.then_some(Revision::Right))
+            .chain(self.base.then_some(Revision::Base))
     }
 }
 
