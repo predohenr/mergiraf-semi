@@ -296,7 +296,7 @@ impl<'a> MergedTree<'a> {
     }
 
     /// Checks if a particular node is contained in the result tree
-    pub fn contains(&self, leader: Leader<'a>, class_mapping: &ClassMapping<'a>) -> bool {
+    pub fn contains(&self, leader: &Leader<'a>, class_mapping: &ClassMapping<'a>) -> bool {
         match self {
             Self::ExactTree {
                 node, revisions, ..
@@ -306,24 +306,24 @@ impl<'a> MergedTree<'a> {
                     "inconsistency between revision set of ExactTree and the class mapping",
                 );
                 let chosen_revnode = RevNode::new(picked_revision, ast_node);
-                chosen_revnode.contains(&leader, class_mapping)
+                chosen_revnode.contains(leader, class_mapping)
             }
             Self::MixedTree { node, children, .. } => {
-                *node == leader || children.iter().any(|c| c.contains(leader, class_mapping))
+                node == leader || children.iter().any(|c| c.contains(leader, class_mapping))
             }
             // TODO here we could look for all representatives in their corresponding conflict side, that would be more accurate.
             Self::Conflict { base, left, right } => match leader.as_representative().rev {
                 Revision::Base => base
                     .iter()
-                    .any(|n| RevNode::new(Revision::Base, n).contains(&leader, class_mapping)),
+                    .any(|n| RevNode::new(Revision::Base, n).contains(leader, class_mapping)),
                 Revision::Left => left
                     .iter()
-                    .any(|n| RevNode::new(Revision::Left, n).contains(&leader, class_mapping)),
+                    .any(|n| RevNode::new(Revision::Left, n).contains(leader, class_mapping)),
                 Revision::Right => right
                     .iter()
-                    .any(|n| RevNode::new(Revision::Right, n).contains(&leader, class_mapping)),
+                    .any(|n| RevNode::new(Revision::Right, n).contains(leader, class_mapping)),
             },
-            Self::LineBasedMerge { node, .. } => *node == leader,
+            Self::LineBasedMerge { node, .. } => node == leader,
             Self::CommutativeChildSeparator { .. } => false,
         }
     }
