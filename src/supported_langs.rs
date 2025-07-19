@@ -1011,6 +1011,29 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             ],
             injections: None,
         },
+        LangProfile {
+            name: "Starlark",
+            alternate_names: &["bazel", "bzl"],
+            extensions: vec!["bzl", "bazel"],
+            file_names: vec!["BUILD", "WORKSPACE"],
+            language: tree_sitter_starlark::LANGUAGE.into(),
+            atomic_nodes: vec![],
+            commutative_parents: vec![
+                // The order of key-value pairs in a dictionary doesn't matter.
+                CommutativeParent::new("dictionary", "{", ", ", "}"),
+                // The order of keyword arguments in a function call doesn't matter.
+                // We restrict this to only keyword_argument nodes.
+                CommutativeParent::new("argument_list", "(", ", ", ")")
+                    .restricted_to_groups(&[&["keyword_argument"]]),
+            ],
+            signatures: vec![
+                // Dictionary entries are identified by their key.
+                signature("pair", vec![vec![Field("key")]]),
+                // Keyword arguments are identified by their name.
+                signature("keyword_argument", vec![vec![Field("name")]]),
+            ],
+            injections: None,
+        },
     ]
 });
 
