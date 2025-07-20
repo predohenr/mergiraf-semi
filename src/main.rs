@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use clap::{ArgAction, Args, Parser, Subcommand};
+use clap::{ArgAction, Args, CommandFactory, Parser, Subcommand};
 use log::warn;
 use mergiraf::{
     DISABLING_ENV_VAR,
@@ -135,6 +135,12 @@ enum CliCommand {
         /// Print the list in a format suitable for inclusion in gitattributes
         #[arg(long, default_value_t = false)]
         gitattributes: bool,
+    },
+    /// Create shell completions
+    Completions {
+        /// Shell to create completions for
+        #[arg(long)]
+        shell: clap_complete::Shell,
     },
 }
 
@@ -364,6 +370,16 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
         }
         CliCommand::Report { merge_id_or_file } => {
             report_bug(&merge_id_or_file)?;
+            0
+        }
+        CliCommand::Completions { shell } => {
+            clap_complete::generate(
+                shell,
+                &mut CliArgs::command_for_update(),
+                "mergiraf",
+                &mut std::io::stdout(),
+            );
+
             0
         }
     };
