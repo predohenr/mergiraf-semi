@@ -62,13 +62,9 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
     let arena = Arena::new();
     let ref_arena = Arena::new();
 
-    let language_determining_path = match &args.command {
-        Command::Parse { path } => path,
-        Command::Compare { first, .. } => first,
+    let lang_profile = |language_determining_path| {
+        LangProfile::find_by_filename_or_name(language_determining_path, args.language.as_deref())
     };
-
-    let lang_profile =
-        LangProfile::find_by_filename_or_name(language_determining_path, args.language.as_deref())?;
 
     let contents = |path: &Path| -> Result<Cow<str>, String> {
         let original_contents = fs::read_to_string(path)
@@ -80,6 +76,8 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
 
     match &args.command {
         Command::Parse { path } => {
+            let lang_profile = lang_profile(path)?;
+
             let contents = contents(path)?;
 
             let tree = AstNode::parse(&contents, lang_profile, &arena, &ref_arena)
@@ -93,6 +91,8 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
             second,
             commutative,
         } => {
+            let lang_profile = lang_profile(first)?;
+
             let contents_first = contents(first)?;
 
             let tree_first = AstNode::parse(&contents_first, lang_profile, &arena, &ref_arena)
