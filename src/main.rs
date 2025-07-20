@@ -1,6 +1,8 @@
 use std::{
     borrow::Cow,
-    env, fs,
+    env,
+    ffi::OsStr,
+    fs,
     path::{Path, PathBuf},
     process::{Command, exit},
     time::Duration,
@@ -293,14 +295,7 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             keep_backup,
         } => {
             // Check if user is using Jujutsu instead of Git, which can lead to issues.
-            if let Ok(canonical_path) = fname_conflicts.canonicalize()
-                && let Some(conflict_dir) = canonical_path.parent()
-                && Command::new("jj")
-                    .arg("root")
-                    .current_dir(conflict_dir)
-                    .output()
-                    .is_ok_and(|o| o.status.success())
-            {
+            if conflict_location_looks_like_jj_repo(&fname_conflicts) {
                 return Err(
                     "\
                     You seem to be using Jujutsu instead of Git.\n\
@@ -424,6 +419,40 @@ fn fallback_to_git_merge_file(
                 .map(|exit_status| exit_status.code().unwrap_or(0))
         })
         .map_err(|err| err.to_string())
+}
+
+fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
+    let Ok(conflict_path) = fname_conflicts.canonicalize() else {
+        return false;
+    };
+    let Some(conflict_dir) = conflict_path.parent() else {
+        return false;
+    };
+    let Ok(output) = Command::new("jj")
+        .arg("root")
+        .current_dir(conflict_dir)
+        .output()
+    else {
+        return false;
+    };
+    if !output.status.success() {
+        return false;
+    };
+    let trimmed = output.stdout.trim_ascii();
+    if trimmed.is_empty() {
+        return false;
+    }
+
+    // this is exhaustive, because there are no other `target_family`s --
+    // see https://stackoverflow.com/a/41743950
+    #[cfg(target_family = "windows")]
+    let repo_path = std::os::windows::ffi::OsStringExt::from_bytes(trimmed);
+    #[cfg(target_family = "unix")]
+    let repo_path = std::os::unix::ffi::OsStrExt::from_bytes(trimmed);
+
+    let jj_root = Path::new::<OsStr>(repo_path).join(".jj");
+
+    fs::exists(jj_root).is_ok_and(|exists| exists)
 }
 
 #[cfg(test)]
