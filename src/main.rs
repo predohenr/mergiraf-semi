@@ -391,18 +391,17 @@ fn fallback_to_git_merge_file(
     if !git {
         command.arg("-p");
     }
-    if let Some(base_rev_name) = settings.base_revision_name.as_deref()
-        && let Some(left_rev_name) = settings.left_revision_name.as_deref()
-        && let Some(right_rev_name) = settings.right_revision_name.as_deref()
-    {
-        command
-            .arg("-L")
-            .arg(left_rev_name)
-            .arg("-L")
-            .arg(base_rev_name)
-            .arg("-L")
-            .arg(right_rev_name);
-    };
+    if let Some(left_rev_name) = settings.left_revision_name.as_deref() {
+        command.arg("-L").arg(left_rev_name);
+
+        if let Some(base_rev_name) = settings.base_revision_name.as_deref() {
+            command.arg("-L").arg(base_rev_name);
+
+            if let Some(right_rev_name) = settings.right_revision_name.as_deref() {
+                command.arg("-L").arg(right_rev_name);
+            }
+        }
+    }
 
     let exit_code = command
         .arg("--marker-size")
