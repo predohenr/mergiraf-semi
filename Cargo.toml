@@ -4,6 +4,7 @@ members = ["mgf_dev"]
 
 [workspace.dependencies]
 clap = { version = "4.5.40", features = ["derive"] }
+clap_complete = "4.5.55"
 stderrlog = "0.6"
 tempfile = "3"
 typed-arena = "2"
@@ -61,6 +62,7 @@ tree-sitter-nix = "0.0.2"
 typed-arena.workspace = true
 tree-edit-distance = "0.4"
 clap.workspace = true
+clap_complete.workspace = true
 stderrlog.workspace = true
 log = "0.4"
 rand = "0.9.1"
@@ -74,7 +76,6 @@ nu-ansi-term = "0.50.1"
 oneshot = {version = "0.1.11", default-features = false, features = ["std"]}
 tree-sitter-devicetree = "0.14.1"
 tree-sitter-systemverilog = "0.2.0"
-clap_complete = "4.5.55"
 
 # for transitive dependencies that incorrectly specify minimal required versions of their dependencies
 [target."cfg(any())".dependencies]

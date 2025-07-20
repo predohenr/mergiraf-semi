@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 clap.workspace = true
+clap_complete.workspace = true
 mergiraf.path = ".."
 stderrlog.workspace = true
 typed-arena.workspace = true

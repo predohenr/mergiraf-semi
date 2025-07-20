@@ -5,7 +5,7 @@ use std::{
     process::exit,
 };
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use mergiraf::{
     ast::AstNode,
     lang_profile::LangProfile,
@@ -43,6 +43,12 @@ enum Command {
         /// Enable commutative isomorphism checking, disregarding the order of nodes where it's not significant.
         #[arg(short, long)]
         commutative: bool,
+    },
+    /// Create shell completions
+    Completions {
+        /// Shell to create completions for
+        #[arg(long)]
+        shell: clap_complete::Shell,
     },
 }
 
@@ -113,6 +119,16 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
             } else {
                 1
             }
+        }
+        Command::Completions { shell } => {
+            clap_complete::generate(
+                *shell,
+                &mut CliArgs::command_for_update(),
+                "mgf_dev",
+                &mut std::io::stdout(),
+            );
+
+            0
         }
     };
     Ok(exit_code)
