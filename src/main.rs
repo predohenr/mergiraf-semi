@@ -410,11 +410,8 @@ fn fallback_to_git_merge_file(
         .arg(base)
         .arg(right)
         .spawn()
-        .and_then(|mut process| {
-            process
-                .wait()
-                .map(|exit_status| exit_status.code().unwrap_or(0))
-        })
+        .and_then(|mut process| process.wait())
+        .map(|exit_status| exit_status.code().unwrap_or(0))
         .map_err(|err| err.to_string())
 }
 
