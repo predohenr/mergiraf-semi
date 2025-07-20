@@ -392,13 +392,13 @@ fn fallback_to_git_merge_file(
         command.arg("-p");
     }
     if let Some(left_rev_name) = settings.left_revision_name.as_deref() {
-        command.arg("-L").arg(left_rev_name);
+        command.args(["-L", left_rev_name]);
 
         if let Some(base_rev_name) = settings.base_revision_name.as_deref() {
-            command.arg("-L").arg(base_rev_name);
+            command.args(["-L", base_rev_name]);
 
             if let Some(right_rev_name) = settings.right_revision_name.as_deref() {
-                command.arg("-L").arg(right_rev_name);
+                command.args(["-L", right_rev_name]);
             }
         }
     }
@@ -406,9 +406,7 @@ fn fallback_to_git_merge_file(
     let exit_code = command
         .arg("--marker-size")
         .arg(settings.conflict_marker_size_or_default().to_string())
-        .arg(left)
-        .arg(base)
-        .arg(right)
+        .args([left, base, right])
         .spawn()?
         .wait()?
         .code()
