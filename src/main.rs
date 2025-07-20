@@ -1,6 +1,6 @@
 use std::{
     borrow::Cow,
-    env, fs,
+    env, fs, io,
     path::{Path, PathBuf},
     process::{Command, exit},
     time::Duration,
@@ -223,7 +223,8 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 let mergiraf_disabled = env::var(DISABLING_ENV_VAR).as_deref() == Ok("0");
 
                 if mergiraf_disabled {
-                    return fallback_to_git_merge_file(base, left, right, git, &settings);
+                    return fallback_to_git_merge_file(base, left, right, git, &settings)
+                        .map_err(|e| format!("error when calling git-merge-file: {e}"));
                 }
             }
 
@@ -384,7 +385,7 @@ fn fallback_to_git_merge_file(
     right: &Path,
     git: bool,
     settings: &DisplaySettings,
-) -> Result<i32, String> {
+) -> io::Result<i32> {
     let mut command = Command::new("git");
     command.arg("merge-file").arg("--diff-algorithm=histogram");
     if !git {
@@ -403,16 +404,18 @@ fn fallback_to_git_merge_file(
             .arg(right_rev_name);
     };
 
-    command
+    let exit_code = command
         .arg("--marker-size")
         .arg(settings.conflict_marker_size_or_default().to_string())
         .arg(left)
         .arg(base)
         .arg(right)
-        .spawn()
-        .and_then(|mut process| process.wait())
-        .map(|exit_status| exit_status.code().unwrap_or(0))
-        .map_err(|err| err.to_string())
+        .spawn()?
+        .wait()?
+        .code()
+        .unwrap_or(0);
+
+    Ok(exit_code)
 }
 
 /// Check if user is using Jujutsu instead of Git, which can lead to issues when running
