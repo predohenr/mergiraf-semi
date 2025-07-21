@@ -440,7 +440,7 @@ fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
         return false;
     };
     // output of `jj root` contains a trailing newline
-    let repo_path = repo_path.trim_ascii();
+    let repo_path = repo_path.trim_end();
 
     // There's a JSON stream editor also called `jj`, which, when called with `jj root`, actually
     // returns an empty stdout (even though when running interactively, it seems to just hang).
