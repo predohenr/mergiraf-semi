@@ -292,7 +292,6 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             stdout,
             keep_backup,
         } => {
-            // Check if user is using Jujutsu instead of Git, which can lead to issues.
             if conflict_location_looks_like_jj_repo(&fname_conflicts) {
                 return Err(
                     "\
@@ -419,6 +418,8 @@ fn fallback_to_git_merge_file(
         .map_err(|err| err.to_string())
 }
 
+/// Check if user is using Jujutsu instead of Git, which can lead to issues when running
+/// `mergiraf solve`
 fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
     if let Ok(conflict_path) = fname_conflicts.canonicalize()
         && let Some(conflict_dir) = conflict_path.parent()
