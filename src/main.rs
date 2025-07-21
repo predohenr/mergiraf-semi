@@ -1,8 +1,6 @@
 use std::{
     borrow::Cow,
-    env,
-    ffi::OsStr,
-    fs,
+    env, fs,
     path::{Path, PathBuf},
     process::{Command, exit},
     time::Duration,
@@ -438,7 +436,11 @@ fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
     if !output.status.success() {
         return false;
     };
-    let trimmed = output.stdout.trim_ascii();
+    let Ok(repo_path) = String::try_from(output.stdout) else {
+        return false;
+    };
+    // output of `jj root` contains a trailing newline
+    let repo_path = repo_path.trim_ascii();
 
     // There's a JSON stream editor also called `jj`, which, when called with `jj root`, actually
     // returns an empty stdout (even though when running interactively, it seems to just hang).
@@ -449,18 +451,11 @@ fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
     // One could imagine a program that returns _something_ on `jj root`, even an
     // "unknown subcommand: root", but the hope is that the path created by joining "/.jj" onto
     // that will end up being invalid, which `fs::exists` will catch
-    if trimmed.is_empty() {
+    if repo_path.is_empty() {
         return false;
     }
 
-    // this is exhaustive, because there are no other `target_family`s --
-    // see https://stackoverflow.com/a/41743950
-    #[cfg(target_family = "windows")]
-    let repo_path = std::os::windows::ffi::OsStringExt::from_bytes(trimmed);
-    #[cfg(target_family = "unix")]
-    let repo_path = std::os::unix::ffi::OsStrExt::from_bytes(trimmed);
-
-    let jj_root = Path::new::<OsStr>(repo_path).join(".jj");
+    let jj_root = Path::new(repo_path).join(".jj");
 
     matches!(fs::exists(jj_root), Ok(true))
 }
