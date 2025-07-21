@@ -452,7 +452,7 @@ fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
 
     let jj_root = Path::new::<OsStr>(repo_path).join(".jj");
 
-    fs::exists(jj_root).is_ok_and(|exists| exists)
+    matches!(fs::exists(jj_root), Ok(true))
 }
 
 #[cfg(test)]
