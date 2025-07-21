@@ -74,7 +74,7 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
         Ok(contents)
     };
 
-    match &args.command {
+    let exit_code = match &args.command {
         Command::Parse { path } => {
             let lang_profile = lang_profile(path)?;
 
@@ -84,7 +84,7 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
                 .map_err(|err| format!("File has parse errors: {err}"))?;
 
             print!("{}", tree.ascii_tree());
-            Ok(0)
+            0
         }
         Command::Compare {
             first,
@@ -109,12 +109,13 @@ fn real_main(args: &CliArgs) -> Result<i32, String> {
             if first_root.isomorphic_to(second_root)
                 || (*commutative && first_root.commutatively_isomorphic_to(second_root))
             {
-                Ok(0)
+                0
             } else {
-                Ok(1)
+                1
             }
         }
-    }
+    };
+    Ok(exit_code)
 }
 
 #[cfg(test)]
