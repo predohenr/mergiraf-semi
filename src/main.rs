@@ -439,6 +439,16 @@ fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
         return false;
     };
     let trimmed = output.stdout.trim_ascii();
+
+    // There's a JSON stream editor also called `jj`, which, when called with `jj root`, actually
+    // returns an empty stdout (even though when running interactively, it seems to just hang).
+    // And out latter check for `fs::exists` actually doesn't recognize that, because
+    // "empty path" + "/.jj" gives a relative path ".jj", which just happens to be valid (if the
+    // repos are colocated). So we sanity-check that the output is not empty.
+    //
+    // One could imagine a program that returns _something_ on `jj root`, even an
+    // "unknown subcommand: root", but the hope is that the path created by joining "/.jj" onto
+    // that will end up being invalid, which `fs::exists` will catch
     if trimmed.is_empty() {
         return false;
     }
