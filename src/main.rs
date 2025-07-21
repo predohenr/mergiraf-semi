@@ -427,9 +427,9 @@ fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
             .current_dir(conflict_dir)
             .output()
         && output.status.success()
-        && let Ok(repo_path) = String::try_from(output.stdout)
         // output of `jj root` contains a trailing newline
-        && let repo_path = repo_path.trim_end()
+        && let stdout = output.stdout.trim_ascii_end()
+        && let Ok(repo_path) = str::from_utf8(stdout)
         // There's a JSON stream editor also called `jj`, which, when called with `jj root`,
         // actually returns an empty stdout (even though when running interactively, it seems to
         // just hang). And out latter check for `fs::exists` actually doesn't recognize that,
