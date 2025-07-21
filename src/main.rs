@@ -420,44 +420,33 @@ fn fallback_to_git_merge_file(
 }
 
 fn conflict_location_looks_like_jj_repo(fname_conflicts: &Path) -> bool {
-    let Ok(conflict_path) = fname_conflicts.canonicalize() else {
-        return false;
-    };
-    let Some(conflict_dir) = conflict_path.parent() else {
-        return false;
-    };
-    let Ok(output) = Command::new("jj")
-        .arg("root")
-        .current_dir(conflict_dir)
-        .output()
-    else {
-        return false;
-    };
-    if !output.status.success() {
-        return false;
-    };
-    let Ok(repo_path) = String::try_from(output.stdout) else {
-        return false;
-    };
-    // output of `jj root` contains a trailing newline
-    let repo_path = repo_path.trim_end();
-
-    // There's a JSON stream editor also called `jj`, which, when called with `jj root`, actually
-    // returns an empty stdout (even though when running interactively, it seems to just hang).
-    // And out latter check for `fs::exists` actually doesn't recognize that, because
-    // "empty path" + "/.jj" gives a relative path ".jj", which just happens to be valid (if the
-    // repos are colocated). So we sanity-check that the output is not empty.
-    //
-    // One could imagine a program that returns _something_ on `jj root`, even an
-    // "unknown subcommand: root", but the hope is that the path created by joining "/.jj" onto
-    // that will end up being invalid, which `fs::exists` will catch
-    if repo_path.is_empty() {
-        return false;
+    if let Ok(conflict_path) = fname_conflicts.canonicalize()
+        && let Some(conflict_dir) = conflict_path.parent()
+        && let Ok(output) = Command::new("jj")
+            .arg("root")
+            .current_dir(conflict_dir)
+            .output()
+        && output.status.success()
+        && let Ok(repo_path) = String::try_from(output.stdout)
+        // output of `jj root` contains a trailing newline
+        && let repo_path = repo_path.trim_end()
+        // There's a JSON stream editor also called `jj`, which, when called with `jj root`,
+        // actually returns an empty stdout (even though when running interactively, it seems to
+        // just hang). And out latter check for `fs::exists` actually doesn't recognize that,
+        // because "empty path" + "/.jj" gives a relative path ".jj", which just happens to be
+        // valid (if the repos are colocated). So we sanity-check that the output is not empty.
+        //
+        // One could imagine a program that returns _something_ on `jj root`, even an
+        // "unknown subcommand: root", but the hope is that the path created by joining "/.jj" onto
+        // that will end up being invalid, which `fs::exists` will catch
+        && !repo_path.is_empty()
+        && let jj_root = Path::new(repo_path).join(".jj")
+        && let Ok(true) = fs::exists(jj_root)
+    {
+        true
+    } else {
+        false
     }
-
-    let jj_root = Path::new(repo_path).join(".jj");
-
-    matches!(fs::exists(jj_root), Ok(true))
 }
 
 #[cfg(test)]
