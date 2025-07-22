@@ -1355,4 +1355,56 @@ rest of file
             assert_eq!(enriched_settings, initial_settings);
         }
     }
+
+    #[test]
+    fn is_empty() {
+        const fn resolved(contents: &str) -> MergedChunk {
+            MergedChunk::Resolved {
+                contents,
+                offset: 0,
+            }
+        }
+
+        const fn conflict<'a>(
+            base: Option<&'a str>,
+            left: Option<&'a str>,
+            right: Option<&'a str>,
+        ) -> MergedChunk<'a> {
+            MergedChunk::Conflict {
+                left,
+                base,
+                right,
+                left_name: None,
+                base_name: None,
+                right_name: None,
+            }
+        }
+
+        #[track_caller]
+        fn is<const N: usize>(chunks: [MergedChunk<'_>; N]) {
+            assert!(ParsedMerge::new(chunks.into()).is_empty())
+        }
+
+        #[track_caller]
+        fn is_not<const N: usize>(chunks: [MergedChunk<'_>; N]) {
+            assert!(!ParsedMerge::new(chunks.into()).is_empty())
+        }
+
+        is([]);
+        is([resolved("")]);
+        is([resolved(""), resolved("")]);
+        is_not([resolved("hello")]);
+
+        is_not([conflict(None, None, None)]);
+        is_not([conflict(Some(""), None, None)]);
+        is_not([conflict(Some("hello"), None, None)]);
+
+        is_not([conflict(None, None, None)]);
+        is_not([conflict(None, Some(""), None)]);
+        is_not([conflict(None, Some("hello"), None)]);
+
+        is_not([conflict(None, None, None)]);
+        is_not([conflict(None, None, Some(""))]);
+        is_not([conflict(None, None, Some("hello"))]);
+    }
 }
