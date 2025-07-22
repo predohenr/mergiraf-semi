@@ -52,7 +52,8 @@ impl TreeMatcher {
         let start = Instant::now();
 
         // First pass, top down, matching pairs of isomorphic subtrees deeper than a certain depth
-        let (matching, exact_matching) = self.top_down_pass(left, right, initial_matching, initial_exact_matching);
+        let (matching, exact_matching) =
+            self.top_down_pass(left, right, initial_matching, initial_exact_matching);
 
         debug!("top-down phase yielded {} matches", exact_matching.len());
 

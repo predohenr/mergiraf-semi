@@ -129,7 +129,8 @@ fn generate_matchings<'a>(
         &base_left_matching.full,
         &base_right_matching.full,
     );
-    let left_right_matching = auxiliary_matcher.match_trees(left, right, Some(&composed_matching), None);
+    let left_right_matching =
+        auxiliary_matcher.match_trees(left, right, Some(&composed_matching), None);
     debug!("matching all three pairs took {:?}", start.elapsed());
 
     // save the matchings for debugging purposes
