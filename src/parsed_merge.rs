@@ -436,7 +436,12 @@ impl<'a> ParsedMerge<'a> {
 
     /// Whether the merge is empty when rendered
     pub(crate) fn is_empty(&self) -> bool {
-        self.chunks.is_empty() || self.render_conflictless().is_some_and(|s| s.is_empty())
+        // NOTE: `.iter.all()` is trivially true for an empty `self.chunks`
+        self.chunks.iter().all(|c| {
+            // 1. if any chunk is a conflict, we'll need conflict markers => not empty
+            // 2. if any resolved chunk is not empty, its render will be.. not empty as well
+            matches!(c, MergedChunk::Resolved { contents: "", .. })
+        })
     }
 
     /// Render into a merge result with the provided settings
