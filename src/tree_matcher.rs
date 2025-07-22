@@ -51,7 +51,7 @@ impl TreeMatcher {
         let start = Instant::now();
 
         // First pass, top down, matching pairs of isomorphic subtrees deeper than a certain depth
-        let (matching, exact_matching) = self.top_down_pass(left, right, initial_matching);
+        let (matching, exact_matching) = self.top_down_pass(left, right, initial_matching, None);
 
         debug!("top-down phase yielded {} matches", exact_matching.len());
 
@@ -80,26 +80,30 @@ impl TreeMatcher {
         }
     }
 
-    // First pass of the GumTree classic algorithm, top down, creating the exact matchings between isomorphic subtrees
+    /// First pass of the GumTree classic algorithm, top down, creating the exact matchings between isomorphic subtrees.
+    /// It takes two initial matchings:
+    /// - `initial_matching`, which may contain inexact matches, but which the exact matching produced in this method must
+    ///   be compatible with (we cannot generate an exact match of a node with another one that's already matched in the
+    ///   initial_matching)
+    /// - `initial_exact_matching`, which is an initial seed of matches that are known to be isomorphic.
     fn top_down_pass<'a>(
         &self,
         left: &'a AstNode<'a>,
         right: &'a AstNode<'a>,
         initial_matching: Option<&Matching<'a>>,
+        initial_exact_matching: Option<&Matching<'a>>,
     ) -> (Matching<'a>, Matching<'a>) {
         let mut matching = Matching::new();
         let mut exact_matching = Matching::new();
         let mut auxiliary = Matching::new();
 
         if let Some(initial_matching) = initial_matching {
-            /*
-            exact_matching.add_matching(initial_matching);
-            for (right_match, left_match) in initial_matching.iter_right_to_left() {
-                for (left_descendant, right_descendant) in left_match.dfs().zip(right_match.dfs()) {
-                    matching.add(left_descendant, right_descendant);
-                }
-            } */
             matching.add_matching(initial_matching);
+        }
+
+        if let Some(initial_exact_matching) = initial_exact_matching {
+            matching.add_matching(initial_exact_matching);
+            exact_matching.add_matching(initial_exact_matching);
         }
 
         let mut l1 = PriorityList::new();
