@@ -74,6 +74,8 @@ fn integration_failing(#[files("examples/*/failing/*")] test_dir: PathBuf) {
         None,
         Duration::from_millis(0),
         language_override_for_test(&test_dir),
+        false,
+        None,
     );
 
     let actual = &merge_result.contents;
@@ -139,6 +141,8 @@ please examine the new output and update ExpectedCurrently{suffix} if it looks o
         None,
         None,
         Duration::from_millis(0),
+        None,
+        false,
         None,
     );
 

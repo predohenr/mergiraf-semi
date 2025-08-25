@@ -31,6 +31,8 @@ fn not_in_repo() {
         None,
         repo_dir,
         None,
+        false,
+        None,
     );
     assert!(
         result.is_ok(),
@@ -65,6 +67,8 @@ fn not_in_index() {
         DisplaySettings::default(),
         None,
         repo_dir,
+        None,
+        false,
         None,
     );
     assert!(
@@ -114,6 +118,8 @@ fn committed_conflict() {
         DisplaySettings::default(),
         None,
         repo_dir,
+        None,
+        false,
         None,
     );
     assert!(

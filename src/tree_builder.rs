@@ -1266,7 +1266,7 @@ mod tests {
             let class_mapping = &class_mapping;
             // build the necessary context for the tree-gathering algorithm
             let tree_gatherer =
-                TreeBuilder::new(merged_changeset, base_changeset, class_mapping, &settings);
+                TreeBuilder::new(merged_changeset, base_changeset, class_mapping, &settings, false, None);
             tree_gatherer.build_tree()
         };
 
@@ -1298,7 +1298,7 @@ mod tests {
             let class_mapping = &class_mapping;
             // build the necessary context for the tree-gathering algorithm
             let tree_gatherer =
-                TreeBuilder::new(merged_changeset, base_changeset, class_mapping, &settings);
+                TreeBuilder::new(merged_changeset, base_changeset, class_mapping, &settings, false, None);
             tree_gatherer.build_tree()
         }
         .expect("a successful merge was expected");

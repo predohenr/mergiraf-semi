@@ -39,6 +39,8 @@ fn timeout_support() {
         None,
         Duration::from_millis(1), // very small timeout: structured merging should never be that fast
         None,
+        false,
+        None,
     );
 
     let expected = contents_expected.trim();

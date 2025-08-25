@@ -98,6 +98,8 @@ fn solve_command(#[case] conflict_style: &str) {
         None,
         repo_dir,
         language_override_for_test(test_dir),
+        false,
+        None,
     )
     .expect("solving the conflicts returned an error");
 

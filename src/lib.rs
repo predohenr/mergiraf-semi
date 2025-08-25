@@ -173,7 +173,7 @@ mod test {
 ";
         let settings = DisplaySettings::default();
         let parsed = ParsedMerge::parse(contents, &settings).unwrap();
-        let result = resolve_merge(&parsed, &settings, LangProfile::rust(), None, false, TextualMergeStrategy::Structured);
+        let result = resolve_merge(&parsed, &settings, LangProfile::rust(), None, false, None);
         assert_eq!(result, Err(ZDIFF3_DETECTED.to_string()));
     }
 }

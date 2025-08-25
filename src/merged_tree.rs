@@ -567,6 +567,8 @@ mod test {
             &auxiliary_matcher,
             &DisplaySettings::default(),
             None,
+            false,
+            None,
         );
         assert_eq!(
             merged_tree.to_string(),

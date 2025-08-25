@@ -353,6 +353,8 @@ mod tests {
             &auxiliary_matcher,
             &settings,
             None,
+            false,
+            None,
         );
 
         debug!("{merged_tree}");
@@ -380,6 +382,8 @@ mod tests {
             &primary_matcher,
             &auxiliary_matcher,
             &settings,
+            None,
+            false,
             None,
         );
 
@@ -419,6 +423,8 @@ mod tests {
             &auxiliary_matcher,
             &settings,
             None,
+            false,
+            None,
         );
 
         let pretty_printed = result_tree.pretty_print(&class_mapping, &settings);
@@ -456,6 +462,8 @@ mod tests {
             &primary_matcher,
             &auxiliary_matcher,
             &settings,
+            None,
+            false,
             None,
         );
 
@@ -495,6 +503,8 @@ mod tests {
             &auxiliary_matcher,
             &settings,
             None,
+            false,
+            None,
         );
 
         let pretty_printed = merged_tree.pretty_print(&class_mapping, &settings);
@@ -533,6 +543,8 @@ mod tests {
             &auxiliary_matcher,
             &settings,
             None,
+            false,
+            None,
         );
 
         let pretty_printed = merged_tree.pretty_print(&class_mapping, &settings);
@@ -559,6 +571,8 @@ mod tests {
             &primary_matcher,
             &auxiliary_matcher,
             &settings,
+            None,
+            false,
             None,
         );
 
@@ -587,6 +601,8 @@ mod tests {
             &auxiliary_matcher,
             &settings,
             None,
+            false,
+            None,
         );
 
         let pretty_printed = merged_tree.pretty_print(&class_mapping, &settings);
@@ -613,6 +629,8 @@ mod tests {
             &primary_matcher,
             &auxiliary_matcher,
             &settings,
+            None,
+            false,
             None,
         );
 
@@ -659,6 +677,8 @@ mod tests {
             &primary_matcher,
             &auxiliary_matcher,
             &settings,
+            None,
+            false,
             None,
         );
 
@@ -743,6 +763,8 @@ fn baz() {
             &primary_matcher,
             &auxiliary_matcher,
             &settings,
+            None,
+            false,
             None,
         );
 

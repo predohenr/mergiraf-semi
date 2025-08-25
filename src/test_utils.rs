@@ -20,7 +20,7 @@ impl<'a> TestContext<'a> {
     fn parse_internal(&'a self, extension: &str, source: &'a str) -> &'a AstNode<'a> {
         let lang_profile =
             LangProfile::detect_from_filename(extension).expect("could not load language profile");
-        AstNode::parse(source, lang_profile, &self.arena, &self.ref_arena)
+        AstNode::parse(source, lang_profile, &self.arena, &self.ref_arena, false)
             .expect("syntax error in source")
     }
 
