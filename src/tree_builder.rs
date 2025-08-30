@@ -66,7 +66,7 @@ fn format_node_list_detailed(nodes: &Vec<&AstNode>, is_unstable: bool) -> String
         format!("(L{}-L{})", start_line, end_line)
     };
     const MAX_NODES_TO_SHOW: usize = 3;
-    const MAX_CONTENT_LEN: usize = 25;
+    const MAX_CONTENT_LEN: usize = 250;
 
     let descriptions: Vec<String> = nodes.iter().map(|n| {
         if is_unstable || n.is_leaf(){
@@ -256,36 +256,88 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
         if let (Some(textual_merger), PCSNode::Node {node: leader, .. }) = (self.semistructured_strategy, node) {
             if leader.lang_profile().truncation_node_kinds.contains(leader.grammar_name()) {
+                let revisions = self.class_mapping.revision_set(&leader);
+                //node in both left and right
+                if revisions.contains(Revision::Left) && revisions.contains(Revision::Right){
+                    let left_node = self.class_mapping.node_at_rev(&leader, Revision::Left)
+                        .ok_or_else(|| "Truncated note not found on Left revision".to_string())?;
+                    let right_node = self.class_mapping.node_at_rev(&leader, Revision::Right)
+                        .ok_or_else(|| "Truncated note not found on Right revision".to_string())?;
+                    
+                    if let Some(base_node) = self.class_mapping.node_at_rev(&leader, Revision::Base) {
+                        //node in base
+                        let merger: Box<dyn TextualMerger> = match textual_merger {
+                            TextualMergeStrategy::Diff3 => Box::new(DiffyMerger),
+                            //add other diff strategies here
+                        };
+                        let text_result = merger.merge(base_node.source, left_node.source, right_node.source);
+        
+                        let merged_node = match text_result {
+                            TextualMergeResult::Success(content) => MergedTree::TextuallyMerged {
+                                node: leader,
+                                content,
+                                has_conflict: false,
+                            },
+                            TextualMergeResult::Conflict(content) => MergedTree::TextuallyMerged {
+                                node: leader,
+                                content,
+                                has_conflict: true,
+                            },
+                        };
+        
+                        return Ok(merged_node);
+                    } else {
+                        //node not in base
+                        if left_node.source == right_node.source {
+                            return Ok(MergedTree::TextuallyMerged{
+                                node: leader,
+                                content: left_node.source.to_string(),
+                                has_conflict: false,
+                            });
+                        } else {
+                            let marker_size = self.settings.conflict_marker_size_or_default();
+                            let left_marker = "<".repeat(marker_size);
+                            let right_marker = ">".repeat(marker_size);
+                            let base_marker = "|".repeat(marker_size);
+                            let separator_marker = "=".repeat(marker_size);
 
-                let left_node = self.class_mapping.node_at_rev(&leader, Revision::Left)
-                    .ok_or_else(|| "Truncated note not found on Left revision".to_string())?;
-                let right_node = self.class_mapping.node_at_rev(&leader, Revision::Right)
-                    .ok_or_else(|| "Truncated note not found on Right revision".to_string())?;
-                let base_node_opt = self.class_mapping.node_at_rev(&leader, Revision::Base);
+                            let left_name = self.settings.left_revision_name.as_deref().unwrap_or("left");
+                            let base_name = self.settings.base_revision_name.as_deref().unwrap_or("base");
+                            let right_name = self.settings.right_revision_name.as_deref().unwrap_or("right");
 
-                let base_source = base_node_opt.map_or(left_node.source, |n| n.source);
+                            let conflict_content = format!(
+                                "{left_marker} {left_name}\n{left_content}\n{base_marker} {base_name}\n{separator_marker}\n{right_content}\n{right_marker} {right_name}",
+                                left_marker = left_marker,
+                                left_name = left_name,
+                                left_content = left_node.source,
+                                base_marker = base_marker,
+                                base_name = base_name,
+                                separator_marker = separator_marker,
+                                right_content = right_node.source,
+                                right_marker = right_marker,
+                                right_name = right_name,
+                            );
 
-                let merger: Box<dyn TextualMerger> = match textual_merger {
-                    TextualMergeStrategy::Diff3 => Box::new(DiffyMerger),
-                    //add other diff strategies here
-                };
-
-                let text_result = merger.merge(base_source, left_node.source, right_node.source);
-
-                let merged_node = match text_result {
-                    TextualMergeResult::Success(content) => MergedTree::TextuallyMerged {
+                            return Ok(MergedTree::TextuallyMerged{
+                                node: leader,
+                                content: conflict_content,
+                                has_conflict: true,
+                            });
+                        }
+                    }
+                } else {
+                    //node only in left or right
+                    let rev = if revisions.contains(Revision::Left) { Revision::Left } else { Revision::Right };
+                    let node_to_add = self.class_mapping.node_at_rev(&leader, rev).unwrap();
+                    return Ok(MergedTree::TextuallyMerged{
                         node: leader,
-                        content,
+                        content: node_to_add.source.to_string(),
                         has_conflict: false,
-                    },
-                    TextualMergeResult::Conflict(content) => MergedTree::TextuallyMerged {
-                        node: leader,
-                        content,
-                        has_conflict: true,
-                    },
-                };
+                    });
+                }
 
-                return Ok(merged_node);
+
+
             }
         }
 
@@ -834,7 +886,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 trimmed_right_delim,
             )
             .collect();
-        let left_leaders: Vec<_> = self
+        let left_leaders: HashSet<_> = self
             .keep_content_only(
                 left,
                 Revision::Left,
@@ -843,7 +895,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 trimmed_right_delim,
             )
             .collect();
-        let right_leaders: Vec<_> = self
+        let right_leaders: HashSet<_> = self
             .keep_content_only(
                 right,
                 Revision::Right,
@@ -865,21 +917,11 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         // NOTE: trimmed_sep is still consistent with raw_separator per the assumption that the two
         // kinds of separators are equal up to leading and trailing whitespace
 
-        let left_added: HashSet<_> = left_leaders
-            .iter()
-            .filter(|x| !base_leaders.contains(x))
-            .collect();
-        debug!("{pad}left_added: {}", left_added.iter().format(", "));
-        let right_added: Vec<_> = right_leaders
-            .iter()
-            .filter(|x| !base_leaders.contains(x) && !left_added.contains(x))
-            .collect();
-        debug!("{pad}right_added: {}", right_added.iter().format(", "));
-
         // then, compute the symmetric difference between the base and right lists
         let right_removed: HashSet<Leader<'_>> = base_leaders
-            .into_iter()
+            .iter()
             .filter(|x| !right_leaders.contains(x))
+            .copied()
             .collect();
         debug!("{pad}right_removed: {}", right_removed.iter().format(", "));
         // check which right removed elements have been modified on the left-hand side,
@@ -908,12 +950,20 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|(revnode, _)| revnode)
             .collect();
 
-        // apply this symmetric difference to the left list
-        let merged: Vec<_> = left_leaders
-            .iter()
-            .filter(|n| !right_removed_and_not_modified.contains(n))
-            .chain(right_added)
+
+        let right_added: HashSet<Leader<'_>> = right_leaders
+            .difference(&base_leaders)
+            .copied()
             .collect();
+
+        let merged: Vec<_> = left_leaders
+        .iter()
+        .filter(|n| !right_removed_and_not_modified.contains(n))
+        .copied()
+        .chain(right_added)
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
 
         // build the result tree for each element of the result
         let merged_content: Vec<MergedTree<'a>> = merged
@@ -921,8 +971,8 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|revnode| {
                 self.build_subtree(
                     PCSNode::Node {
-                        revisions: self.class_mapping.revision_set(revnode),
-                        node: *revnode,
+                        revisions: self.class_mapping.revision_set(&revnode),
+                        node: revnode,
                     },
                     visiting_state,
                     log_state,

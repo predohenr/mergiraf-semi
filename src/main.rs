@@ -153,7 +153,6 @@ fn main() {
     let args = CliArgs::parse();
 
     stderrlog::new()
-        .module(module_path!())
         .verbosity(if args.verbose { 3 } else { 2 })
         .init()
         .unwrap();

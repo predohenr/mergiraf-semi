@@ -180,7 +180,6 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
             injections: None,
             truncation_node_kinds: [
                 "method_declaration",
-                "field_declaration",
                 "constructor_declaration",
                 "import_declaration",
             ].into_iter().collect(),

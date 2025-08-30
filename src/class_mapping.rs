@@ -4,11 +4,12 @@ use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
 use crate::{
+    debug,
     ast::AstNode,
     lang_profile::{CommutativeParent, LangProfile},
     matching::Matching,
     pcs::Revision,
-    signature::SignatureDefinition,
+    signature::{SignatureDefinition, Signature},
 };
 
 /// A node together with a marker of which revision it came from.
@@ -146,29 +147,38 @@ impl<'a> ClassMapping<'a> {
                 // and that the parents of both nodes need to be matched together.
                 continue;
             }
-            let leader_left = self
-                .map
-                .get(&right_rev_node)
-                .map_or(&right_rev_node, |leader| &leader.0);
-            let leader_right = self
-                .map
-                .get(&left_rev_node)
-                .map_or(&left_rev_node, |leader| &leader.0);
-            let leader = Leader(if leader_left.rev < leader_right.rev {
-                *leader_left
-            } else {
-                *leader_right
-            });
-            self.map.insert(left_rev_node, leader);
-            self.map.insert(right_rev_node, leader);
-            let repr = self.representatives.entry(leader).or_default();
-            // keep track of exact matchings
-            if is_exact && !repr.contains_key(&to_rev) {
-                let exacts = self.exact_matchings.entry(leader).or_default();
-                *exacts += 1;
+            self.unify_nodes(left_rev_node, right_rev_node);
+            if is_exact {
+                let leader = self.map_to_leader(left_rev_node);
+                if !self.representatives.get(&leader).unwrap().contains_key(&to_rev) {
+                    let exacts = self.exact_matchings.entry(leader).or_default();
+                    *exacts += 1;
+                }
             }
-            repr.insert(to_rev, right_rev_node);
-            repr.insert(from_rev, left_rev_node);
+        }
+    }
+
+    fn unify_nodes(&mut self, node_a: RevNode<'a>, node_b: RevNode<'a>) {
+        let leader_a = self.map.get(&node_a).map_or(node_a, |l| l.0);
+        let leader_b = self.map.get(&node_b).map_or(node_b, |l| l.0);
+    
+        let (new_leader, other_leader) = if leader_a.rev < leader_b.rev {
+            (leader_a, leader_b)
+        } else {
+            (leader_b, leader_a)
+        };
+    
+        if new_leader == other_leader {
+            return;
+        }
+    
+        let mut other_reprs = self.representatives.remove(&Leader(other_leader)).unwrap_or_default();
+        other_reprs.insert(other_leader.rev, other_leader);
+    
+        let new_leader_entry = self.representatives.entry(Leader(new_leader)).or_default();
+        for (rev, node) in other_reprs {
+            self.map.insert(node, Leader(new_leader));
+            new_leader_entry.insert(rev, node);
         }
     }
 
@@ -272,6 +282,64 @@ impl<'a> ClassMapping<'a> {
                 .iter()
                 .find_map(|(_, node)| node.node.field_name)
         })
+    }
+
+    pub fn unify_concurrent_additions(&mut self) {
+        debug!("[CM DEBUG] Start Concurrent Additions Unification");
+        // Encontra todos os nós em left e right que não têm correspondência em base.
+        let unmatched_left: Vec<_> = self.get_unmatched_nodes(Revision::Left, Revision::Base).collect();
+        let unmatched_right: Vec<_> = self.get_unmatched_nodes(Revision::Right, Revision::Base).collect();
+
+        debug!("[CM DEBUG] Unmatched nodes in Left: {}", unmatched_left.iter().format(", "));
+        debug!("[CM DEBUG] Unmatched nodes in Right: {}", unmatched_right.iter().format(", "));
+
+        // Cria um mapa de assinatura para nós para uma busca eficiente.
+        let mut right_sig_map: FxHashMap<Signature, Vec<RevNode>> = FxHashMap::default();
+        for rev_node in unmatched_right {
+            if let Some(signature) = rev_node.node.signature() {
+                right_sig_map.entry(signature).or_default().push(rev_node);
+            }
+        }
+
+        debug!("[CM DEBUG] Right Signature Map: {:?}", right_sig_map.keys());
+
+        for left_node in unmatched_left {
+            if let Some(signature) = left_node.node.signature() {
+
+                debug!("[CM DEBUG] Processing Left Node with Signature: {}", signature);
+
+                if let Some(right_nodes) = right_sig_map.get_mut(&signature) {
+
+                    debug!("[CM DEBUG] Match Found in Right!.");
+
+                    if let Some(right_node) = right_nodes.pop() {
+
+                        debug!("[CM DEBUG] Unifying {} and {}", left_node, right_node);
+
+                        self.unify_nodes(left_node, right_node);
+                    }
+                }
+            }
+        }
+        debug!("[CM DEBUG] End Concurrent Additions Unification");
+    }
+
+    fn get_unmatched_nodes(&self, rev: Revision, other_rev: Revision) -> impl Iterator<Item = RevNode<'a>> + '_ {
+        self.iter_rev(rev).filter(move |&rev_node| {
+            self.get_equivalent_node(rev_node, other_rev).is_none()
+        })
+    }
+
+    fn iter_rev(&self, rev: Revision) -> impl Iterator<Item = RevNode<'a>> + '_ {
+        self.map.keys().filter(move |k| k.rev == rev).copied()
+    }
+
+    fn get_equivalent_node(&self, rev_node: RevNode<'a>, other_rev: Revision) -> Option<RevNode<'a>> {
+        let leader = self.map_to_leader(rev_node);
+        if leader.as_representative().rev == other_rev {
+            return Some(leader.as_representative());
+        }
+        self.representatives.get(&leader)?.get(&other_rev).copied()
     }
 }
 

@@ -20,6 +20,7 @@ use tree_sitter::{
 use typed_arena::Arena;
 
 use crate::{
+    debug,
     lang_profile::{CommutativeParent, LangProfile, ParentType},
     signature::{Signature, SignatureDefinition},
 };
@@ -949,6 +950,23 @@ impl<'a> AstNode<'a> {
     /// for this type of nodes in the language profile.
     pub(crate) fn signature(&'a self) -> Option<Signature<'a, 'a>> {
         let definition = self.signature_definition()?;
+
+        if self.children.is_empty() && self.lang_profile.truncation_node_kinds.contains(self.grammar_name) {
+            let mut parser = Parser::new();
+            if parser.set_language(&self.lang_profile.language).is_err() {
+                return None;
+            }
+            if let Some(tree) = parser.parse(self.source, None) {
+                let temp_sig = definition.extract_signature_from_ts_node(&tree.root_node(), self.source);
+                
+                debug!("[AST DEBUG] Extracted Signature: {}", temp_sig);
+
+                let static_sig = temp_sig.to_static();
+                return Some(unsafe { std::mem::transmute(static_sig) });
+            }
+            return None;
+        }
+
         Some(definition.extract_signature_from_original_node(self))
     }
 }

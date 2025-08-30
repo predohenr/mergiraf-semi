@@ -3,6 +3,7 @@ use std::hash::{Hash, Hasher};
 use std::iter::zip;
 
 use itertools::Itertools;
+use tree_sitter::Node;
 
 use crate::ast::AstNode;
 use crate::class_mapping::ClassMapping;
@@ -23,6 +24,7 @@ impl Display for Signature<'_, '_> {
                 x.iter().format_with(", ", |element, f| match element {
                     AstNodeEquiv::Original(ast_node) => f(&ast_node.source),
                     AstNodeEquiv::Merged(tree) => f(tree),
+                    AstNodeEquiv::Tmp(s) => f(&s),
                 })
             )))
         )
@@ -37,10 +39,23 @@ impl Display for Signature<'_, '_> {
 enum AstNodeEquiv<'a, 'b> {
     Original(&'b AstNode<'b>),
     Merged(&'a MergedTree<'b>),
+    Tmp(&'b str),
 }
 
 impl<'b> AstNodeEquiv<'_, 'b> {
     /// Unified interface to fetch children by field name on either an original tree or a merged one
+    pub(crate) fn to_static(self) -> AstNodeEquiv<'static, 'static> {
+        match self {
+            AstNodeEquiv::Original(node) => AstNodeEquiv::Tmp(Box::leak(
+                node.unindented_source().to_string().into_boxed_str(),
+            )),
+            AstNodeEquiv::Merged(tree) => AstNodeEquiv::Tmp(Box::leak(
+                tree.to_string().into_boxed_str(),
+            )),
+            AstNodeEquiv::Tmp(s) => AstNodeEquiv::Tmp(Box::leak(s.to_string().into_boxed_str())),
+        }
+    }
+    
     fn children_by_field_name(
         &self,
         field_name: &str,
@@ -70,6 +85,8 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                 | MergedTree::TextuallyMerged { .. }
                 | MergedTree::CommutativeChildSeparator { .. } => Vec::new(),
             },
+
+            Self::Tmp(_) => vec![],
         }
     }
 
@@ -108,6 +125,8 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                 | MergedTree::TextuallyMerged { .. }
                 | MergedTree::CommutativeChildSeparator { .. } => Vec::new(),
             },
+
+            Self::Tmp(_) => vec![],
         }
     }
 
@@ -210,6 +229,9 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                 (MergedTree::TextuallyMerged { .. }, _) | (_, MergedTree::TextuallyMerged { .. }) => a == b,
                 (_, _) => a == b,
             },
+
+            (Self::Tmp(a), Self::Tmp(b)) => a == b,
+            _ => false,
         }
     }
 }
@@ -245,6 +267,8 @@ impl Hash for AstNodeEquiv<'_, '_> {
                     has_conflict.hash(state);
                 }
             },
+
+            Self::Tmp(s) => s.hash(state),
         }
     }
 }
@@ -254,6 +278,7 @@ impl Display for AstNodeEquiv<'_, '_> {
         match self {
             Self::Original(ast_node) => write!(f, "Original({ast_node})"),
             Self::Merged(merged) => write!(f, "Merged({merged})"),
+            Self::Tmp(s) => write!(f, "Tmp({s})"),
         }
     }
 }
@@ -284,6 +309,17 @@ pub fn signature(node_type: &'static str, paths: Vec<Vec<PathStep>>) -> Signatur
     }
 }
 
+impl Signature<'_, '_> {
+    pub(crate) fn to_static(&self) -> Signature<'static, 'static> {
+        Signature(
+            self.0
+                .iter()
+                .map(|v| v.iter().map(|x| x.to_static()).collect())
+                .collect(),
+        )
+    }
+}
+
 impl SignatureDefinition {
     pub fn new(node_type: &'static str, paths: Vec<Vec<PathStep>>) -> Self {
         signature(node_type, paths)
@@ -304,6 +340,50 @@ impl SignatureDefinition {
         class_mapping: &ClassMapping<'b>,
     ) -> Signature<'a, 'b> {
         self.extract_internal(AstNodeEquiv::Merged(node), class_mapping)
+    }
+
+    /// Extracts a signature from a brute tree-sitter node and its corresponding text.
+    pub(crate) fn extract_signature_from_ts_node<'b>(
+        &self,
+        node: &Node<'b>,
+        source: &'b str,
+    ) -> Signature<'b, 'b> {
+        let mut signature_parts = Vec::new();
+
+        for path_part in &self.paths {
+            let mut current_nodes = vec![*node];
+
+            for step in &path_part.steps {
+                let mut next_nodes = Vec::new();
+                for current_node in current_nodes {
+                    match step {
+                        PathStep::Field(field_name) => {
+                            let mut cursor = current_node.walk();
+                            for child in current_node.children_by_field_name(field_name, &mut cursor) {
+                                next_nodes.push(child);
+                            }
+                        }
+                        PathStep::ChildType(grammar_name) => {
+                            let mut cursor = current_node.walk();
+                            for child in current_node.children(&mut cursor) {
+                                if child.grammar_name() == *grammar_name {
+                                    next_nodes.push(child);
+                                }
+                            }
+                        }
+                    }
+                }
+                current_nodes = next_nodes;
+            }
+
+            let mut part = Vec::new();
+            for final_node in current_nodes {
+                let range = final_node.byte_range();
+                part.push(AstNodeEquiv::Tmp(&source[range]));
+            }
+            signature_parts.push(part);
+        }
+        Signature(signature_parts)
     }
 
     /// Extracts a signature for the supplied node
