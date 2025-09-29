@@ -180,24 +180,6 @@ impl<'a> ChangeSet<'a> {
             set.iter().map(move |pcs| (node, pcs))
         })
     }
-
-    pub fn iter_predecessors(&self) -> impl Iterator<Item = (&PCSNode<'a>, &PCS<'a>)> {
-        self.predecessors.iter().flat_map(|(node, set)| {
-            set.iter().map(move |pcs| (node, pcs))
-        })
-    }
-
-    pub fn iter_parents(&self) -> impl Iterator<Item = (&PCSNode<'a>, &PCS<'a>)> {
-        self.parents.iter().flat_map(|(node, set)| {
-            set.iter().map(move |pcs| (node, pcs))
-        })
-    }
-
-    pub fn iter_all(&self) -> impl Iterator<Item = (&PCSNode<'a>, &PCS<'a>)> {
-        self.iter_successors()
-            .chain(self.iter_predecessors())
-            .chain(self.iter_parents())
-    }
 }
 
 #[cfg(test)]

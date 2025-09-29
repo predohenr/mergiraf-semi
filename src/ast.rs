@@ -15,7 +15,7 @@ use itertools::Itertools;
 use nu_ansi_term::Color;
 use rustc_hash::FxHashMap;
 use tree_sitter::{
-    Node, Parser, Point, Query, QueryCursor, Range as TSRange, StreamingIterator, Tree, TreeCursor,
+    Parser, Point, Query, QueryCursor, Range as TSRange, StreamingIterator, Tree, TreeCursor,
 };
 use typed_arena::Arena;
 
@@ -944,20 +944,6 @@ impl<'a> AstNode<'a> {
         };
 
         conflict_in_self() || conflict_in_children()
-    }
-
-    fn find_first_descendant_with_kind<'b>(root: Node<'b>, kind: &'static str) -> Option<Node<'b>> {
-        let mut stack = vec![root];
-        while let Some(n) = stack.pop(){
-            if n.grammar_name() == kind {
-                return Some(n);
-            }
-            let mut c = n.walk();
-            for child in n.children(&mut c) {
-                stack.push(child);
-            }
-        }
-        None
     }
 
     /// Extracts a signature for this node if we have a signature definition

@@ -550,7 +550,7 @@ impl<'a> MergedTree<'a> {
                     right.len()
                 )
             }
-            MergedTree::LineBasedMerge { node, parsed } => {
+            MergedTree::LineBasedMerge { node, .. } => {
                 format!(
                     "LineBasedMerge(kind={})",
                     node.grammar_name(),

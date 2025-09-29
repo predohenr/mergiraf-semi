@@ -39,12 +39,6 @@ impl<'a> ChunkData<'a> {
     pub fn is_empty(&self) -> bool {
         self.left_nodes.is_empty() && self.base_nodes.is_empty() && self.right_nodes.is_empty()
     }
-
-    pub fn clear(&mut self) {
-        self.base_nodes.clear();
-        self.left_nodes.clear();
-        self.right_nodes.clear();
-    }
 }
 
 // Estado para manter o log durante a recursão
@@ -967,12 +961,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             .map(|(revnode, _)| revnode)
             .collect();
 
-
-        let right_added: HashSet<Leader<'_>> = right_leaders
-            .difference(&base_leaders)
-            .copied()
-            .collect();
-
         let merged_set: HashSet<_> = left_leaders
             .iter()
             .filter(|n| !right_removed_and_not_modified.contains(n))
@@ -1115,7 +1103,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
 
         let mut first = !starts_with_separator;
 
-        for (revnode, merged_tree) in merged_pairs {
+        for (_revnode, merged_tree) in merged_pairs {
             if first {
                 first = false;
             } else {
