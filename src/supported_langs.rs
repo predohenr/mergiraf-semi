@@ -150,6 +150,22 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
                     vec![vec![Field("declarator"), Field("name")]],
                 ),
                 signature(
+                    "constructor_declaration",
+                    vec![
+                        vec![Field("name")],
+                        vec![
+                            Field("parameters"),
+                            ChildType("formal_parameter"),
+                            Field("type"),
+                        ],
+                        vec![
+                            Field("parameters"),
+                            ChildType("spread_parameter"),
+                            ChildType("identifier"),
+                        ],
+                    ],
+                ),
+                signature(
                     "method_declaration",
                     vec![
                         vec![Field("name")],
