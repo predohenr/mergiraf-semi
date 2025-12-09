@@ -327,17 +327,24 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                     }
                 } else {
                     //node only in left or right
-                    let rev = if revisions.contains(Revision::Left) { Revision::Left } else { Revision::Right };
+                    let rev = if let Some(_) = self.class_mapping.node_at_rev(&leader, Revision::Left) {
+                        Revision::Left
+                    } else if let Some(_) = self.class_mapping.node_at_rev(&leader, Revision::Right) {
+                        Revision::Right
+                    } else {
+                        debug!(
+                            "[WARN] Truncated node {:?} has revision set {:?} but no mapped nodes.",
+                            leader.grammar_name(),
+                            revisions
+                        );
+                        return Ok(MergedTree::TextuallyMerged {
+                            node: leader,
+                            content: String::new(),
+                            has_conflict: false,
+                        });
+                    };
                     let node_to_add = self.class_mapping.node_at_rev(&leader, rev).unwrap();
-                    return Ok(MergedTree::TextuallyMerged{
-                        node: leader,
-                        content: node_to_add.source.to_string(),
-                        has_conflict: false,
-                    });
                 }
-
-
-
             }
         }
 

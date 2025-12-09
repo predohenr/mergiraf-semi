@@ -253,15 +253,6 @@ fn generate_pcs_triples<'a>(
     }
     debug!("generating PCS triples took {:?}", start.elapsed());
 
-    {
-        debug!("[PCS] Triples before cleanup:");
-        let successors: Vec<_> = changeset.iter_successors().collect();
-        for (node, pcs) in successors {
-            debug!("Successor {} -> {}", node.short_debug(), pcs.short_debug());
-        }        
-    }
-
-
     (changeset, base_changeset)
 }
 
