@@ -131,6 +131,8 @@ pub struct TreeBuilder<'a, 'b> {
 struct VisitingState<'a> {
     deleted_and_modified: HashSet<Leader<'a>>,
     visited_nodes: HashSet<Leader<'a>>,
+    pub textual_merge_time: std::time::Duration,
+    pub diffy_calls: usize,
 }
 
 impl VisitingState<'_> {
@@ -168,12 +170,33 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
             deleted_and_modified: HashSet::new(),
             // keep track of visited nodes in the recursive algorithm to avoid looping
             visited_nodes: HashSet::new(),
+            textual_merge_time: std::time::Duration::ZERO,
+            diffy_calls: 0,
         };
 
         let mut log_state = if self.print_chunks { Some(LogState::default()) } else { None };
 
+        let phase_start_time = std::time::Instant::now();
+
         // recursively build the tree by starting from the virtual root
         let merged_tree = self.build_subtree(PCSNode::VirtualRoot, &mut visiting_state, &mut log_state)?;
+        
+        //measure time
+        let phase_total_time = phase_start_time.elapsed();
+        let diffy_time = visiting_state.textual_merge_time;
+        let percentual = if phase_total_time.as_secs_f64() > 0.0 {
+            (diffy_time.as_secs_f64() / phase_total_time.as_secs_f64()) * 100.0
+        } else {
+            0.0
+        };
+
+        log::info!("===========================================================");
+        log::info!("[PROFILING SEMISTRUCTURED]");
+        log::info!("DIFFY CALLS: {}", visiting_state.diffy_calls);
+        log::info!("TOTAL TIME BUILDING MERGED TREE: {:?}", phase_total_time);
+        log::info!("TIME SPENT ON DIFFY: {:?}", diffy_time);
+        log::info!("DIFFY CALLS ARE {:.2}% OF TOTAL TIME", percentual);
+        log::info!("===========================================================");
 
         debug!("{merged_tree}");
 
@@ -257,6 +280,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         if let (Some(textual_merger), PCSNode::Node {node: leader, .. }) = (self.semistructured_strategy, node) {
             if leader.lang_profile().truncation_node_kinds.contains(leader.grammar_name()) {
                 let revisions = self.class_mapping.revision_set(&leader);
+
                 //node in both left and right
                 if revisions.contains(Revision::Left) && revisions.contains(Revision::Right){
                     let left_node = self.class_mapping.node_at_rev(&leader, Revision::Left)
@@ -265,65 +289,84 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         .ok_or_else(|| "Truncated note not found on Right revision".to_string())?;
                     
                     if let Some(base_node) = self.class_mapping.node_at_rev(&leader, Revision::Base) {
+
+                        let left_text = left_node.source;
+                        let right_text = right_node.source;
+                        let base_text = base_node.source;
+
+                        if left_text == right_text {
+                            log::info!("[FAST-PATH 1] Disparado: Left e Right são idênticos no nó {:?}", leader.grammar_name());
+                            return Ok(MergedTree::TextuallyMerged{
+                                node: leader,
+                                content: left_text.to_string(),
+                                has_conflict: false,
+                            });
+                        }
+
+                        if right_text == base_text {
+                            log::info!("[FAST-PATH 2] Disparado: Apenas Left alterou o nó {:?}", leader.grammar_name());
+                            return Ok(MergedTree::TextuallyMerged{
+                                node: leader,
+                                content: left_text.to_string(),
+                                has_conflict: false,
+                            });
+                        }
+
+                        if left_text == base_text {
+                            log::info!("[FAST-PATH 3] Disparado: Apenas Right alterou o nó {:?}", leader.grammar_name());
+                            return Ok(MergedTree::TextuallyMerged{
+                                node: leader,
+                                content: right_text.to_string(),
+                                has_conflict: false,
+                            })
+                        }
+
                         //node in base
                         let merger: Box<dyn TextualMerger> = match textual_merger {
                             TextualMergeStrategy::Diff3 => Box::new(DiffyMerger),
                             //add other diff strategies here
                         };
+
+                        let diffy_start = std::time::Instant::now();
+
                         let text_result = merger.merge(base_node.source, left_node.source, right_node.source);
         
+                        visiting_state.textual_merge_time += diffy_start.elapsed();
+                        visiting_state.diffy_calls += 1;
+
                         let merged_node = match text_result {
                             TextualMergeResult::Success(content) => MergedTree::TextuallyMerged {
                                 node: leader,
                                 content,
                                 has_conflict: false,
                             },
-                            TextualMergeResult::Conflict(content) => MergedTree::TextuallyMerged {
-                                node: leader,
-                                content,
-                                has_conflict: true,
-                            },
+                            TextualMergeResult::Conflict(_) => {
+                                MergedTree::Conflict {
+                                    base: vec![base_node],
+                                    left: vec![left_node],
+                                    right: vec![right_node],
+                                }
+                            }
                         };
         
                         return Ok(merged_node);
                     } else {
-                        //node not in base
                         if left_node.source == right_node.source {
-                            return Ok(MergedTree::TextuallyMerged{
+                            log::info!("[FAST-PATH BONUS] Disparado: Adição concorrente exata no nó {:?}", leader.grammar_name());
+                            return Ok(MergedTree::TextuallyMerged {
                                 node: leader,
                                 content: left_node.source.to_string(),
                                 has_conflict: false,
                             });
-                        } else {
-                            let marker_size = self.settings.conflict_marker_size_or_default();
-                            let left_marker = "<".repeat(marker_size);
-                            let right_marker = ">".repeat(marker_size);
-                            let base_marker = "|".repeat(marker_size);
-                            let separator_marker = "=".repeat(marker_size);
-
-                            let left_name = self.settings.left_revision_name.as_deref().unwrap_or("left");
-                            let base_name = self.settings.base_revision_name.as_deref().unwrap_or("base");
-                            let right_name = self.settings.right_revision_name.as_deref().unwrap_or("right");
-
-                            let conflict_content = format!(
-                                "{left_marker} {left_name}\n{left_content}\n{base_marker} {base_name}\n{separator_marker}\n{right_content}\n{right_marker} {right_name}",
-                                left_marker = left_marker,
-                                left_name = left_name,
-                                left_content = left_node.source,
-                                base_marker = base_marker,
-                                base_name = base_name,
-                                separator_marker = separator_marker,
-                                right_content = right_node.source,
-                                right_marker = right_marker,
-                                right_name = right_name,
-                            );
-
-                            return Ok(MergedTree::TextuallyMerged{
-                                node: leader,
-                                content: conflict_content,
-                                has_conflict: true,
-                            });
                         }
+
+                        //node not in base but left and right differ
+                        log::info!("[CONFLICT] Adição concorrente divergente no nó {:?}", leader.grammar_name());
+                        return Ok(MergedTree::Conflict {
+                            base: vec![], 
+                            left: vec![left_node],
+                            right: vec![right_node],
+                        });
                     }
                 } else {
                     //node only in left or right
@@ -339,11 +382,17 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         );
                         return Ok(MergedTree::TextuallyMerged {
                             node: leader,
-                            content: String::new(),
+                            content: String::new(), //just a delete
                             has_conflict: false,
                         });
                     };
                     let node_to_add = self.class_mapping.node_at_rev(&leader, rev).unwrap();
+
+                    return Ok(MergedTree::TextuallyMerged {
+                        node: leader,
+                        content: node_to_add.source.to_string(), //addition only in left or right
+                        has_conflict: false,
+                    });
                 }
             }
         }
@@ -412,7 +461,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
         loop {
             match cursor.len() {
                 0 => {
-                    // unexpected, this is a nasty conflict!
+                    // unexpected, this is a nasty conflict, fallback to line_based!
                     return self.commutative_or_line_based_local_fallback(node, visiting_state, log_state);
                 }
                 1 => {
@@ -1210,11 +1259,7 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                 self.class_mapping,
             ));
         }
-
         debug!("{pad}with_separators (final merged children):");
-        for child in &with_separators {
-            debug!("{pad}   {}", child.short_debug());
-        }
 
         Ok(with_separators)
     }

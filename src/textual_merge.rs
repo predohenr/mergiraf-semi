@@ -1,4 +1,6 @@
 use diffy_imara as diffy;
+use crate::settings::DisplaySettings;
+use crate::parsed_merge::ParsedMerge;
 
 ///Textual merge result could be a conflict or not
 #[derive(Debug, PartialEq, Eq)]
@@ -18,9 +20,25 @@ impl TextualMerger for DiffyMerger {
         
         let result = diffy::merge(base, left, right);
 
-        match result {
-            Ok(merged_text) => TextualMergeResult::Success(merged_text),
-            Err(conflict_text) => TextualMergeResult::Conflict(conflict_text),
+        let merged_text = match result {
+            Ok(t) => t,
+            Err(t) => t,
+        };
+
+        let settings = DisplaySettings::default(); 
+
+        match ParsedMerge::parse(&merged_text, &settings) {
+            Ok(parsed) => {
+                if parsed.conflict_count() > 0 {
+                    TextualMergeResult::Conflict(merged_text)
+                } else {
+                    TextualMergeResult::Success(merged_text)
+                }
+            },
+            Err(_) => {
+                // parsing failed
+                TextualMergeResult::Conflict(merged_text)
+            }
         }
     }
 }
