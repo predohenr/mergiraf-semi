@@ -1,4 +1,10 @@
-use std::{fmt::Display, hash::Hash, iter, ops::Deref};
+use std::{
+    fmt::Display, 
+    hash::Hash, 
+    iter, 
+    ops::Deref,
+    time::{Instant},
+};
 
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
@@ -297,6 +303,7 @@ impl<'a> ClassMapping<'a> {
 
     pub fn unify_concurrent_additions(&mut self) {
         debug!("[CM DEBUG] Start Concurrent Additions Unification");
+        let uca = Instant::now(); 
         // Encontra todos os nós em left e right que não têm correspondência em base.
         let unmatched_left: Vec<_> = self.get_unmatched_nodes(Revision::Left, Revision::Base).collect();
         let unmatched_right: Vec<_> = self.get_unmatched_nodes(Revision::Right, Revision::Base).collect();
@@ -317,8 +324,6 @@ impl<'a> ClassMapping<'a> {
                 }
             }
         }
-
-        //debug!("[CM DEBUG] Right Signature Map: {:?}", right_sig_map.keys());
 
         for left_node in unmatched_left {
             match left_node.node.signature() {
@@ -343,6 +348,7 @@ impl<'a> ClassMapping<'a> {
                 }
             }
         }
+        log::info!("[TIME CM] Unify Concurrent Additions time: {:?}", uca.elapsed());
         debug!("[CM DEBUG] End Concurrent Additions Unification");
     }
 

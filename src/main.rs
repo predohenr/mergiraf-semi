@@ -3,7 +3,7 @@ use std::{
     env, fs,
     path::{Path, PathBuf},
     process::{Command, exit},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use clap::{ArgAction, Args, Parser, Subcommand};
@@ -258,6 +258,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
 
             let fname_base = path_name.unwrap_or(fname_base);
 
+            log::info!("[TIME MAIN] Starting line_merge_and_structured_resolution...");
+            let start_total_merge = Instant::now();
+
             let merge_result = line_merge_and_structured_resolution(
                 contents_base,
                 contents_left,
@@ -272,6 +275,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 print_chunks,
                 semistructured,
             );
+
+            log::info!("[TIME MAIN] Total time merge module: {:?}", start_total_merge.elapsed());
+
             if let Some(fname_out) = output {
                 write_string_to_file(&fname_out, &merge_result.contents)?;
             } else if git {
@@ -350,6 +356,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
             let conflict_contents = normalize_to_lf(&original_conflict_contents);
             let working_dir = env::current_dir().expect("Invalid current directory");
 
+            log::info!("[TIME MAIN] Starting resolve_merge_cascading...");
+            let start_total_solve = Instant::now();
+
             let postprocessed = resolve_merge_cascading(
                 &conflict_contents,
                 &fname_conflicts,
@@ -360,6 +369,9 @@ fn real_main(args: CliArgs) -> Result<i32, String> {
                 print_chunks,
                 semistructured,
             );
+
+            log::info!("[TIME MAIN] Total resolution time: {:?}", start_total_solve.elapsed());
+
             match postprocessed {
                 Ok(merged) => {
                     if stdout {

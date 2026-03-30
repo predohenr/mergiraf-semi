@@ -107,7 +107,7 @@ pub fn cascading_merge(
         &settings,
         lang_profile,
     );
-    debug!("line-based merge took {:?}", start.elapsed());
+    log::info!("[TIME] Phase 1 (line-based merge) took: {:?}", start.elapsed());
     if line_based_merge.conflict_count == 0 && !line_based_merge.has_additional_issues {
         return vec![line_based_merge];
     }
@@ -119,7 +119,12 @@ pub fn cascading_merge(
 
         // second attempt: to solve the conflicts from the line-based merge
         if !line_based_merge.has_additional_issues {
+
+            let start_phase2 = Instant::now(); 
+
             let solved_merge = resolve_merge(&parsed_conflicts, &settings, lang_profile, debug_dir, print_chunks, semistructured);
+
+            log::info!("[TIME] Phase 2 (structure on line-based conflicts) took: {:?}", start_phase2.elapsed());
 
             match solved_merge {
                 Ok(recovered_merge) => {
@@ -138,6 +143,9 @@ pub fn cascading_merge(
 
         if full_merge || line_based_merge.has_additional_issues {
             // third attempt: full-blown structured merge
+
+            let start_phase3 = Instant::now();
+
             let structured_merge = structured_merge(
                 contents_base,
                 contents_left,
@@ -149,6 +157,9 @@ pub fn cascading_merge(
                 print_chunks,
                 semistructured,
             );
+
+            log::info!("[TIME] Phase 3 (structure on entire file) took: {:?}", start_phase3.elapsed());
+
             match structured_merge {
                 Ok(successful_merge) => merges.push(successful_merge),
                 Err(parse_error) => {

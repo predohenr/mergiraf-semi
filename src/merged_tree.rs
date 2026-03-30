@@ -524,51 +524,6 @@ impl<'a> MergedTree<'a> {
         let signature = definition.extract_signature_from_merged_node(self, class_mapping);
         Some(signature)
     }
-
-    pub fn short_debug(&self) -> String {
-        match self {
-            MergedTree::ExactTree { node, revisions, .. } => {
-                format!(
-                    "ExactTree(kind={}, src='{}', revs={:?})",
-                    node.grammar_name(),
-                    node.rev_node().node.source.trim().replace('\n', "\\n"),
-                    revisions
-                )
-            }
-            MergedTree::MixedTree { node, children, .. } => {
-                format!(
-                    "MixedTree(kind={}, children={})",
-                    node.grammar_name(),
-                    children.len()
-                )
-            }
-            MergedTree::Conflict { base, left, right } => {
-                format!(
-                    "Conflict(base={}, left={}, right={})",
-                    base.len(),
-                    left.len(),
-                    right.len()
-                )
-            }
-            MergedTree::LineBasedMerge { node, .. } => {
-                format!(
-                    "LineBasedMerge(kind={})",
-                    node.grammar_name(),
-                )
-            }
-            MergedTree::CommutativeChildSeparator { separator } => {
-                format!("Separator('{}')", separator.escape_debug())
-            }
-            MergedTree::TextuallyMerged { node, content, has_conflict } => {
-                format!(
-                    "TextuallyMerged(kind={}, src='{}', conflict={})",
-                    node.grammar_name(),
-                    content.trim().replace('\n', "\\n"),
-                    has_conflict
-                )
-            }
-        }
-    }
 }
 
 impl Display for MergedTree<'_> {

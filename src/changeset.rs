@@ -174,12 +174,6 @@ impl<'a> ChangeSet<'a> {
         }
     }
 
-    ///For debug purposes
-    pub fn iter_successors(&self) -> impl Iterator<Item = (&PCSNode<'a>, &PCS<'a>)> {
-        self.successors.iter().flat_map(|(node, set)| {
-            set.iter().map(move |pcs| (node, pcs))
-        })
-    }
 }
 
 #[cfg(test)]
