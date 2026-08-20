@@ -6,6 +6,7 @@ use log::debug;
 use itertools::Itertools;
 use tree_sitter::Node;
 
+use crate::Revision;
 use crate::ast::AstNode;
 use crate::class_mapping::ClassMapping;
 use crate::merged_tree::MergedTree;
@@ -81,9 +82,16 @@ impl<'b> AstNodeEquiv<'_, 'b> {
                     .filter(|child| child.field_name(class_mapping) == Some(field_name))
                     .map(Self::Merged)
                     .collect(),
+                MergedTree::LineBasedMerge {node, .. }
+                | MergedTree::TextuallyMerged { node, .. } => {
+                    let representative = class_mapping.node_at_rev(node, Revision::Left)
+                        .or_else(|| class_mapping.node_at_rev(node, Revision::Right))
+                        .or_else(|| class_mapping.node_at_rev(node, Revision::Base))
+                        .expect("Textually resolved node doesnt exist in any revision");
+                    
+                    Self::Original(representative).children_by_field_name(field_name, class_mapping)
+                }
                 MergedTree::Conflict { .. }
-                | MergedTree::LineBasedMerge { .. }
-                | MergedTree::TextuallyMerged { .. }
                 | MergedTree::CommutativeChildSeparator { .. } => Vec::new(),
             },
 

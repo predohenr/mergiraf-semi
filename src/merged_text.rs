@@ -30,6 +30,7 @@ enum MergeSection<'a> {
         left: Cow<'a, str>,
         right: Cow<'a, str>,
     },
+    RawTextualConflict(Cow<'a, str>),
 }
 
 impl<'a> MergedText<'a> {
@@ -42,7 +43,7 @@ impl<'a> MergedText<'a> {
     pub(crate) fn count_conflicts(&self) -> usize {
         self.sections
             .iter()
-            .filter(|section| matches!(section, MergeSection::Conflict { .. }))
+            .filter(|section| matches!(section, MergeSection::Conflict { .. } | MergeSection::RawTextualConflict(_)))
             .count()
     }
 
@@ -55,6 +56,7 @@ impl<'a> MergedText<'a> {
                 MergeSection::Conflict { base, left, right } => {
                     base.len() + left.len() + right.len()
                 }
+                MergeSection::RawTextualConflict(content) => content.len(),
             })
             .sum()
     }
@@ -82,6 +84,10 @@ impl<'a> MergedText<'a> {
             self.sections
                 .push(MergeSection::Conflict { base, left, right });
         }
+    }
+
+    pub(crate) fn push_raw_textual_conflict(&mut self, content: Cow<'a, str>) {
+        self.sections.push(MergeSection::RawTextualConflict(content));
     }
 
     /// Appends some text which might contain line-based conflicts.
@@ -177,6 +183,7 @@ impl<'a> MergedText<'a> {
                     Revision::Left => left.as_ref(),
                     Revision::Right => right.as_ref(),
                 },
+                MergeSection::RawTextualConflict(content) => content.as_ref(),
             })
             .collect()
     }
@@ -291,6 +298,19 @@ impl<'a> MergedText<'a> {
                     }
                     gathering_conflict = !all_end_with_newline;
                 }
+                MergeSection::RawTextualConflict(content) => {
+                    if gathering_conflict {
+                        Self::render_conflict(
+                            &base_buffer,
+                            &left_buffer,
+                            &right_buffer,
+                            settings,
+                            &mut output,
+                        );
+                        gathering_conflict = false;
+                    }
+                    output.push_str(content);
+                }
             }
         }
         if gathering_conflict {
@@ -378,6 +398,10 @@ impl<'a> MergedText<'a> {
                     } else {
                         Self::render_conflict(base, left, right, settings, &mut output);
                     }
+                    last_was_conflict = true;
+                }
+                MergeSection::RawTextualConflict(content) => {
+                    output.push_str(content);
                     last_was_conflict = true;
                 }
             }

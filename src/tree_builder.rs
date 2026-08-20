@@ -295,7 +295,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         let base_text = base_node.source;
 
                         if left_text == right_text {
-                            log::info!("[FAST-PATH 1] Disparado: Left e Right são idênticos no nó {:?}", leader.grammar_name());
                             return Ok(MergedTree::TextuallyMerged{
                                 node: leader,
                                 content: left_text.to_string(),
@@ -304,7 +303,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         }
 
                         if right_text == base_text {
-                            log::info!("[FAST-PATH 2] Disparado: Apenas Left alterou o nó {:?}", leader.grammar_name());
                             return Ok(MergedTree::TextuallyMerged{
                                 node: leader,
                                 content: left_text.to_string(),
@@ -313,7 +311,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         }
 
                         if left_text == base_text {
-                            log::info!("[FAST-PATH 3] Disparado: Apenas Right alterou o nó {:?}", leader.grammar_name());
                             return Ok(MergedTree::TextuallyMerged{
                                 node: leader,
                                 content: right_text.to_string(),
@@ -335,16 +332,17 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         visiting_state.diffy_calls += 1;
 
                         let merged_node = match text_result {
-                            TextualMergeResult::Success(content) => MergedTree::TextuallyMerged {
-                                node: leader,
-                                content,
-                                has_conflict: false,
+                            TextualMergeResult::Success(content) => 
+                                MergedTree::TextuallyMerged {
+                                    node: leader,
+                                    content,
+                                    has_conflict: false,
                             },
-                            TextualMergeResult::Conflict(_) => {
-                                MergedTree::Conflict {
-                                    base: vec![base_node],
-                                    left: vec![left_node],
-                                    right: vec![right_node],
+                            TextualMergeResult::Conflict(conflict_content) => {
+                                MergedTree::TextuallyMerged {
+                                    node: leader,
+                                    content: conflict_content,
+                                    has_conflict: true,
                                 }
                             }
                         };
@@ -352,7 +350,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         return Ok(merged_node);
                     } else {
                         if left_node.source == right_node.source {
-                            log::info!("[FAST-PATH BONUS] Disparado: Adição concorrente exata no nó {:?}", leader.grammar_name());
                             return Ok(MergedTree::TextuallyMerged {
                                 node: leader,
                                 content: left_node.source.to_string(),
@@ -361,7 +358,6 @@ impl<'a, 'b> TreeBuilder<'a, 'b> {
                         }
 
                         //node not in base but left and right differ
-                        log::info!("[CONFLICT] Adição concorrente divergente no nó {:?}", leader.grammar_name());
                         return Ok(MergedTree::Conflict {
                             base: vec![], 
                             left: vec![left_node],

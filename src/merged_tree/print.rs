@@ -162,7 +162,7 @@ impl<'a> MergedTree<'a> {
                 );
 
                 if *has_conflict {
-                    output.push_conflict(Cow::from(""), Cow::from(content.clone()), Cow::from(""));
+                    output.push_raw_textual_conflict(Cow::from(content.clone()));
                 } else {
                     output.push_merged(Cow::from(content.clone()));
                 }
