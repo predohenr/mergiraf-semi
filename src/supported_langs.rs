@@ -85,7 +85,6 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
                 ]),
                 // strictly speaking, this isn't true (order can be accessed via reflection)
                 CommutativeParent::new("class_body", " {\n", "\n\n", "\n}\n").restricted_to(vec![
-                    ChildrenGroup::with_separator(&["field_declaration"], "\n"),
                     ChildrenGroup::new(&[
                         "record_declaration",
                         "class_declaration",
@@ -96,6 +95,7 @@ pub static SUPPORTED_LANGUAGES: LazyLock<Vec<LangProfile>> = LazyLock::new(|| {
                     ChildrenGroup::new(&[
                         "constructor_declaration",
                         "method_declaration",
+                        "field_declaration",
                         "compact_constructor_declaration",
                     ]),
                 ]),
